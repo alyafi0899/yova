@@ -1,0 +1,10 @@
+{
+  "description": "This web application streamlines the design process by providing intuitive UI/UX prototyping tools for designers and teams, enhancing collaboration and efficiency.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
