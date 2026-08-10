@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getWhatsAppLink } from './data/dresses'
+import { supabase } from './lib/supabase'
 import Home from './pages/Home'
 import Collection from './pages/Collection'
 import DressDetail from './pages/DressDetail'
@@ -8,6 +9,12 @@ import Fitting from './pages/Fitting'
 import CheckRental from './pages/CheckRental'
 import FAQ from './pages/FAQ'
 import Contact from './pages/Contact'
+
+// Admin Components
+import AdminLogin from './pages/admin/AdminLogin'
+import AdminLayout from './components/admin/AdminLayout'
+import AdminDresses from './pages/admin/AdminDresses'
+import AdminOrders from './pages/admin/AdminOrders'
 
 export type Page =
   | 'home'
@@ -18,6 +25,9 @@ export type Page =
   | 'check-rental'
   | 'faq'
   | 'contact'
+  | 'admin-login'
+  | 'admin-dresses'
+  | 'admin-orders'
 
 export interface NavProps {
   navigate: (page: Page, dressId?: string) => void
@@ -36,6 +46,7 @@ export default function App() {
   const [selectedDressId, setSelectedDressId] = useState<string | undefined>()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [session, setSession] = useState<any>(null)
 
   const navigate = (p: Page, dressId?: string) => {
     setPage(p)
@@ -45,12 +56,54 @@ export default function App() {
   }
 
   useEffect(() => {
+    // Check Auth Session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
     const onScroll = () => setScrolled(window.scrollY > 48)
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      subscription.unsubscribe()
+    }
   }, [])
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    navigate('home')
+  }
+
+  // Admin Route Protection
+  const isAdminPage = page.startsWith('admin-')
+
+  useEffect(() => {
+    if (isAdminPage && !session && page !== 'admin-login') {
+      setPage('admin-login')
+    }
+    if (page === 'admin-login' && session) {
+      setPage('admin-dresses')
+    }
+  }, [page, session, isAdminPage])
+
   const transparent = page === 'home' && !scrolled && !menuOpen
+
+  // Render Admin Pages
+  if (isAdminPage) {
+    if (page === 'admin-login') return <AdminLogin onLogin={() => navigate('admin-dresses')} />
+
+    return (
+      <AdminLayout navigate={navigate} onLogout={handleLogout}>
+        {page === 'admin-dresses' && <AdminDresses />}
+        {page === 'admin-orders' && <AdminOrders />}
+      </AdminLayout>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-ivory">
@@ -64,25 +117,34 @@ export default function App() {
       >
         <div className="max-w-7xl mx-auto px-6 sm:px-10 h-16 flex items-center justify-between">
           {/* Logo */}
-          <button
-            onClick={() => navigate('home')}
-            className="text-left shrink-0"
-          >
-            <div
-              className={`font-display text-xl tracking-wide transition-colors ${
-                transparent ? 'text-white' : 'text-charcoal'
-              }`}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('home')}
+              className="text-left shrink-0"
             >
-              YOVA
-            </div>
-            <div
-              className={`text-[9px] tracking-[0.22em] uppercase transition-colors ${
-                transparent ? 'text-white/60' : 'text-muted'
-              }`}
-            >
-              Sewa Baju Akad · Blangkejeren
-            </div>
-          </button>
+              <div
+                className={`font-display text-xl tracking-wide transition-colors ${
+                  transparent ? 'text-white' : 'text-charcoal'
+                }`}
+              >
+                YOVA
+              </div>
+              <div
+                className={`text-[9px] tracking-[0.22em] uppercase transition-colors ${
+                  transparent ? 'text-white/60' : 'text-muted'
+                }`}
+              >
+                Sewa Baju Akad · Blangkejeren
+              </div>
+            </button>
+
+            {/* Hidden Admin Access Trigger */}
+            <button
+              onDoubleClick={() => navigate('admin-login')}
+              className="w-4 h-4 opacity-0 cursor-default"
+              aria-hidden="true"
+            />
+          </div>
 
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-7">
@@ -175,7 +237,7 @@ export default function App() {
           <DressDetail navigate={navigate} dressId={selectedDressId} />
         )}
         {page === 'how-it-works' && <HowItWorks navigate={navigate} />}
-        {page === 'fitting' && <Fitting navigate={navigate} />}
+        {page === 'fitting' && <Fitting navigate={navigate} dressId={selectedDressId} />}
         {page === 'check-rental' && <CheckRental navigate={navigate} />}
         {page === 'faq' && <FAQ navigate={navigate} />}
         {page === 'contact' && <Contact navigate={navigate} />}
@@ -223,8 +285,16 @@ export default function App() {
             </a>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 py-5 border-t border-ivory/8 text-[11px] text-ivory/25">
-          © 2026 YOVA Sewa Baju Akad Blangkejeren. Semua hak dilindungi.
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 py-5 border-t border-ivory/8 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="text-[11px] text-ivory/25">
+            © 2026 YOVA Sewa Baju Akad Blangkejeren. Semua hak dilindungi.
+          </div>
+          <button
+            onClick={() => navigate('admin-login')}
+            className="text-[10px] text-ivory/10 hover:text-ivory/40 transition-colors uppercase tracking-widest"
+          >
+            Admin Login
+          </button>
         </div>
       </footer>
     </div>

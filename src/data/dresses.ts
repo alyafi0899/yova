@@ -32,6 +32,8 @@ export interface Dress {
   resizeAvailable: boolean
   fitNotes: string
   recommendedHeight: string
+  size?: string
+  colors?: string[]
 }
 
 export const DRESSES: Dress[] = [

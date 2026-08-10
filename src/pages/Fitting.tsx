@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, useEffect } from 'react'
 import type { NavProps } from '../App'
-import { DRESSES } from '../data/dresses'
+import { supabase } from '../lib/supabase'
+import { getWhatsAppLink, type Dress } from '../data/dresses'
 
 interface FormState {
   name: string
@@ -35,18 +36,93 @@ const TIME_SLOTS = [
   '16:00 – 17:00',
 ]
 
-export default function Fitting({ navigate }: NavProps) {
+interface FittingProps extends NavProps {
+  dressId?: string
+}
+
+export default function Fitting({ navigate, dressId }: FittingProps) {
   const [form, setForm] = useState<FormState>(INITIAL)
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [dbDresses, setDbDresses] = useState<Dress[]>([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [activeSelect, setActiveSelect] = useState<'primary' | 'secondary'>('primary')
+
+  useEffect(() => {
+    async function fetchDresses() {
+      const { data } = await supabase.from('dresses').select('*')
+      if (data) {
+        const mapped = data.map((d: any) => ({
+          ...d,
+          collectionCode: d.collection_code,
+          includedItems: d.included_items,
+          resizeAvailable: d.resize_available,
+          fitNotes: d.fit_notes,
+          recommendedHeight: d.recommended_height,
+          estimatedAvailable: d.estimated_available,
+        }))
+        setDbDresses(mapped)
+
+        if (dressId) {
+          const selected = mapped.find(d => d.id === dressId)
+          if (selected) {
+            setForm(prev => ({ ...prev, selectedDress: selected.collectionCode }))
+          }
+        }
+      }
+    }
+    fetchDresses()
+  }, [dressId])
 
   const set = (field: keyof FormState, val: string) =>
     setForm(f => ({ ...f, [field]: val }))
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setSubmitted(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    setLoading(true)
+
+    // Menambahkan 3 digit random di akhir agar tidak duplikat jika orang yang sama pesan baju yang sama
+    const randomSuffix = Math.floor(100 + Math.random() * 900)
+    const bookingId = `${form.selectedDress}-${form.whatsapp.slice(-4)}-${randomSuffix}`
+
+    const { error } = await supabase.from('rentals').insert([
+      {
+        booking_id: bookingId,
+        customer_name: form.name,
+        whatsapp: form.whatsapp,
+        event_date: form.eventDate,
+        dress_code: form.selectedDress,
+        fitting_date: form.fittingDate,
+        fitting_time: form.fittingTime,
+        status: 'pending',
+        completed_steps: []
+      }
+    ])
+
+    if (!error) {
+      setSubmitted(true)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      alert('Gagal mengirim permintaan: ' + error.message)
+    }
+    setLoading(false)
   }
+
+  const openDressPicker = (type: 'primary' | 'secondary') => {
+    setActiveSelect(type)
+    setIsModalOpen(true)
+  }
+
+  const selectDress = (code: string) => {
+    if (activeSelect === 'primary') {
+      set('selectedDress', code)
+    } else {
+      set('secondDress', code)
+    }
+    setIsModalOpen(false)
+  }
+
+  const getDressByCode = (code: string) => dbDresses.find(d => d.collectionCode === code)
 
   if (submitted) {
     return (
@@ -67,7 +143,10 @@ export default function Fitting({ navigate }: NavProps) {
           </div>
           <p className="text-muted text-sm leading-relaxed mb-8 max-w-xs mx-auto">
             Kami akan menghubungi Anda melalui WhatsApp untuk mengkonfirmasi jadwal
-            fitting. Pastikan nomor WhatsApp Anda aktif.
+            fitting. Jika booking dikonfirmasi, ID Booking Anda akan berupa: <br/>
+            <span className="font-mono font-bold text-mocha">
+              {form.selectedDress || 'KODE'}-{form.whatsapp.slice(-4) || 'XXXX'}
+            </span>
           </p>
 
           <div className="p-5 bg-cream border border-nude text-left text-sm space-y-3 mb-8">
@@ -144,15 +223,22 @@ export default function Fitting({ navigate }: NavProps) {
                   </div>
                   <div>
                     <label className={labelClass}>Nomor WhatsApp *</label>
-                    <input
-                      required
-                      type="tel"
-                      value={form.whatsapp}
-                      onChange={e => set('whatsapp', e.target.value)}
-                      className={inputClass}
-                      style={{ borderRadius: '2px' }}
-                      placeholder="08XXXXXXXXXX"
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted">+62</span>
+                      <input
+                        required
+                        type="tel"
+                        value={form.whatsapp.startsWith('62') ? form.whatsapp.slice(2) : form.whatsapp.startsWith('0') ? form.whatsapp.slice(1) : form.whatsapp}
+                        onChange={e => {
+                          const val = e.target.value.replace(/\D/g, '')
+                          set('whatsapp', '62' + val)
+                        }}
+                        className={inputClass + ' pl-12'}
+                        style={{ borderRadius: '2px' }}
+                        placeholder="81234567890"
+                      />
+                    </div>
+                    <p className="text-[9px] text-muted mt-1 italic">Masukkan nomor tanpa angka 0 di depan.</p>
                   </div>
                 </div>
               </div>
@@ -194,7 +280,7 @@ export default function Fitting({ navigate }: NavProps) {
               {/* Fitting schedule */}
               <div>
                 <h2 className={sectionLabel}>Jadwal Fitting</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                   <div>
                     <label className={labelClass}>Tanggal Fitting *</label>
                     <input
@@ -222,39 +308,57 @@ export default function Fitting({ navigate }: NavProps) {
                     </select>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Visual Picker for Primary Dress */}
                   <div>
                     <label className={labelClass}>Koleksi Pilihan *</label>
-                    <select
-                      required
-                      value={form.selectedDress}
-                      onChange={e => set('selectedDress', e.target.value)}
-                      className={selectClass}
+                    <button
+                      type="button"
+                      onClick={() => openDressPicker('primary')}
+                      className="w-full flex items-center justify-between px-3 py-3 border border-nude bg-white text-sm text-left hover:border-charcoal transition-colors"
                       style={{ borderRadius: '2px' }}
                     >
-                      <option value="">Pilih koleksi</option>
-                      {DRESSES.map(d => (
-                        <option key={d.id} value={d.collectionCode}>
-                          {d.collectionCode} — {d.name}
-                        </option>
-                      ))}
-                    </select>
+                      {form.selectedDress ? (
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={getDressByCode(form.selectedDress)?.images[0]}
+                            className="w-8 h-8 object-cover rounded-sm"
+                            alt=""
+                          />
+                          <span>{form.selectedDress} — {getDressByCode(form.selectedDress)?.name}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted">Pilih Koleksi...</span>
+                      )}
+                      <span className="text-[10px]">▼</span>
+                    </button>
+                    <input type="hidden" required value={form.selectedDress} />
                   </div>
+
+                  {/* Visual Picker for Secondary Dress */}
                   <div>
                     <label className={labelClass}>Pilihan Kedua (opsional)</label>
-                    <select
-                      value={form.secondDress}
-                      onChange={e => set('secondDress', e.target.value)}
-                      className={selectClass}
+                    <button
+                      type="button"
+                      onClick={() => openDressPicker('secondary')}
+                      className="w-full flex items-center justify-between px-3 py-3 border border-nude bg-white text-sm text-left hover:border-charcoal transition-colors"
                       style={{ borderRadius: '2px' }}
                     >
-                      <option value="">—</option>
-                      {DRESSES.map(d => (
-                        <option key={d.id} value={d.collectionCode}>
-                          {d.collectionCode} — {d.name}
-                        </option>
-                      ))}
-                    </select>
+                      {form.secondDress ? (
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={getDressByCode(form.secondDress)?.images[0]}
+                            className="w-8 h-8 object-cover rounded-sm"
+                            alt=""
+                          />
+                          <span>{form.secondDress} — {getDressByCode(form.secondDress)?.name}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted">—</span>
+                      )}
+                      <span className="text-[10px]">▼</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -274,10 +378,11 @@ export default function Fitting({ navigate }: NavProps) {
 
               <button
                 type="submit"
-                className="w-full py-4 bg-mocha text-ivory text-sm font-medium tracking-wide hover:bg-mocha-dark transition-colors"
+                disabled={loading}
+                className="w-full py-4 bg-mocha text-ivory text-sm font-medium tracking-wide hover:bg-mocha-dark transition-colors disabled:opacity-50"
                 style={{ borderRadius: '2px' }}
               >
-                Ajukan Jadwal Fitting
+                {loading ? 'Mengirim...' : 'Ajukan Jadwal Fitting'}
               </button>
             </form>
           </div>
@@ -301,20 +406,60 @@ export default function Fitting({ navigate }: NavProps) {
                 ))}
               </ul>
             </div>
-            <div className="p-6 bg-cream border border-nude">
-              <h3 className="font-display text-xl text-charcoal mb-2">Lokasi Studio</h3>
-              <p className="text-sm text-muted mb-1">Blangkejeren, Kabupaten Gayo Lues, Aceh</p>
-              <p className="text-xs text-muted italic">
-                Alamat lengkap diberikan saat konfirmasi jadwal fitting.
-              </p>
-            </div>
-            <div className="p-4 border border-nude text-xs text-muted">
-              Permintaan fitting belum otomatis dikonfirmasi. Kami akan menghubungi Anda
-              via WhatsApp untuk memastikan jadwal tersedia.
-            </div>
           </div>
         </div>
       </div>
+
+      {/* Dress Picker Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-nude flex justify-between items-center">
+              <h2 className="font-display text-xl text-charcoal">Pilih Koleksi</h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-muted hover:text-charcoal text-2xl">&times;</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-2 sm:grid-cols-3 gap-6">
+              {dbDresses.map(dress => {
+                const isAvailable = dress.status === 'available'
+                return (
+                  <button
+                    key={dress.id}
+                    disabled={!isAvailable}
+                    onClick={() => selectDress(dress.collectionCode)}
+                    className={`group relative text-left transition-all ${!isAvailable ? 'cursor-not-allowed' : 'hover:scale-[1.02]'}`}
+                  >
+                    <div className={`aspect-[3/4] bg-soft overflow-hidden mb-3 relative ${!isAvailable ? 'opacity-40' : ''}`}>
+                      <img src={dress.images[0]} className="w-full h-full object-cover" alt={dress.name} />
+                      {!isAvailable && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="bg-charcoal/80 text-white text-[9px] font-bold uppercase px-3 py-1 tracking-widest">
+                            Sudah Dipesan
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className={!isAvailable ? 'opacity-50' : ''}>
+                      <div className="text-[9px] text-muted font-bold uppercase tracking-widest mb-1">{dress.collectionCode}</div>
+                      <div className="text-xs text-charcoal font-medium line-clamp-1">{dress.name}</div>
+                      <div className="text-[10px] text-mocha font-bold mt-1">Size {dress.size || 'M'}</div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-nude text-right">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-6 py-2 text-xs font-medium uppercase tracking-widest border border-nude hover:bg-white transition-colors"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

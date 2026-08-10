@@ -83,15 +83,16 @@ export default function Contact({ navigate: _ }: NavProps) {
 
           {/* Map + location info */}
           <div>
-            <div
-              className="bg-soft border border-nude flex flex-col items-center justify-center mb-4"
-              style={{ aspectRatio: '1 / 1' }}
-            >
-              <span className="text-4xl mb-4">📍</span>
-              <p className="text-sm text-charcoal font-medium mb-1">Blangkejeren, Aceh</p>
-              <p className="text-xs text-muted text-center px-6 italic">
-                Google Maps link akan dikonfigurasi oleh pemilik studio
-              </p>
+            <div className="bg-soft border border-nude mb-4 overflow-hidden" style={{ aspectRatio: '1 / 1' }}>
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4959.633033097137!2d97.3431208!3d3.9907141!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x303997002d538f69%3A0x3fc7f51fc8915306!2sToko%20Bangunan%20Surya%20Agung!5e1!3m2!1sid!2sid!4v1786353451541!5m2!1sid!2sid"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={true}
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+              ></iframe>
             </div>
 
             <div className="p-5 bg-cream border border-nude">

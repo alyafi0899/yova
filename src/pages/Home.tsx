@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import type { NavProps } from '../App'
-import { DRESSES, getWhatsAppLink } from '../data/dresses'
+import { supabase } from '../lib/supabase'
+import { getWhatsAppLink, type Dress } from '../data/dresses'
 import DressCard from '../components/DressCard'
 
 const HERO =
@@ -12,7 +14,43 @@ const WA_GENERAL = getWhatsAppLink(
 )
 
 export default function Home({ navigate }: NavProps) {
-  const featured = DRESSES.slice(0, 3)
+  const [featured, setFeatured] = useState<Dress[]>([])
+  const [loading, setLoading] = useState(true)
+  const [totalCount, setTotalCount] = useState(0)
+
+  useEffect(() => {
+    async function fetchHomeData() {
+      setLoading(true)
+      // Fetch top 3 for featured
+      const { data: featuredData } = await supabase
+        .from('dresses')
+        .select('*')
+        .limit(3)
+        .order('created_at', { ascending: false })
+
+      // Fetch total count for stats
+      const { count } = await supabase
+        .from('dresses')
+        .select('*', { count: 'exact', head: true })
+
+      if (featuredData) {
+        const mapped = featuredData.map((d: any) => ({
+          ...d,
+          collectionCode: d.collection_code,
+          includedItems: d.included_items,
+          resizeAvailable: d.resize_available,
+          fitNotes: d.fit_notes,
+          recommendedHeight: d.recommended_height,
+          estimatedAvailable: d.estimated_available,
+        }))
+        setFeatured(mapped)
+      }
+
+      if (count !== null) setTotalCount(count)
+      setLoading(false)
+    }
+    fetchHomeData()
+  }, [])
 
   return (
     <div>
@@ -67,15 +105,23 @@ export default function Home({ navigate }: NavProps) {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {featured.map(dress => (
-            <DressCard
-              key={dress.id}
-              dress={dress}
-              onClick={() => navigate('dress-detail', dress.id)}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center py-20 text-muted italic">Memuat koleksi pilihan...</div>
+        ) : featured.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {featured.map(dress => (
+              <DressCard
+                key={dress.id}
+                dress={dress}
+                onClick={() => navigate('dress-detail', dress.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="bg-cream/30 border border-dashed border-nude py-20 text-center text-muted text-sm">
+            Data list dress belum ditambahkan.
+          </div>
+        )}
 
         <button
           onClick={() => navigate('collection')}
@@ -161,7 +207,7 @@ export default function Home({ navigate }: NavProps) {
             </p>
             <div className="grid grid-cols-3 gap-6 border-t border-nude pt-8">
               {[
-                { label: 'Koleksi Tersedia', value: `${DRESSES.length}+` },
+                { label: 'Koleksi Tersedia', value: `${totalCount}+` },
                 { label: 'Deposit Jaminan', value: 'Rp150rb' },
                 { label: 'Pickup H-1', value: 'Return H+1' },
               ].map(stat => (
