@@ -1,4 +1,4 @@
-export const WHATSAPP_NUMBER = '628XXXXXXXXXX' // Ganti dengan nomor WhatsApp Yova
+export const WHATSAPP_NUMBER = '6282225191311' // Ganti dengan nomor WhatsApp Yova
 export const DEPOSIT_AMOUNT = 150000
 
 export type DressStatus = 'available' | 'booked' | 'rented' | 'maintenance'
@@ -170,5 +170,5 @@ export function formatPrice(amount: number): string {
 }
 
 export function getWhatsAppLink(message: string): string {
-  return `https://wa.me/${+6282225191311}?text=${encodeURIComponent(message)}`
+  return `https://wa.me/${6282225191311}?text=${encodeURIComponent(message)}`
 }
