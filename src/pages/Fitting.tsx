@@ -1,5 +1,5 @@
 import { useState, type FormEvent, useEffect } from 'react'
-import type { NavProps } from '../App'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { getWhatsAppLink, type Dress } from '../data/dresses'
 
@@ -36,11 +36,10 @@ const TIME_SLOTS = [
   '16:00 – 17:00',
 ]
 
-interface FittingProps extends NavProps {
-  dressId?: string
-}
-
-export default function Fitting({ navigate, dressId }: FittingProps) {
+export default function Fitting() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const dressId = searchParams.get('dressId')
   const [form, setForm] = useState<FormState>(INITIAL)
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -176,7 +175,7 @@ export default function Fitting({ navigate, dressId }: FittingProps) {
             onClick={() => {
               setForm(INITIAL)
               setSubmitted(false)
-              navigate('home')
+              navigate('/')
             }}
             className="px-8 py-3 bg-mocha text-ivory text-sm font-medium hover:bg-mocha-dark transition-colors"
             style={{ borderRadius: '2px' }}

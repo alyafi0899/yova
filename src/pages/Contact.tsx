@@ -9,7 +9,7 @@ function WhatsAppIcon() {
   )
 }
 
-export default function Contact({ navigate: _ }: NavProps) {
+export default function Contact() {
   return (
     <div className="pt-20 min-h-screen">
       <div className="max-w-5xl mx-auto px-6 sm:px-10 py-16">

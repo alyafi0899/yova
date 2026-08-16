@@ -105,94 +105,31 @@ function PhoneMockup() {
 }
 
 export default function Landing() {
+  const navigate = useNavigate()
   const [activeTemplate, setActiveTemplate] = useState(0)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
-  const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <div className="min-h-screen" style={{ fontFamily: 'Outfit, sans-serif', background: '#FAF8F4' }}>
-      {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4" style={{ background: 'rgba(250,248,244,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(201,168,76,0.15)' }}>
-        <Link to="/" className="flex items-center gap-2.5">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-            <polygon points="14,1 27,7.5 27,20.5 14,27 1,20.5 1,7.5" fill="#1B3A4B" />
-            <polygon points="14,7 22,11 22,17 14,21 6,17 6,11" fill="none" stroke="#C9A84C" strokeWidth="0.8" />
-            <circle cx="14" cy="14" r="2.5" fill="#C9A84C" />
-          </svg>
-          <span style={{ fontFamily: 'DM Serif Display, serif', fontSize: 18, color: '#1B3A4B' }}>Nikahku</span>
-        </Link>
-        <div className="hidden md:flex items-center gap-8">
-          {NAV_LINKS.map(l => (
-            <a key={l} href={`#${l.toLowerCase()}`} className="text-sm text-stone-600 hover:text-stone-900 transition-colors tracking-wide">{l}</a>
-          ))}
-        </div>
-        <div className="hidden md:flex items-center gap-3">
-          <Link to="/auth" className="text-sm text-stone-600 hover:text-stone-900 px-4 py-2 transition-colors">Masuk</Link>
-          <Link to="/auth?mode=signup" className="text-sm px-5 py-2 rounded-full text-white transition-colors" style={{ background: '#1B3A4B' }}>Daftar Gratis</Link>
-        </div>
-        <button className="md:hidden p-2" onClick={() => setMenuOpen(!menuOpen)}>
-          <div className="space-y-1.5">
-            <span className="block w-6 h-0.5 bg-stone-700" />
-            <span className="block w-4 h-0.5 bg-stone-700" />
-            <span className="block w-6 h-0.5 bg-stone-700" />
+      {/* Reduced Hero / Introduction */}
+      <section className="relative pt-32 pb-24 overflow-hidden">
+        <div className="absolute inset-0 geometric-pattern opacity-10" />
+        <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] tracking-widest uppercase mb-8" style={{ background: 'rgba(201,168,76,0.12)', color: '#9B7B2A', border: '1px solid rgba(201,168,76,0.25)' }}>
+            <span>✦</span> Platform Undangan Digital Terintegrasi
           </div>
-        </button>
-      </nav>
-
-      {menuOpen && (
-        <div className="fixed inset-0 z-40 pt-16" style={{ background: 'rgba(250,248,244,0.98)' }}>
-          <div className="flex flex-col items-center gap-6 pt-12">
-            {NAV_LINKS.map(l => (
-              <a key={l} href={`#${l.toLowerCase()}`} onClick={() => setMenuOpen(false)} className="text-xl text-stone-700">{l}</a>
-            ))}
-            <Link to="/auth" onClick={() => setMenuOpen(false)} className="text-xl text-stone-700">Masuk</Link>
-            <Link to="/auth?mode=signup" onClick={() => setMenuOpen(false)} className="px-8 py-3 rounded-full text-white text-lg" style={{ background: '#1B3A4B' }}>Daftar Gratis</Link>
+          <h1 className="font-display text-charcoal text-5xl md:text-6xl mb-6">
+            Undangan <em className="text-mocha italic">Digital</em> Elegan
+          </h1>
+          <p className="mt-6 text-muted leading-relaxed max-w-2xl mx-auto text-lg">
+            Satu-satunya platform undangan digital di Blangkejeren yang terintegrasi langsung dengan koleksi baju akad Anda.
+          </p>
+          <div className="mt-12 flex justify-center gap-4">
+            <button onClick={() => navigate('/invitation/builder')} className="px-10 py-4 bg-mocha text-white text-[11px] font-bold uppercase tracking-[0.2em] shadow-xl hover:bg-mocha-dark transition-all transform hover:-translate-y-1">
+              Buat Undangan Sekarang
+            </button>
           </div>
         </div>
-      )}
-
-      {/* Hero */}
-      <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
-        <div className="absolute inset-0 geometric-pattern opacity-40" />
-        <div className="absolute top-0 right-0 w-1/2 h-full opacity-10">
-          <img src="https://images.unsplash.com/photo-1779501678407-c212cd23af9f?w=800&h=900&fit=crop&auto=format" alt="" className="w-full h-full object-cover" />
-        </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center py-20">
-          <div>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs tracking-widest uppercase mb-8" style={{ background: 'rgba(201,168,76,0.12)', color: '#9B7B2A', border: '1px solid rgba(201,168,76,0.25)' }}>
-              <span>✦</span> Platform Undangan Digital Pernikahan #1 Indonesia
-            </div>
-            <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 'clamp(2.5rem, 5vw, 4rem)', lineHeight: 1.1, color: '#1B3A4B' }}>
-              Buat Undangan<br />
-              <em style={{ color: '#C9A84C' }}>Pernikahan</em><br />
-              yang Indah
-            </h1>
-            <p className="mt-6 text-stone-500 leading-relaxed max-w-md" style={{ fontSize: 17 }}>
-              Rancang, kustomisasi, dan bagikan undangan digital pernikahan Anda yang elegan. Gratis hingga siap dipublikasikan.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link to="/auth?mode=signup" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-white text-sm font-medium transition-all hover:shadow-lg hover:-translate-y-0.5" style={{ background: '#1B3A4B' }}>
-                Buat Undangan Sekarang
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </Link>
-              <Link to="/templates" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium transition-all" style={{ border: '1px solid rgba(201,168,76,0.4)', color: '#9B7B2A', background: 'rgba(201,168,76,0.06)' }}>
-                Lihat Template
-              </Link>
-            </div>
-            <div className="mt-12 flex gap-8">
-              {[['2.400+', 'Pasangan'], ['98%', 'Puas'], ['20+', 'Template']].map(([val, label]) => (
-                <div key={label}>
-                  <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: 28, color: '#1B3A4B' }}>{val}</div>
-                  <div className="text-stone-400 text-xs tracking-widest uppercase mt-0.5">{label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex justify-center">
-            <PhoneMockup />
-          </div>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none" style={{ background: 'linear-gradient(to bottom, transparent, #FAF8F4)' }} />
       </section>
 
       {/* Templates Showcase */}

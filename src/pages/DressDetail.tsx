@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react'
-import type { NavProps } from '../App'
+import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatPrice, getWhatsAppLink, type Dress } from '../data/dresses'
 
-interface DressDetailProps extends NavProps {
-  dressId?: string
-}
-
-export default function DressDetail({ navigate, dressId }: DressDetailProps) {
+export default function DressDetail({ navigate: _ }: { navigate?: any }) {
+  const navigate = useNavigate()
+  const { id: dressId } = useParams()
   const [dress, setDress] = useState<Dress | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeImage, setActiveImage] = useState(0)
@@ -59,12 +57,12 @@ export default function DressDetail({ navigate, dressId }: DressDetailProps) {
 
   return (
     <div className="pt-32 pb-24 px-6 sm:px-10 max-w-7xl mx-auto">
-      <button
-        onClick={() => navigate('collection')}
-        className="text-[10px] tracking-[0.2em] uppercase text-muted mb-10 flex items-center gap-2 hover:text-mocha transition-colors"
-      >
-        ← Kembali ke Koleksi
-      </button>
+        <button
+          onClick={() => navigate('/collection')}
+          className="text-[10px] tracking-[0.2em] uppercase text-muted mb-10 flex items-center gap-2 hover:text-mocha transition-colors"
+        >
+          ← Kembali ke Koleksi
+        </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
         {/* Images */}
@@ -137,7 +135,7 @@ export default function DressDetail({ navigate, dressId }: DressDetailProps) {
 
             <div className="space-y-3">
               <button
-                onClick={() => navigate('fitting', dress.id)}
+                onClick={() => navigate(`/fitting?dressId=${dress.id}`)}
                 className="block w-full py-4 bg-mocha text-ivory text-center text-sm font-medium tracking-wide hover:bg-mocha-dark transition-colors"
                 style={{ borderRadius: '2px' }}
               >

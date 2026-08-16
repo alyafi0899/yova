@@ -69,7 +69,7 @@ const POLICIES = [
   },
 ]
 
-export default function FAQ({ navigate: _ }: NavProps) {
+export default function FAQ() {
   const [open, setOpen] = useState<number | null>(null)
   const [tab, setTab] = useState<'faq' | 'policy'>('faq')
 

@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import TemplateRenderer, { TEMPLATE_CONFIGS, type TemplateConfig } from '../components/TemplateRenderer'
+import { useState, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import TemplateRenderer, { TEMPLATE_CONFIGS, type TemplateConfig } from '../../components/invitation/TemplateRenderer'
 
 const TEMPLATES = Object.values(TEMPLATE_CONFIGS)
 const FILTERS = ['Semua', 'Islam', 'Romantis', 'Minimal', 'Mewah', 'Budaya', 'Modern']
@@ -24,7 +24,7 @@ function TemplateCard({ t, onPreview }: { t: TemplateConfig; onPreview: () => vo
           <button onClick={e => { e.stopPropagation(); onPreview() }} className="px-5 py-2 rounded-full text-xs font-medium border transition-colors" style={{ border: '1px solid rgba(255,255,255,0.6)', color: '#fff', backdropFilter: 'blur(8px)' }}>
             Preview Penuh
           </button>
-          <Link to={`/builder?template=${t.id}`} onClick={e => e.stopPropagation()} className="px-5 py-2 rounded-full text-xs font-medium transition-colors" style={{ background: '#C9A84C', color: '#1B3A4B' }}>
+          <Link to={`/invitation/builder?template=${t.id}`} onClick={e => e.stopPropagation()} className="px-5 py-2 rounded-full text-xs font-medium transition-colors" style={{ background: '#C9A84C', color: '#1B3A4B' }}>
             Gunakan Template
           </Link>
         </div>
@@ -52,7 +52,7 @@ function TemplateCard({ t, onPreview }: { t: TemplateConfig; onPreview: () => vo
           <button onClick={e => { e.stopPropagation(); onPreview() }} className="py-2 rounded-lg text-xs font-medium border transition-colors hover:bg-stone-50" style={{ borderColor: '#E0D9CF', color: '#5C4A2A' }}>
             Preview
           </button>
-          <Link to={`/builder?template=${t.id}`} onClick={e => e.stopPropagation()} className="py-2 rounded-lg text-xs font-medium text-center transition-colors" style={{ background: '#1B3A4B', color: '#FAF8F4' }}>
+          <Link to={`/invitation/builder?template=${t.id}`} onClick={e => e.stopPropagation()} className="py-2 rounded-lg text-xs font-medium text-center transition-colors" style={{ background: '#1B3A4B', color: '#FAF8F4' }}>
             Gunakan
           </Link>
         </div>
@@ -83,7 +83,7 @@ function FullPreviewModal({ template, onClose }: { template: TemplateConfig; onC
                 🖥 Desktop
               </button>
             </div>
-            <Link to={`/builder?template=${template.id}`} className="px-4 py-2 rounded-lg text-xs font-medium" style={{ background: '#C9A84C', color: '#1B3A4B' }}>
+            <Link to={`/invitation/builder?template=${template.id}`} className="px-4 py-2 rounded-lg text-xs font-medium" style={{ background: '#C9A84C', color: '#1B3A4B' }}>
               Gunakan Template Ini
             </Link>
             <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-stone-100" style={{ color: '#5C4A2A' }}>
@@ -115,7 +115,7 @@ function FullPreviewModal({ template, onClose }: { template: TemplateConfig; onC
                   <div className="w-3 h-3 rounded-full bg-green-500/70" />
                 </div>
                 <div className="flex-1 mx-4 px-3 py-1 rounded-md text-xs" style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.4)' }}>
-                  nikahku.id/i/yafi-yova
+                  yova.id/i/yafi-yova
                 </div>
               </div>
               <div className="overflow-y-auto" style={{ maxHeight: 510 }}>
@@ -132,9 +132,18 @@ function FullPreviewModal({ template, onClose }: { template: TemplateConfig; onC
 }
 
 export default function Templates() {
+  const [searchParams] = useSearchParams()
+  const previewId = searchParams.get('previewId')
   const [filter, setFilter] = useState('Semua')
   const [preview, setPreview] = useState<TemplateConfig | null>(null)
   const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    if (previewId) {
+      const t = TEMPLATES.find(t => t.id === previewId)
+      if (t) setPreview(t)
+    }
+  }, [previewId])
 
   const filtered = TEMPLATES.filter(t => {
     const matchFilter = filter === 'Semua' || t.tags.some(tag => tag.toLowerCase().includes(filter.toLowerCase()))

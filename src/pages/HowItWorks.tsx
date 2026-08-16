@@ -1,4 +1,4 @@
-import type { NavProps } from '../App'
+import { useNavigate } from 'react-router-dom'
 import { getWhatsAppLink, formatPrice, DEPOSIT_AMOUNT } from '../data/dresses'
 
 const STEPS = [
@@ -55,7 +55,8 @@ const STEPS = [
   },
 ]
 
-export default function HowItWorks({ navigate }: NavProps) {
+export default function HowItWorks() {
+  const navigate = useNavigate()
   return (
     <div className="pt-20 min-h-screen">
       <div className="max-w-4xl mx-auto px-6 sm:px-10 py-16">
@@ -129,7 +130,7 @@ export default function HowItWorks({ navigate }: NavProps) {
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-nude">
           <button
-            onClick={() => navigate('fitting')}
+            onClick={() => navigate('/fitting')}
             className="px-8 py-3 bg-mocha text-ivory text-sm font-medium tracking-wide hover:bg-mocha-dark transition-colors"
             style={{ borderRadius: '2px' }}
           >

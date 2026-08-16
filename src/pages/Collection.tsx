@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
-import type { NavProps } from '../App'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import type { Dress, DressCategory } from '../data/dresses'
 import DressCard from '../components/DressCard'
 
 const CATEGORIES: DressCategory[] = ['Wanita', 'Pria', 'Couple']
 
-export default function Collection({ navigate }: NavProps) {
+export default function Collection({ navigate: _ }: { navigate?: any }) {
+  const navigate = useNavigate()
   const [dresses, setDresses] = useState<Dress[]>([])
   const [activeCategory, setActiveCategory] = useState<DressCategory | 'Semua'>('Semua')
   const [loading, setLoading] = useState(true)
@@ -87,7 +88,7 @@ export default function Collection({ navigate }: NavProps) {
               <DressCard
                 key={dress.id}
                 dress={dress}
-                onClick={() => navigate('dress-detail', dress.id)}
+                onClick={() => navigate(`/dress/${dress.id}`)}
               />
             ))}
           </div>

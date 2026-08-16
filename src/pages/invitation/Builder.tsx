@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import TemplateRenderer, { TEMPLATE_CONFIGS, type TemplateConfig } from '../components/TemplateRenderer'
+import TemplateRenderer, { TEMPLATE_CONFIGS, type TemplateConfig } from '../../components/invitation/TemplateRenderer'
 
 // ─── Sections definition ──────────────────────────────────────────────────────
 type SectionDef = {
