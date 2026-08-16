@@ -87,7 +87,7 @@ export default function App() {
       setPage('admin-login')
     }
     if (page === 'admin-login' && session) {
-      setPage('admin-dresses')
+      setPage('admin-orders')
     }
   }, [page, session, isAdminPage])
 
@@ -95,7 +95,7 @@ export default function App() {
 
   // Render Admin Pages
   if (isAdminPage) {
-    if (page === 'admin-login') return <AdminLogin onLogin={() => navigate('admin-dresses')} />
+    if (page === 'admin-login') return <AdminLogin onLogin={() => navigate('admin-orders')} />
 
     return (
       <AdminLayout navigate={navigate} onLogout={handleLogout}>
