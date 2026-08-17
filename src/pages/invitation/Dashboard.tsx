@@ -1,7 +1,9 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 
-const INVITATIONS = [
+// Mock Data for Invitations (will be replaced by real DB query later)
+const MOCK_INVITATIONS = [
   {
     id: 1,
     couple: 'Al Yafi & Yova',
@@ -12,20 +14,8 @@ const INVITATIONS = [
     edited: '2 jam lalu',
     views: 1247,
     rsvp: 118,
-    url: 'nikahku.id/i/yafi-yova',
-  },
-  {
-    id: 2,
-    couple: 'Rizky & Fatimah',
-    template: 'Azzahra',
-    templateImg: 'photo-1521129866021-4313ccf20e9e',
-    status: 'draft',
-    date: '14 Mar 2027',
-    edited: '3 hari lalu',
-    views: 0,
-    rsvp: 0,
-    url: '',
-  },
+    url: 'yova.id/i/yafi-yova',
+  }
 ]
 
 const STATUS_MAP = {
@@ -35,186 +25,314 @@ const STATUS_MAP = {
 }
 
 const SIDEBAR = [
-  { icon: '⊞', label: 'Undangan Saya', path: '/dashboard', active: true },
-  { icon: '＋', label: 'Buat Baru', path: '/templates' },
-  { icon: '⚙', label: 'Pengaturan Akun', path: '/dashboard' },
-  { icon: '💳', label: 'Billing', path: '/dashboard' },
-  { icon: '?', label: 'Bantuan', path: '/dashboard' },
+  { icon: '🏠', label: 'Ringkasan', path: '/dashboard', id: 'overview' },
+  { icon: '💌', label: 'Undangan Saya', path: '/dashboard', id: 'invitations' },
+  { icon: '👗', label: 'Rental Saya', path: '/dashboard', id: 'rentals' },
+  { icon: '⚙', label: 'Pengaturan Akun', path: '/dashboard', id: 'settings' },
+  { icon: '?', label: 'Bantuan', path: '/dashboard', id: 'help' },
 ]
 
-function InvitationCard({ inv, onDelete }: { inv: typeof INVITATIONS[0]; onDelete: () => void }) {
+function InvitationCard({ inv, onDelete, onDuplicate }: { inv: any; onDelete: (id: string) => void; onDuplicate: (id: string) => void }) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const st = STATUS_MAP[inv.status as keyof typeof STATUS_MAP]
+  const st = STATUS_MAP[inv.status as keyof typeof STATUS_MAP] || STATUS_MAP.draft
 
   return (
-    <div className="rounded-2xl border overflow-hidden transition-all hover:shadow-md" style={{ background: '#FFFFFF', borderColor: '#E0D9CF' }}>
+    <div className="bg-white border border-nude shadow-sm transition-all hover:shadow-md overflow-hidden flex flex-col h-full">
       {/* Template thumbnail */}
-      <div className="relative h-36 overflow-hidden" style={{ background: '#F5EFE6' }}>
-        <img src={`https://images.unsplash.com/photo-${inv.templateImg}?w=600&h=200&fit=crop&auto=format`} alt="" className="w-full h-full object-cover opacity-60" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-xs text-stone-600 opacity-70 tracking-widest uppercase">The Wedding of</p>
-            <p style={{ fontFamily: 'DM Serif Display, serif', fontSize: 18, color: '#1B3A4B' }}>{inv.couple}</p>
-          </div>
+      <div className="relative h-40 overflow-hidden bg-soft">
+        {inv.thumbnail ? (
+           <img src={inv.thumbnail} alt="" className="w-full h-full object-cover" />
+        ) : (
+           <div className="w-full h-full flex items-center justify-center opacity-10">
+              <span className="text-6xl">💌</span>
+           </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-transparent" />
+        <div className="absolute bottom-4 left-4 right-4">
+           <p className="font-display text-lg text-white leading-tight mb-1 truncate">{inv.title}</p>
+           <p className="text-[8px] text-white/70 tracking-[0.15em] uppercase font-bold">{inv.template_id} v{inv.template_version}</p>
         </div>
-        <div className={`absolute top-3 left-3 text-xs px-2 py-0.5 rounded-full border ${st.color}`}>{st.label}</div>
+        <div className={`absolute top-3 left-3 text-[9px] px-2 py-0.5 font-bold uppercase border bg-white shadow-sm ${st.color}`}>{st.label}</div>
+
         {/* Menu */}
-        <div className="absolute top-2 right-2 relative">
-          <button onClick={() => setMenuOpen(!menuOpen)} className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-black/10" style={{ color: '#5C4A2A' }}>
-            ···
+        <div className="absolute top-2 right-2">
+          <button onClick={() => setMenuOpen(!menuOpen)} className="w-8 h-8 flex items-center justify-center bg-white/90 backdrop-blur shadow-sm text-charcoal hover:bg-white transition-colors" style={{ borderRadius: '2px' }}>
+            •••
           </button>
           {menuOpen && (
-            <div className="absolute right-0 top-8 z-20 rounded-xl shadow-lg border overflow-hidden w-40" style={{ background: '#FFFFFF', borderColor: '#E0D9CF' }}>
-              {['Edit', 'Preview', 'Duplikat', 'Analitik'].map(a => (
-                <button key={a} className="w-full text-left px-4 py-2.5 text-xs text-stone-600 hover:bg-stone-50 transition-colors">{a}</button>
-              ))}
-              <button onClick={onDelete} className="w-full text-left px-4 py-2.5 text-xs text-red-500 hover:bg-red-50 transition-colors border-t" style={{ borderColor: '#F5F5F5' }}>Hapus</button>
+            <div className="absolute right-0 top-9 z-20 bg-white border border-nude shadow-xl py-2 w-48 animate-in fade-in slide-in-from-top-2 duration-200">
+              <Link to={`/invitation/builder?id=${inv.id}`} className="w-full text-left px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-muted hover:bg-ivory hover:text-charcoal flex items-center gap-2"><span>✎</span> Edit</Link>
+              <Link to={`/i/${inv.slug}`} target="_blank" className="w-full text-left px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-muted hover:bg-ivory hover:text-charcoal flex items-center gap-2"><span>👁</span> Preview Publik</Link>
+              <button onClick={() => onDuplicate(inv.id)} className="w-full text-left px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-muted hover:bg-ivory hover:text-charcoal flex items-center gap-2"><span>❏</span> Duplikat</button>
+              <div className="h-px bg-nude my-2" />
+              <button onClick={() => onDelete(inv.id)} className="w-full text-left px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-red-500 hover:bg-red-50 flex items-center gap-2"><span>✕</span> Hapus</button>
             </div>
           )}
         </div>
       </div>
+
       {/* Info */}
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <h3 className="font-semibold text-stone-800 text-sm">{inv.couple}</h3>
-            <p className="text-stone-400 text-xs mt-0.5">Template {inv.template} · {inv.date}</p>
+      <div className="p-5 flex-1 flex flex-col justify-between">
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="text-center p-2 bg-ivory border border-nude">
+            <div className="font-bold text-charcoal text-xs">{inv.views || 0}</div>
+            <div className="text-muted text-[8px] uppercase tracking-tighter mt-0.5 font-bold">Views</div>
+          </div>
+          <div className="text-center p-2 bg-ivory border border-nude">
+            <div className="font-bold text-charcoal text-xs">{inv.rsvp_count || 0}</div>
+            <div className="text-muted text-[8px] uppercase tracking-tighter mt-0.5 font-bold">RSVP</div>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {[['views', inv.views.toLocaleString(), 'Dilihat'], ['rsvp', inv.rsvp.toString(), 'RSVP'], ['edited', inv.edited, 'Diedit']].map(([key, val, label]) => (
-            <div key={key} className="text-center p-2 rounded-lg" style={{ background: '#F5EFE6' }}>
-              <div className="font-semibold text-stone-700 text-sm">{val}</div>
-              <div className="text-stone-400 text-[10px] mt-0.5">{label}</div>
-            </div>
-          ))}
+
+        <div className="flex gap-2">
+          <Link to={`/invitation/builder?id=${inv.id}`} className="flex-1 py-2.5 bg-charcoal text-ivory text-[9px] font-bold uppercase tracking-widest text-center hover:bg-black transition-colors">Kelola Konten</Link>
+          <button
+            onClick={() => navigator.clipboard.writeText(`yova.id/i/${inv.slug}`)}
+            className="px-4 py-2.5 border border-nude text-charcoal text-[9px] font-bold uppercase tracking-widest hover:bg-ivory transition-colors"
+          >
+             Salin Link
+          </button>
         </div>
-        {inv.status === 'published' ? (
-          <div className="flex gap-2">
-            <Link to="/builder" className="flex-1 py-2 rounded-lg text-xs font-medium text-center border transition-colors hover:bg-stone-50" style={{ borderColor: '#E0D9CF', color: '#5C4A2A' }}>Edit</Link>
-            <button className="flex-1 py-2 rounded-lg text-xs font-medium transition-colors" style={{ background: '#1B3A4B', color: '#FAF8F4' }}>
-              Salin Tautan
-            </button>
-          </div>
-        ) : (
-          <div className="flex gap-2">
-            <Link to="/builder" className="flex-1 py-2 rounded-lg text-xs font-medium text-center border transition-colors hover:bg-stone-50" style={{ borderColor: '#E0D9CF', color: '#5C4A2A' }}>Edit</Link>
-            <Link to="/publish" className="flex-1 py-2 rounded-lg text-xs font-medium text-center transition-colors" style={{ background: '#C9A84C', color: '#1B3A4B' }}>Publikasikan</Link>
-          </div>
-        )}
       </div>
     </div>
   )
 }
 
 export default function Dashboard() {
-  const [invitations, setInvitations] = useState(INVITATIONS)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState('overview')
+  const [invitations, setInvitations] = useState<any[]>([])
+  const [rentals, setRentals] = useState<any[]>([])
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true)
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+
+      if (user) {
+        // Fetch real invitations
+        const { data: invData } = await supabase
+          .from('invitations')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+
+        if (invData) setInvitations(invData)
+
+        // Fetch rentals
+        const { data: rentalData } = await supabase
+          .from('rentals')
+          .select('*')
+          .or(`whatsapp.eq.${user.email},customer_name.ilike.%${user.user_metadata?.full_name}%`)
+
+        if (rentalData) setRentals(rentalData)
+      }
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Hapus undangan ini selamanya?')) {
+      const { error } = await supabase.from('invitations').delete().eq('id', id)
+      if (!error) setInvitations(prev => prev.filter(i => i.id !== id))
+    }
+  }
+
+  const handleDuplicate = async (id: string) => {
+    const source = invitations.find(i => i.id === id)
+    if (!source) return
+
+    const { data, error } = await supabase.from('invitations').insert([{
+      ...source,
+      id: undefined,
+      slug: `${source.slug}-copy-${Math.floor(Math.random() * 1000)}`,
+      title: `${source.title} (Copy)`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }]).select()
+
+    if (!error && data) setInvitations(prev => [data[0], ...prev])
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    navigate('/')
+  }
+
+  if (loading) return (
+    <div className="min-h-screen bg-ivory flex flex-col items-center justify-center p-10">
+       <div className="w-10 h-10 border-2 border-mocha/20 border-t-mocha rounded-full animate-spin mb-4" />
+       <p className="text-[10px] font-bold uppercase tracking-widest text-muted">Memuat Dashboard...</p>
+    </div>
+  )
 
   return (
-    <div className="min-h-screen flex" style={{ background: '#FAF8F4', fontFamily: 'Outfit, sans-serif' }}>
+    <div className="min-h-screen bg-ivory font-sans flex">
       {/* Sidebar */}
-      <aside className={`fixed lg:relative inset-y-0 left-0 z-40 flex flex-col w-60 transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`} style={{ background: '#FFFFFF', borderRight: '1px solid #E0D9CF' }}>
-        <div className="p-5 flex items-center gap-2.5" style={{ borderBottom: '1px solid #E0D9CF' }}>
-          <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
-            <polygon points="14,1 27,7.5 27,20.5 14,27 1,20.5 1,7.5" fill="#1B3A4B" />
-            <circle cx="14" cy="14" r="2.5" fill="#C9A84C" />
-          </svg>
-          <span style={{ fontFamily: 'DM Serif Display, serif', fontSize: 16, color: '#1B3A4B' }}>Nikahku</span>
+      <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-nude">
+        <div className="h-16 flex items-center px-8 border-b border-nude">
+          <div className="font-display text-xl tracking-wide text-charcoal">YOVA</div>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-6 space-y-2">
           {SIDEBAR.map(item => (
-            <Link
+            <button
               key={item.label}
-              to={item.path}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${item.active ? 'font-medium' : 'text-stone-500 hover:bg-stone-50 hover:text-stone-700'}`}
-              style={item.active ? { background: '#F5EFE6', color: '#1B3A4B' } : {}}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center gap-4 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all ${
+                activeTab === item.id ? 'bg-mocha text-ivory shadow-lg' : 'text-muted hover:bg-ivory hover:text-charcoal'
+              }`}
+              style={{ borderRadius: '2px' }}
             >
               <span className="text-base">{item.icon}</span>
               {item.label}
-            </Link>
+            </button>
           ))}
         </nav>
-        <div className="p-4" style={{ borderTop: '1px solid #E0D9CF' }}>
-          <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#F5EFE6' }}>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium" style={{ background: '#1B3A4B', color: '#C9A84C' }}>A</div>
+        <div className="p-6 border-t border-nude">
+          <div className="flex items-center gap-3 p-4 bg-ivory">
+            <div className="w-8 h-8 bg-mocha text-ivory flex items-center justify-center text-xs font-bold shadow-md">
+              {user?.user_metadata?.full_name?.[0] || user?.email?.[0] || 'U'}
+            </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-stone-700 truncate">Al Yafi</div>
-              <div className="text-xs text-stone-400 truncate">alyafi@email.com</div>
+              <div className="text-[10px] font-bold text-charcoal truncate uppercase tracking-wider">{user?.user_metadata?.full_name || 'User'}</div>
+              <button onClick={handleLogout} className="text-[8px] font-bold text-muted hover:text-mocha uppercase tracking-widest mt-0.5">Keluar Akun</button>
             </div>
           </div>
         </div>
       </aside>
 
-      {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
-
-      {/* Main */}
-      <main className="flex-1 overflow-auto">
-        {/* Topbar */}
-        <header className="sticky top-0 z-20 flex items-center justify-between px-6 py-4" style={{ background: 'rgba(250,248,244,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(201,168,76,0.15)' }}>
-          <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-1.5 rounded-lg hover:bg-stone-100">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="#5C4A2A" strokeWidth="1.5" strokeLinecap="round" /></svg>
-            </button>
-            <h1 className="font-semibold text-stone-800">Undangan Saya</h1>
-          </div>
-          <Link to="/templates" className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all" style={{ background: '#1B3A4B', color: '#FAF8F4' }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-            Buat Undangan
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col min-w-0 bg-[#f9f7f2]">
+        <header className="h-16 bg-white border-b border-nude flex items-center justify-between px-8 sticky top-0 z-10">
+          <h1 className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted">Dashboard Saya</h1>
+          <Link to="/invitation/templates" className="px-5 py-2 bg-mocha text-ivory text-[9px] font-bold uppercase tracking-widest hover:bg-mocha-dark transition-all shadow-md active:translate-y-px" style={{ borderRadius: '2px' }}>
+            + Buat Undangan
           </Link>
         </header>
 
-        <div className="p-6">
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {[
-              { label: 'Total Undangan', value: '2', icon: '📋' },
-              { label: 'Total Dilihat', value: '1,247', icon: '👁' },
-              { label: 'Total RSVP', value: '118', icon: '✉️' },
-              { label: 'Tamu Hadir', value: '98', icon: '✓' },
-            ].map(s => (
-              <div key={s.label} className="p-4 rounded-2xl border" style={{ background: '#FFFFFF', borderColor: '#E0D9CF' }}>
-                <div className="text-2xl mb-2">{s.icon}</div>
-                <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: 24, color: '#1B3A4B' }}>{s.value}</div>
-                <div className="text-stone-400 text-xs mt-0.5">{s.label}</div>
-              </div>
-            ))}
-          </div>
+        <div className="p-8 max-w-7xl w-full mx-auto space-y-12">
+          {activeTab === 'overview' && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+               {/* Welcome section */}
+               <div className="mb-12">
+                 <h2 className="font-display text-4xl text-charcoal mb-3">Halo, {user?.user_metadata?.full_name?.split(' ')[0] || 'Pengantin'}!</h2>
+                 <p className="text-muted text-sm leading-relaxed max-w-xl">
+                   Pantau statistik undangan dan status sewa baju akad Anda dalam satu dashboard terpadu.
+                 </p>
+               </div>
 
-          {/* Quick links */}
-          <div className="grid md:grid-cols-3 gap-3 mb-8">
-            {[
-              { label: 'Dashboard RSVP', desc: 'Lihat konfirmasi kehadiran', icon: '📊', path: '/rsvp-dashboard', color: '#1B3A4B' },
-              { label: 'Manajemen Tamu', desc: 'Kelola daftar tamu', icon: '👥', path: '/dashboard', color: '#5C4A2A' },
-              { label: 'Pengaturan Undangan', desc: 'Edit info & tema', icon: '✏️', path: '/builder', color: '#6B4C3E' },
-            ].map(q => (
-              <Link key={q.label} to={q.path} className="flex items-center gap-4 p-4 rounded-2xl border transition-all hover:shadow-sm hover:-translate-y-px" style={{ background: '#FFFFFF', borderColor: '#E0D9CF' }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style={{ background: '#F5EFE6' }}>{q.icon}</div>
-                <div>
-                  <div className="font-medium text-stone-800 text-sm">{q.label}</div>
-                  <div className="text-stone-400 text-xs">{q.desc}</div>
-                </div>
-              </Link>
-            ))}
-          </div>
+               {/* Stats Summary */}
+               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                 {[
+                   { label: 'Rental Aktif', value: rentals.length, icon: '👗' },
+                   { label: 'Undangan Digital', value: invitations.length, icon: '💌' },
+                   { label: 'Total RSVP', value: invitations.reduce((acc, i) => acc + (i.rsvp_count || 0), 0), icon: '👥' },
+                   { label: 'Total Views', value: invitations.reduce((acc, i) => acc + (i.views || 0), 0), icon: '👁' },
+                 ].map(s => (
+                   <div key={s.label} className="bg-white p-6 border border-nude shadow-sm hover:shadow-md transition-shadow">
+                     <div className="text-2xl mb-4">{s.icon}</div>
+                     <div className="font-display text-3xl text-charcoal mb-1">{s.value}</div>
+                     <div className="text-muted text-[9px] uppercase tracking-widest font-bold">{s.label}</div>
+                   </div>
+                 ))}
+               </div>
 
-          {/* Invitations grid */}
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {invitations.map(inv => (
-              <InvitationCard key={inv.id} inv={inv} onDelete={() => setInvitations(prev => prev.filter(i => i.id !== inv.id))} />
-            ))}
+               {/* Main Sections Grid */}
+               <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-12">
+                 {/* Left: Invitations */}
+                 <div className="space-y-8">
+                   <div className="flex items-end justify-between border-b border-nude pb-4">
+                     <h3 className="text-[10px] font-bold uppercase tracking-[0.25em] text-charcoal">Undangan Digital Terbaru</h3>
+                     <button onClick={() => setActiveTab('invitations')} className="text-[9px] font-bold text-mocha hover:underline uppercase tracking-widest">Semua Undangan →</button>
+                   </div>
 
-            {/* Create new CTA */}
-            <Link to="/templates" className="rounded-2xl border-2 border-dashed flex flex-col items-center justify-center p-8 gap-3 transition-all hover:border-amber-300 hover:bg-amber-50/30 group min-h-64" style={{ borderColor: '#E0D9CF' }}>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center transition-colors group-hover:bg-amber-100" style={{ background: '#F5EFE6' }}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M3 10h14" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" /></svg>
-              </div>
-              <div className="text-center">
-                <div className="font-medium text-stone-600 text-sm group-hover:text-stone-800 transition-colors">Buat Undangan Baru</div>
-                <div className="text-stone-400 text-xs mt-1">Pilih template & mulai kustomisasi</div>
-              </div>
-            </Link>
-          </div>
+                   <div className="grid sm:grid-cols-2 gap-6">
+                     {invitations.slice(0, 3).map(inv => (
+                       <InvitationCard key={inv.id} inv={inv} onDelete={handleDelete} onDuplicate={handleDuplicate} />
+                     ))}
+
+                     <Link to="/invitation/templates" className="bg-cream/20 border-2 border-dashed border-nude flex flex-col items-center justify-center p-8 gap-4 group hover:border-mocha transition-all min-h-[320px]">
+                       <div className="w-12 h-12 bg-ivory border border-nude flex items-center justify-center text-xl group-hover:bg-mocha group-hover:text-ivory transition-colors shadow-sm">+</div>
+                       <div className="text-center">
+                         <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal">Buat Undangan Baru</p>
+                         <p className="text-muted text-[8px] uppercase tracking-tighter mt-1 font-bold">Pilih template premium</p>
+                       </div>
+                     </Link>
+                   </div>
+                 </div>
+
+                 {/* Right: Rentals */}
+                 <div className="space-y-8">
+                   <div className="flex items-end justify-between border-b border-nude pb-4">
+                     <h3 className="text-[10px] font-bold uppercase tracking-[0.25em] text-charcoal">Rental Baju Akad</h3>
+                     <Link to="/check-rental" className="text-[9px] font-bold text-mocha hover:underline uppercase tracking-widest">Cek Manual →</Link>
+                   </div>
+
+                   <div className="space-y-6">
+                     {rentals.length > 0 ? (
+                       rentals.map(rental => (
+                         <div key={rental.id} className="bg-white border border-nude p-6 shadow-sm">
+                            <div className="flex justify-between items-start mb-4">
+                              <span className="font-mono text-xs font-bold text-charcoal">{rental.booking_id}</span>
+                              <span className="text-[8px] px-2 py-0.5 bg-emerald-50 text-emerald-600 font-bold uppercase rounded">{rental.status}</span>
+                            </div>
+                            <p className="text-sm font-display text-charcoal mb-1">{rental.dress_code}</p>
+                            <p className="text-[10px] text-muted uppercase tracking-widest mb-4">{rental.event_date}</p>
+                            <Link to="/check-rental" className="text-[9px] font-bold text-mocha uppercase tracking-widest hover:underline">Detail Status →</Link>
+                         </div>
+                       ))
+                     ) : (
+                       <div className="bg-cream/20 border border-dashed border-nude p-10 text-center">
+                         <p className="text-[9px] font-bold uppercase tracking-widest text-muted mb-6 leading-relaxed">Belum ada pesanan rental yang terhubung.</p>
+                         <Link to="/collection" className="inline-block px-8 py-3 bg-mocha text-ivory text-[9px] font-bold uppercase tracking-widest hover:bg-mocha-dark transition-all shadow-md">Lihat Koleksi</Link>
+                       </div>
+                     )}
+                   </div>
+                 </div>
+               </div>
+            </div>
+          )}
+
+          {activeTab === 'invitations' && (
+            <div className="animate-in fade-in duration-500 space-y-10">
+               <div className="flex items-center justify-between border-b border-nude pb-6">
+                 <div>
+                   <h2 className="font-display text-3xl text-charcoal mb-1">Daftar Undangan</h2>
+                   <p className="text-xs text-muted">Kelola seluruh undangan digital Anda</p>
+                 </div>
+                 <div className="flex gap-3">
+                   <select className="px-4 py-2 border border-nude bg-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-mocha">
+                     <option>Semua Status</option>
+                     <option>Draft</option>
+                     <option>Published</option>
+                   </select>
+                 </div>
+               </div>
+
+               {invitations.length > 0 ? (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {invitations.map(inv => (
+                       <InvitationCard key={inv.id} inv={inv} onDelete={handleDelete} onDuplicate={handleDuplicate} />
+                    ))}
+                    <Link to="/invitation/templates" className="bg-white border-2 border-dashed border-nude flex flex-col items-center justify-center p-8 gap-4 group hover:border-mocha transition-all h-[360px]">
+                      <div className="w-12 h-12 bg-ivory border border-nude flex items-center justify-center text-xl group-hover:bg-mocha group-hover:text-ivory transition-colors shadow-sm">+</div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal">Undangan Baru</p>
+                    </Link>
+                 </div>
+               ) : (
+                 <div className="py-32 text-center bg-white border border-dashed border-nude rounded-sm">
+                    <span className="text-5xl block mb-6 opacity-20">💌</span>
+                    <h3 className="font-display text-2xl text-charcoal mb-2">Belum ada undangan</h3>
+                    <p className="text-muted text-sm mb-10 max-w-xs mx-auto">Mulai hari bahagia Anda dengan membuat undangan digital pertama Anda di YOVA.</p>
+                    <Link to="/invitation/templates" className="px-10 py-4 bg-mocha text-ivory text-[10px] font-bold uppercase tracking-[0.2em] shadow-xl hover:bg-mocha-dark transition-all">Pilih Template</Link>
+                 </div>
+               )}
+            </div>
+          )}
         </div>
       </main>
     </div>

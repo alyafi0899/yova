@@ -43,7 +43,7 @@ const NAV_ITEMS = [
   { label: 'Kontak', path: '/contact' },
 ]
 
-function Navbar({ transparent }: { transparent: boolean }) {
+function Navbar({ transparent, session }: { transparent: boolean; session: any }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
@@ -54,6 +54,11 @@ function Navbar({ transparent }: { transparent: boolean }) {
     navigate(path)
     setMenuOpen(false)
     window.scrollTo(0, 0)
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    navigate('/')
   }
 
   return (
@@ -95,17 +100,41 @@ function Navbar({ transparent }: { transparent: boolean }) {
         </div>
 
         {/* Desktop CTA */}
-        <button
-          onClick={() => handleNav('/fitting')}
-          className={`hidden md:block px-5 py-2 text-sm font-medium tracking-wide transition-colors ${
-            transparent && !menuOpen
-              ? 'bg-white/15 text-white border border-white/30 hover:bg-white/25'
-              : 'bg-mocha text-ivory hover:bg-mocha-dark'
-          }`}
-          style={{ borderRadius: '2px' }}
-        >
-          Jadwalkan Fitting
-        </button>
+        <div className="hidden md:flex items-center gap-4">
+          {session ? (
+            <>
+              <button
+                onClick={() => handleNav('/dashboard')}
+                className={`px-5 py-2 text-sm font-medium tracking-wide transition-colors ${
+                  transparent && !menuOpen
+                    ? 'bg-white/15 text-white border border-white/30 hover:bg-white/25'
+                    : 'bg-mocha text-ivory hover:bg-mocha-dark'
+                }`}
+                style={{ borderRadius: '2px' }}
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={handleLogout}
+                className={`text-sm font-medium transition-colors ${transparent && !menuOpen ? 'text-white/70 hover:text-white' : 'text-muted hover:text-charcoal'}`}
+              >
+                Keluar
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => handleNav('/fitting')}
+              className={`px-5 py-2 text-sm font-medium tracking-wide transition-colors ${
+                transparent && !menuOpen
+                  ? 'bg-white/15 text-white border border-white/30 hover:bg-white/25'
+                  : 'bg-mocha text-ivory hover:bg-mocha-dark'
+              }`}
+              style={{ borderRadius: '2px' }}
+            >
+              Jadwalkan Fitting
+            </button>
+          )}
+        </div>
 
         {/* Mobile Toggle */}
         <button className={`md:hidden p-2 ${transparent && !menuOpen ? 'text-white' : 'text-charcoal'}`} onClick={() => setMenuOpen(!menuOpen)}>
@@ -126,7 +155,14 @@ function Navbar({ transparent }: { transparent: boolean }) {
             </button>
           ))}
           <button onClick={() => handleNav('/invitation')} className="text-left text-sm font-bold text-amber-700 py-1">Undangan Digital ✨</button>
-          <button onClick={() => handleNav('/fitting')} className="mt-2 py-3 bg-mocha text-ivory text-sm font-medium tracking-wide">Jadwalkan Fitting</button>
+          {session ? (
+            <>
+              <button onClick={() => handleNav('/dashboard')} className="mt-2 py-3 bg-mocha text-ivory text-sm font-medium tracking-wide">Dashboard Saya</button>
+              <button onClick={handleLogout} className="text-left text-sm font-medium text-muted py-1">Keluar Akun</button>
+            </>
+          ) : (
+            <button onClick={() => handleNav('/fitting')} className="mt-2 py-3 bg-mocha text-ivory text-sm font-medium tracking-wide">Jadwalkan Fitting</button>
+          )}
         </div>
       )}
     </nav>
@@ -167,11 +203,19 @@ function Footer() {
 function MainLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const [scrolled, setScrolled] = useState(false)
+  const [session, setSession] = useState<any>(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 48)
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session))
+
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      subscription.unsubscribe()
+    }
   }, [])
 
   const isHome = location.pathname === '/'
@@ -179,11 +223,26 @@ function MainLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-ivory">
-      <Navbar transparent={transparent} />
+      <Navbar transparent={transparent} session={session} />
       <div className={isHome ? 'pt-0' : 'pt-16'}>{children}</div>
       <Footer />
     </div>
   )
+}
+
+function UserProtectedRoute({ children }: { children: React.ReactNode }) {
+  const [session, setSession] = useState<any>(undefined)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session))
+    return () => subscription.unsubscribe()
+  }, [])
+
+  if (session === undefined) return <div className="min-h-screen flex items-center justify-center bg-ivory text-muted italic">Mengecek Sesi...</div>
+  if (!session) return <Navigate to="/invitation/auth" replace />
+
+  return <>{children}</>
 }
 
 function AdminProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -221,10 +280,20 @@ export default function App() {
         <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
 
         {/* Invitation Public Routes */}
-        <Route path="/invitation" element={<InvitationLanding />} />
-        <Route path="/invitation/templates" element={<InvitationTemplates />} />
+        <Route path="/invitation" element={<MainLayout><InvitationLanding /></MainLayout>} />
+        <Route path="/invitation/templates" element={<MainLayout><InvitationTemplates /></MainLayout>} />
         <Route path="/invitation/auth" element={<InvitationAuth />} />
-        <Route path="/invitation/dashboard" element={<InvitationDashboard />} />
+
+        {/* Unified Dashboard */}
+        <Route path="/dashboard" element={
+          <UserProtectedRoute>
+            <MainLayout>
+              <InvitationDashboard />
+            </MainLayout>
+          </UserProtectedRoute>
+        } />
+
+        <Route path="/invitation/dashboard" element={<Navigate to="/dashboard" replace />} />
         <Route path="/invitation/builder" element={<InvitationBuilder />} />
         <Route path="/invitation/publish" element={<InvitationPublish />} />
         <Route path="/invitation/rsvp-dashboard" element={<InvitationRSVP />} />

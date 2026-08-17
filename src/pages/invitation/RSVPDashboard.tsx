@@ -1,50 +1,67 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-
-const GUESTS = [
-  { id: 1, name: 'Ahmad Fauzan', phone: '081234567890', guests: 2, status: 'hadir', wish: 'Baarakallahu laka wa baaraka alaika. Semoga menjadi keluarga sakinah mawaddah warahmah.', rsvpTime: '2 jam lalu' },
-  { id: 2, name: 'Siti Rahma Dewi', phone: '082345678901', guests: 1, status: 'hadir', wish: 'Selamat menempuh hidup baru! Semoga bahagia selalu.', rsvpTime: '4 jam lalu' },
-  { id: 3, name: 'Budi Santoso', phone: '083456789012', guests: 3, status: 'tidak-hadir', wish: 'Mohon maaf tidak bisa hadir. Semoga diberkahi pernikahannya.', rsvpTime: '5 jam lalu' },
-  { id: 4, name: 'Dewi Rahayu', phone: '084567890123', guests: 2, status: 'hadir', wish: '', rsvpTime: '1 hari lalu' },
-  { id: 5, name: 'Rizky Pratama', phone: '085678901234', guests: 4, status: 'hadir', wish: 'MasyaAllah, semoga menjadi pasangan yang penuh berkah.', rsvpTime: '1 hari lalu' },
-  { id: 6, name: 'Nurul Aini', phone: '086789012345', guests: 1, status: 'pending', wish: '', rsvpTime: '' },
-  { id: 7, name: 'Fajar Hidayat', phone: '087890123456', guests: 2, status: 'hadir', wish: 'Selamat ya! Semoga langgeng.', rsvpTime: '2 hari lalu' },
-  { id: 8, name: 'Indah Permata', phone: '088901234567', guests: 3, status: 'hadir', wish: 'Barakallah! Semoga menjadi keluarga yang bahagia dunia akhirat.', rsvpTime: '2 hari lalu' },
-  { id: 9, name: 'Hasan Abdullah', phone: '089012345678', guests: 5, status: 'tidak-hadir', wish: '', rsvpTime: '3 hari lalu' },
-  { id: 10, name: 'Laila Fitriani', phone: '081123456789', guests: 2, status: 'pending', wish: '', rsvpTime: '' },
-]
-
-const CHART_DATA = [
-  { day: 'Sen', hadir: 12, tidak: 2 },
-  { day: 'Sel', hadir: 18, tidak: 3 },
-  { day: 'Rab', hadir: 25, tidak: 5 },
-  { day: 'Kam', hadir: 22, tidak: 4 },
-  { day: 'Jum', hadir: 30, tidak: 6 },
-  { day: 'Sab', hadir: 8, tidak: 1 },
-  { day: 'Min', hadir: 3, tidak: 1 },
-]
-
-const maxVal = Math.max(...CHART_DATA.map(d => d.hadir + d.tidak))
+import { useState, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 
 export default function RSVPDashboard() {
+  const [searchParams] = useSearchParams()
+  const invitationId = searchParams.get('id')
+
   const [tab, setTab] = useState<'list' | 'wishes'>('list')
   const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [invitation, setInvitation] = useState<any>(null)
+  const [guests, setGuests] = useState<any[]>([])
+  const [wishes, setWishes] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const stats = {
-    total: GUESTS.length,
-    hadir: GUESTS.filter(g => g.status === 'hadir').reduce((sum, g) => sum + g.guests, 0),
-    tidakHadir: GUESTS.filter(g => g.status === 'tidak-hadir').length,
-    pending: GUESTS.filter(g => g.status === 'pending').length,
+  useEffect(() => {
+    if (invitationId) {
+      fetchData()
+    }
+  }, [invitationId])
+
+  async function fetchData() {
+    setLoading(true)
+    try {
+      const { data: inv } = await supabase.from('invitations').select('*').eq('id', invitationId).single()
+      setInvitation(inv)
+
+      const { data: rsvpData } = await supabase
+        .from('rsvp')
+        .select('*')
+        .eq('invitation_id', invitationId)
+        .order('created_at', { ascending: false })
+
+      if (rsvpData) setGuests(rsvpData)
+
+      const { data: wishData } = await supabase
+        .from('guest_wishes')
+        .select('*')
+        .eq('invitation_id', invitationId)
+        .order('created_at', { ascending: false })
+
+      if (wishData) setWishes(wishData)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const filtered = GUESTS.filter(g => {
-    const matchStatus = statusFilter === 'all' || g.status === statusFilter
-    const matchSearch = !search || g.name.toLowerCase().includes(search.toLowerCase())
+  const stats = {
+    total: guests.length,
+    hadir: guests.filter(g => g.attendance === 'present').reduce((sum, g) => sum + (g.guest_count || 1), 0),
+    tidakHadir: guests.filter(g => g.attendance === 'absent').length,
+    totalGuests: guests.reduce((sum, g) => sum + (g.guest_count || 1), 0),
+  }
+
+  const filtered = guests.filter(g => {
+    const matchStatus = statusFilter === 'all' ||
+      (statusFilter === 'hadir' && g.attendance === 'present') ||
+      (statusFilter === 'tidak-hadir' && g.attendance === 'absent')
+    const matchSearch = !search || (g.guest_name || '').toLowerCase().includes(search.toLowerCase())
     return matchStatus && matchSearch
   })
-
-  const wishes = GUESTS.filter(g => g.wish)
 
   return (
     <div className="min-h-screen" style={{ background: '#FAF8F4', fontFamily: 'Outfit, sans-serif' }}>
@@ -69,43 +86,54 @@ export default function RSVPDashboard() {
       </header>
 
       <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Invitation badge */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="flex items-center gap-3 p-3 rounded-xl border" style={{ background: '#FFFFFF', borderColor: '#E0D9CF' }}>
-            <div className="w-10 h-10 rounded-lg overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1625038032128-54ed70feb167?w=40&h=40&fit=crop&auto=format" alt="" className="w-full h-full object-cover opacity-70" />
-            </div>
-            <div>
-              <div className="font-semibold text-stone-800 text-sm">Al Yafi &amp; Yova</div>
-              <div className="flex items-center gap-2 text-xs text-stone-400">
-                <span>Template Noura</span>
-                <span className="w-1 h-1 rounded-full bg-stone-300" />
-                <span>10 Jan 2027</span>
-                <span className="px-1.5 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">Live</span>
-              </div>
-            </div>
+        {loading ? (
+          <div className="py-32 text-center">
+             <div className="w-10 h-10 border-2 border-mocha/20 border-t-mocha rounded-full animate-spin mx-auto mb-4" />
+             <p className="text-[10px] font-bold uppercase tracking-widest text-muted">Memuat Data...</p>
           </div>
-          <div className="text-xs text-stone-400">nikahku.id/i/yafi-yova</div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: 'Total Diundang', value: GUESTS.length, sub: 'orang', color: '#1B3A4B', icon: '👥' },
-            { label: 'Total Tamu Hadir', value: stats.hadir, sub: 'orang', color: '#2D6A4F', icon: '✓' },
-            { label: 'Tidak Hadir', value: stats.tidakHadir, sub: 'orang', color: '#9B2B2B', icon: '✕' },
-            { label: 'Belum Konfirmasi', value: stats.pending, sub: 'orang', color: '#9B7B2A', icon: '?' },
-          ].map(s => (
-            <div key={s.label} className="p-5 rounded-2xl border" style={{ background: '#FFFFFF', borderColor: '#E0D9CF' }}>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-stone-400">{s.label}</span>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm" style={{ background: `${s.color}12` }}>{s.icon}</div>
+        ) : !invitation ? (
+          <div className="py-32 text-center bg-white border border-dashed border-nude">
+             <p className="text-muted italic">Undangan tidak ditemukan.</p>
+          </div>
+        ) : (
+          <>
+            {/* Invitation badge */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3 p-3 rounded-xl border bg-white border-nude">
+                <div className="w-10 h-10 rounded-lg overflow-hidden bg-soft">
+                  <img src={invitation.thumbnail} alt="" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <div className="font-semibold text-stone-800 text-sm">{invitation.title}</div>
+                  <div className="flex items-center gap-2 text-xs text-stone-400">
+                    <span>{invitation.template_id}</span>
+                    <span className="w-1 h-1 rounded-full bg-stone-300" />
+                    <span>{new Date(invitation.updated_at).toLocaleDateString()}</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${invitation.status === 'published' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-stone-50 text-stone-500 border border-stone-200'}`}>{invitation.status}</span>
+                  </div>
+                </div>
               </div>
-              <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: 32, color: s.color }}>{s.value}</div>
-              <div className="text-xs text-stone-400 mt-1">{s.sub}</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-muted">yova.id/i/{invitation.slug}</div>
             </div>
-          ))}
-        </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              {[
+                { label: 'Total Konfirmasi', value: stats.total, sub: 'orang', color: '#1B3A4B', icon: '👥' },
+                { label: 'Total Tamu Hadir', value: stats.hadir, sub: 'orang', color: '#2D6A4F', icon: '✓' },
+                { label: 'Tidak Hadir', value: stats.tidakHadir, sub: 'orang', color: '#9B2B2B', icon: '✕' },
+                { label: 'Total Views', value: invitation.views || 0, sub: 'kali', color: '#9B7B2A', icon: '👁' },
+              ].map(s => (
+                <div key={s.label} className="p-5 rounded-2xl border" style={{ background: '#FFFFFF', borderColor: '#E0D9CF' }}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-stone-400 font-bold uppercase tracking-widest">{s.label}</span>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm" style={{ background: `${s.color}12` }}>{s.icon}</div>
+                  </div>
+                  <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 32, color: s.color }}>{s.value}</div>
+                  <div className="text-[10px] uppercase tracking-widest text-stone-400 mt-1">{s.sub}</div>
+                </div>
+              ))}
+            </div>
 
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
           {/* Bar chart */}
@@ -208,24 +236,24 @@ export default function RSVPDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((g, i) => (
+                    {guests.map((g, i) => (
                     <tr key={g.id} className="hover:bg-stone-50/50 transition-colors" style={{ borderBottom: i < filtered.length - 1 ? '1px solid #F5F0EA' : 'none' }}>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium" style={{ background: '#F5EFE6', color: '#9B7B2A' }}>{g.name[0]}</div>
-                          <span className="font-medium text-stone-800 text-sm">{g.name}</span>
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium" style={{ background: '#F5EFE6', color: '#9B7B2A' }}>{(g.guest_name || 'U')[0]}</div>
+                          <span className="font-medium text-stone-800 text-sm">{g.guest_name}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-stone-500 text-xs font-mono">{g.phone}</td>
+                      <td className="px-5 py-4 text-stone-500 text-xs font-mono">{g.phone || '—'}</td>
                       <td className="px-5 py-4">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${g.status === 'hadir' ? 'bg-green-50 text-green-700' : g.status === 'tidak-hadir' ? 'bg-red-50 text-red-600' : 'bg-stone-100 text-stone-500'}`}>
-                          {g.status === 'hadir' ? 'InsyaAllah Hadir' : g.status === 'tidak-hadir' ? 'Tidak Hadir' : 'Belum Konfirmasi'}
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${g.attendance === 'present' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                          {g.attendance === 'present' ? 'Hadir' : 'Tidak Hadir'}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-stone-600 text-sm font-medium">{g.guests} orang</td>
-                      <td className="px-5 py-4 text-stone-400 text-xs">{g.rsvpTime || '—'}</td>
+                      <td className="px-5 py-4 text-stone-600 text-sm font-medium">{g.guest_count} orang</td>
+                      <td className="px-5 py-4 text-stone-400 text-xs">{new Date(g.created_at).toLocaleDateString()}</td>
                       <td className="px-5 py-4 text-stone-400 text-xs max-w-48">
-                        <span className="line-clamp-1">{g.wish || '—'}</span>
+                        <span className="line-clamp-1">{g.message || '—'}</span>
                       </td>
                     </tr>
                   ))}
@@ -255,6 +283,8 @@ export default function RSVPDashboard() {
             ))}
           </div>
         )}
+      </>
+    )}
       </div>
     </div>
   )

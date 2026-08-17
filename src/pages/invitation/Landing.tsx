@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 const NAV_LINKS = ['Templates', 'Fitur', 'Harga', 'Tentang']
 
@@ -71,9 +71,9 @@ function PhoneMockup() {
   return (
     <div className="relative mx-auto" style={{ width: 220 }}>
       {/* Phone frame */}
-      <div className="relative rounded-[2.5rem] border-[6px] border-gray-800 bg-gray-800 shadow-2xl overflow-hidden" style={{ height: 440 }}>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-5 bg-gray-800 rounded-b-2xl z-10" />
-        <div className="w-full h-full overflow-hidden rounded-[1.8rem]" style={{ background: 'linear-gradient(170deg, #1B3A4B 0%, #0D2233 100%)' }}>
+      <div className="relative rounded-[2.5rem] border-[6px] border-charcoal bg-charcoal shadow-2xl overflow-hidden" style={{ height: 440 }}>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-5 bg-charcoal rounded-b-2xl z-10" />
+        <div className="w-full h-full overflow-hidden rounded-[1.8rem]" style={{ background: 'linear-gradient(170deg, #1A1210 0%, #000000 100%)' }}>
           {/* Invitation content */}
           <div className="flex flex-col items-center justify-center h-full text-center px-5 relative">
             <div className="absolute inset-0 geometric-pattern opacity-20" />
@@ -110,12 +110,12 @@ export default function Landing() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   return (
-    <div className="min-h-screen" style={{ fontFamily: 'Outfit, sans-serif', background: '#FAF8F4' }}>
+    <div className="min-h-screen bg-ivory font-sans">
       {/* Reduced Hero / Introduction */}
       <section className="relative pt-32 pb-24 overflow-hidden">
         <div className="absolute inset-0 geometric-pattern opacity-10" />
         <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] tracking-widest uppercase mb-8" style={{ background: 'rgba(201,168,76,0.12)', color: '#9B7B2A', border: '1px solid rgba(201,168,76,0.25)' }}>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] tracking-widest uppercase mb-8 bg-mocha/10 text-mocha border border-mocha/20">
             <span>✦</span> Platform Undangan Digital Terintegrasi
           </div>
           <h1 className="font-display text-charcoal text-5xl md:text-6xl mb-6">
@@ -135,8 +135,8 @@ export default function Landing() {
       {/* Templates Showcase */}
       <section id="templates" className="py-24 max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
-          <p className="text-xs tracking-widest uppercase text-amber-600 mb-3">Template Pilihan</p>
-          <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', color: '#1B3A4B' }}>
+          <p className="text-[10px] tracking-[0.22em] uppercase text-mocha mb-3 font-bold">Template Pilihan</p>
+          <h2 className="font-display text-4xl md:text-5xl text-charcoal leading-tight">
             Desain yang Menawan untuk<br />Hari Istimewa Anda
           </h2>
         </div>
@@ -145,13 +145,13 @@ export default function Landing() {
             <button
               key={t.name}
               onClick={() => setActiveTemplate(i)}
-              className={`relative rounded-2xl overflow-hidden aspect-[3/4] group transition-all ${activeTemplate === i ? 'ring-2 ring-amber-400 scale-[1.02]' : 'hover:scale-[1.01]'}`}
+              className={`relative rounded-sm overflow-hidden aspect-[3/4] group transition-all ${activeTemplate === i ? 'ring-2 ring-mocha scale-[1.02]' : 'hover:scale-[1.01]'}`}
             >
               <img src={`https://images.unsplash.com/photo-${t.img}?w=300&h=400&fit=crop&auto=format`} alt={t.name} className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0 transition-opacity" style={{ background: `linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.7))` }} />
+              <div className="absolute inset-0 transition-opacity" style={{ background: `linear-gradient(to bottom, transparent 40%, rgba(26,18,16,0.8))` }} />
               <div className="absolute inset-0 p-4 flex flex-col justify-end">
-                <span className="text-white font-display text-lg">{t.name}</span>
-                <span className="text-white/60 text-xs">{t.style}</span>
+                <span className="text-ivory font-display text-lg">{t.name}</span>
+                <span className="text-ivory/60 text-[10px] uppercase tracking-wider">{t.style}</span>
               </div>
               <div className="absolute top-3 right-3 flex gap-1">
                 {t.colors.map(c => <span key={c} className="w-3 h-3 rounded-full border border-white/40" style={{ background: c }} />)}
@@ -160,19 +160,18 @@ export default function Landing() {
           ))}
         </div>
         <div className="text-center">
-          <Link to="/templates" className="inline-flex items-center gap-2 text-sm text-amber-700 hover:text-amber-900 transition-colors" style={{ fontFamily: 'Outfit, sans-serif' }}>
-            Lihat semua template
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <Link to="/invitation/templates" className="inline-flex items-center gap-2 text-[10px] text-mocha font-bold tracking-[0.25em] uppercase hover:gap-4 transition-all">
+            Lihat semua template <span>→</span>
           </Link>
         </div>
       </section>
 
       {/* How it works */}
-      <section id="fitur" className="py-24" style={{ background: '#F5EFE6' }}>
+      <section id="fitur" className="py-24 bg-cream/30">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <p className="text-xs tracking-widest uppercase text-amber-600 mb-3">Cara Kerja</p>
-            <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', color: '#1B3A4B' }}>
+            <p className="text-[10px] tracking-[0.22em] uppercase text-mocha mb-3 font-bold">Cara Kerja</p>
+            <h2 className="font-display text-4xl md:text-5xl text-charcoal leading-tight">
               Selesai dalam 4 Langkah
             </h2>
           </div>
@@ -180,14 +179,14 @@ export default function Landing() {
             {HOW_IT_WORKS.map((item, i) => (
               <div key={item.step} className="relative">
                 {i < HOW_IT_WORKS.length - 1 && (
-                  <div className="hidden md:block absolute top-6 left-3/4 w-1/2 h-px" style={{ background: 'linear-gradient(to right, rgba(201,168,76,0.4), transparent)' }} />
+                  <div className="hidden md:block absolute top-6 left-3/4 w-1/2 h-px bg-nude" />
                 )}
                 <div className="flex flex-col gap-4">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-medium" style={{ background: '#1B3A4B', color: '#C9A84C', fontFamily: 'DM Serif Display, serif', fontSize: 18 }}>
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-charcoal text-ivory font-display text-xl">
                     {item.step}
                   </div>
-                  <h3 className="font-semibold text-stone-800">{item.title}</h3>
-                  <p className="text-stone-500 text-sm leading-relaxed">{item.desc}</p>
+                  <h3 className="font-bold text-charcoal text-sm uppercase tracking-wide">{item.title}</h3>
+                  <p className="text-muted text-sm leading-relaxed">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -198,47 +197,47 @@ export default function Landing() {
       {/* Features */}
       <section className="py-24 max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
-          <p className="text-xs tracking-widest uppercase text-amber-600 mb-3">Fitur Lengkap</p>
-          <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', color: '#1B3A4B' }}>
+          <p className="text-[10px] tracking-[0.22em] uppercase text-mocha mb-3 font-bold">Fitur Lengkap</p>
+          <h2 className="font-display text-4xl md:text-5xl text-charcoal leading-tight">
             Semua yang Anda Butuhkan
           </h2>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {FEATURES.map(f => (
-            <div key={f.title} className="p-6 rounded-2xl border hover:shadow-sm transition-all group" style={{ background: '#FFFFFF', borderColor: '#E0D9CF' }}>
-              <div className="text-amber-500 text-xl mb-4">{f.icon}</div>
-              <h3 className="font-semibold text-stone-800 mb-2 group-hover:text-amber-800 transition-colors">{f.title}</h3>
-              <p className="text-stone-500 text-sm leading-relaxed">{f.desc}</p>
+            <div key={f.title} className="p-8 bg-white border border-nude hover:shadow-md transition-all group">
+              <div className="text-mocha text-2xl mb-4">{f.icon}</div>
+              <h3 className="font-bold text-charcoal text-sm uppercase tracking-wide mb-2 group-hover:text-mocha transition-colors">{f.title}</h3>
+              <p className="text-muted text-sm leading-relaxed">{f.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* RSVP Feature Showcase */}
-      <section className="py-24" style={{ background: '#1B3A4B' }}>
+      <section className="py-24 bg-charcoal">
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
           <div>
-            <p className="text-xs tracking-widest uppercase text-amber-400 mb-4">Manajemen RSVP</p>
-            <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', color: '#FAF8F4' }}>
+            <p className="text-[10px] tracking-[0.22em] uppercase text-mocha-light mb-4 font-bold">Manajemen RSVP</p>
+            <h2 className="font-display text-4xl md:text-5xl text-ivory leading-tight">
               Kelola Konfirmasi<br />Kehadiran dengan<br />Mudah
             </h2>
-            <p className="mt-6 text-white/60 leading-relaxed max-w-md">
+            <p className="mt-6 text-ivory/60 leading-relaxed max-w-md">
               Dashboard RSVP real-time menampilkan data kehadiran tamu, ucapan, dan statistik lengkap. Export ke Excel untuk memudahkan koordinasi dengan katering dan venue.
             </p>
             <div className="mt-8 grid grid-cols-3 gap-4">
               {[['142', 'Total Tamu'], ['118', 'Hadir'], ['24', 'Tidak Hadir']].map(([val, label]) => (
-                <div key={label} className="p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: 28, color: '#C9A84C' }}>{val}</div>
-                  <div className="text-white/40 text-xs mt-1">{label}</div>
+                <div key={label} className="p-4 bg-white/5 border border-white/10">
+                  <div className="font-display text-3xl text-mocha-light">{val}</div>
+                  <div className="text-ivory/40 text-[9px] uppercase tracking-widest mt-1 font-bold">{label}</div>
                 </div>
               ))}
             </div>
           </div>
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <div className="p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="bg-white/5 border border-white/10 overflow-hidden">
+            <div className="p-4 border-b border-white/10">
               <div className="flex items-center gap-2">
-                <span className="text-white/60 text-sm">Dashboard RSVP</span>
-                <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-green-400/20 text-green-400">Live</span>
+                <span className="text-ivory/60 text-[10px] font-bold uppercase tracking-widest">Dashboard RSVP</span>
+                <span className="ml-auto text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 font-bold uppercase">Live</span>
               </div>
             </div>
             <div className="p-4 space-y-3">
@@ -249,15 +248,15 @@ export default function Landing() {
                 { name: 'Dewi Rahayu', guests: 2, status: 'Hadir', time: '1h lalu' },
                 { name: 'Rizky Pratama', guests: 4, status: 'Hadir', time: '1h lalu' },
               ].map(r => (
-                <div key={r.name} className="flex items-center gap-3 py-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold" style={{ background: 'rgba(201,168,76,0.2)', color: '#C9A84C' }}>
+                <div key={r.name} className="flex items-center gap-3 py-2 border-b border-white/5">
+                  <div className="w-8 h-8 bg-mocha/20 text-mocha-light flex items-center justify-center text-xs font-bold">
                     {r.name[0]}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-white/80 text-sm truncate">{r.name}</div>
-                    <div className="text-white/30 text-xs">{r.guests} tamu · {r.time}</div>
+                    <div className="text-ivory/80 text-sm truncate">{r.name}</div>
+                    <div className="text-ivory/30 text-[10px]">{r.guests} tamu · {r.time}</div>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${r.status === 'Hadir' ? 'bg-green-400/15 text-green-400' : 'bg-red-400/15 text-red-400'}`}>
+                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase ${r.status === 'Hadir' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-red-500/15 text-red-500'}`}>
                     {r.status}
                   </span>
                 </div>
@@ -270,48 +269,48 @@ export default function Landing() {
       {/* Pricing */}
       <section id="harga" className="py-24 max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
-          <p className="text-xs tracking-widest uppercase text-amber-600 mb-3">Harga</p>
-          <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', color: '#1B3A4B' }}>
+          <p className="text-[10px] tracking-[0.22em] uppercase text-mocha mb-3 font-bold">Harga</p>
+          <h2 className="font-display text-4xl md:text-5xl text-charcoal leading-tight">
             Gratis Buat, Bayar Saat<br />Siap Dipublikasikan
           </h2>
-          <p className="mt-4 text-stone-500 max-w-lg mx-auto">Tidak ada biaya langganan. Buat dan preview undangan Anda secara gratis. Bayar sekali saat ingin dipublikasikan.</p>
+          <p className="mt-4 text-muted max-w-lg mx-auto text-sm">Tidak ada biaya langganan. Buat dan preview undangan Anda secara gratis. Bayar sekali saat ingin dipublikasikan.</p>
         </div>
-        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-          <div className="p-8 rounded-2xl border" style={{ background: '#FFFFFF', borderColor: '#E0D9CF' }}>
-            <h3 className="font-semibold text-stone-800 text-lg mb-1">Gratis</h3>
-            <p className="text-stone-400 text-sm mb-6">Buat & preview undangan</p>
-            <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: 40, color: '#1B3A4B' }}>Rp 0</div>
-            <ul className="mt-6 space-y-3">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="p-10 bg-white border border-nude shadow-sm">
+            <h3 className="font-bold text-charcoal text-sm uppercase tracking-widest mb-1">Gratis</h3>
+            <p className="text-muted text-[10px] uppercase mb-8">Buat & preview undangan</p>
+            <div className="font-display text-5xl text-charcoal mb-8">Rp 0</div>
+            <ul className="space-y-4 mb-10">
               {['Pilih template premium', 'Edit informasi pernikahan', 'Kustomisasi warna & font', 'Preview real-time', 'Simpan sebagai draft'].map(f => (
-                <li key={f} className="flex items-center gap-3 text-sm text-stone-600">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#C9A84C" strokeWidth="1.2" /><path d="M5 8l2 2 4-4" stroke="#C9A84C" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <li key={f} className="flex items-center gap-3 text-xs text-muted">
+                  <span className="text-mocha text-lg">✓</span>
                   {f}
                 </li>
               ))}
             </ul>
-            <Link to="/auth?mode=signup" className="mt-8 block text-center py-3 rounded-full text-sm font-medium transition-all border" style={{ borderColor: '#1B3A4B', color: '#1B3A4B' }}>
+            <Link to="/invitation/auth?mode=signup" className="block text-center py-4 bg-transparent border border-charcoal text-charcoal text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-charcoal hover:text-ivory transition-all">
               Mulai Gratis
             </Link>
           </div>
-          <div className="p-8 rounded-2xl relative overflow-hidden" style={{ background: '#1B3A4B' }}>
+          <div className="p-10 bg-charcoal text-ivory relative overflow-hidden shadow-2xl">
             <div className="absolute inset-0 geometric-pattern opacity-10" />
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-1">
-                <h3 className="font-semibold text-white text-lg">Publikasi</h3>
-                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(201,168,76,0.2)', color: '#C9A84C' }}>Terpopuler</span>
+                <h3 className="font-bold text-ivory text-sm uppercase tracking-widest">Publikasi</h3>
+                <span className="text-[9px] px-2 py-0.5 rounded-full bg-mocha text-ivory font-bold uppercase">Terpopuler</span>
               </div>
-              <p className="text-white/50 text-sm mb-6">Publikasikan & bagikan undangan</p>
-              <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: 40, color: '#C9A84C' }}>Rp 70.000</div>
-              <p className="text-white/40 text-xs mt-1">Bayar sekali, aktif 2 tahun</p>
-              <ul className="mt-6 space-y-3">
+              <p className="text-ivory/50 text-[10px] uppercase mb-8">Publikasikan & bagikan undangan</p>
+              <div className="font-display text-5xl text-mocha-light mb-2">Rp 70.000</div>
+              <p className="text-ivory/30 text-[9px] uppercase tracking-widest mb-8">Bayar sekali, aktif 2 tahun</p>
+              <ul className="space-y-4 mb-10">
                 {['Semua fitur gratis', 'URL undangan unik', 'RSVP management', 'Ucapan tamu', 'Undangan personal per tamu', 'Export data RSVP', 'Dukungan prioritas'].map(f => (
-                  <li key={f} className="flex items-center gap-3 text-sm text-white/80">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#C9A84C" strokeWidth="1.2" /><path d="M5 8l2 2 4-4" stroke="#C9A84C" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  <li key={f} className="flex items-center gap-3 text-xs text-ivory/80">
+                    <span className="text-mocha-light text-lg">✓</span>
                     {f}
                   </li>
                 ))}
               </ul>
-              <Link to="/auth?mode=signup" className="mt-8 block text-center py-3 rounded-full text-sm font-medium transition-all" style={{ background: '#C9A84C', color: '#1B3A4B' }}>
+              <Link to="/invitation/auth?mode=signup" className="block text-center py-4 bg-mocha text-ivory text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-mocha-dark transition-all">
                 Buat Undangan Sekarang
               </Link>
             </div>
@@ -320,27 +319,27 @@ export default function Landing() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-24" style={{ background: '#F5EFE6' }}>
+      <section className="py-24 bg-cream/30">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <p className="text-xs tracking-widest uppercase text-amber-600 mb-3">Testimoni</p>
-            <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', color: '#1B3A4B' }}>
+            <p className="text-[10px] tracking-[0.22em] uppercase text-mocha mb-3 font-bold">Testimoni</p>
+            <h2 className="font-display text-4xl md:text-5xl text-charcoal leading-tight">
               Dipercaya 2.400+ Pasangan
             </h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-8">
             {TESTIMONIALS.map(t => (
-              <div key={t.name} className="p-6 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E0D9CF' }}>
-                <div className="flex gap-1 mb-4">
-                  {[1,2,3,4,5].map(i => <span key={i} className="text-amber-400 text-sm">★</span>)}
+              <div key={t.name} className="p-8 bg-white border border-nude shadow-sm">
+                <div className="flex gap-1 mb-6">
+                  {[1,2,3,4,5].map(i => <span key={i} className="text-mocha text-sm">★</span>)}
                 </div>
-                <p className="text-stone-600 text-sm leading-relaxed mb-4 italic" style={{ fontFamily: 'Lora, serif' }}>"{t.text}"</p>
-                <div className="flex items-center justify-between">
+                <p className="text-muted text-sm leading-relaxed mb-8 italic">"{t.text}"</p>
+                <div className="flex items-center justify-between pt-6 border-t border-nude">
                   <div>
-                    <div className="font-semibold text-stone-800 text-sm">{t.name}</div>
-                    <div className="text-stone-400 text-xs">{t.city}</div>
+                    <div className="font-bold text-charcoal text-xs uppercase tracking-wide">{t.name}</div>
+                    <div className="text-muted text-[10px] uppercase tracking-widest mt-1">{t.city}</div>
                   </div>
-                  <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'rgba(201,168,76,0.1)', color: '#9B7B2A' }}>{t.template}</span>
+                  <span className="text-[9px] px-2 py-1 rounded-full bg-mocha/10 text-mocha font-bold uppercase tracking-wider">{t.template}</span>
                 </div>
               </div>
             ))}
@@ -351,25 +350,25 @@ export default function Landing() {
       {/* FAQ */}
       <section className="py-24 max-w-4xl mx-auto px-6">
         <div className="text-center mb-16">
-          <p className="text-xs tracking-widest uppercase text-amber-600 mb-3">FAQ</p>
-          <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', color: '#1B3A4B' }}>
+          <p className="text-[10px] tracking-[0.22em] uppercase text-mocha mb-3 font-bold">FAQ</p>
+          <h2 className="font-display text-4xl md:text-5xl text-charcoal leading-tight">
             Pertanyaan Umum
           </h2>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-4">
           {FAQS.map((faq, i) => (
-            <div key={i} className="rounded-xl border overflow-hidden" style={{ borderColor: '#E0D9CF' }}>
+            <div key={i} className="border border-nude overflow-hidden bg-white">
               <button
                 onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                className="w-full flex items-center justify-between p-5 text-left transition-colors hover:bg-stone-50"
+                className="w-full flex items-center justify-between p-6 text-left transition-colors hover:bg-ivory"
               >
-                <span className="font-medium text-stone-800 text-sm pr-4">{faq.q}</span>
-                <span className={`text-amber-600 flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span className="font-bold text-charcoal text-sm uppercase tracking-wide pr-4">{faq.q}</span>
+                <span className={`text-mocha flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 7.5l5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </span>
               </button>
               {openFaq === i && (
-                <div className="px-5 pb-5 text-stone-500 text-sm leading-relaxed">{faq.a}</div>
+                <div className="px-6 pb-6 text-muted text-sm leading-relaxed border-t border-nude/50 pt-4">{faq.a}</div>
               )}
             </div>
           ))}
@@ -377,20 +376,20 @@ export default function Landing() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 mx-6 mb-12 rounded-3xl overflow-hidden relative" style={{ background: '#1B3A4B' }}>
+      <section className="py-32 bg-charcoal relative overflow-hidden">
         <div className="absolute inset-0 geometric-pattern opacity-10" />
         <div className="relative z-10 text-center max-w-2xl mx-auto px-6">
-          <p className="text-xs tracking-widest uppercase text-amber-400 mb-4">Mulai Sekarang</p>
-          <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#FAF8F4', lineHeight: 1.2 }}>
+          <p className="text-[10px] tracking-[0.22em] uppercase text-mocha-light mb-6 font-bold">Mulai Sekarang</p>
+          <h2 className="font-display text-5xl md:text-6xl text-ivory mb-8 leading-[1.1]">
             Wujudkan Undangan<br />
-            <em style={{ color: '#C9A84C' }}>Impian</em> Anda
+            <em className="text-mocha-light italic">Impian</em> Anda
           </h2>
-          <p className="mt-6 text-white/60 leading-relaxed">Buat undangan pernikahan digital yang cantik, elegan, dan berkesan. Gratis untuk dicoba.</p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link to="/auth?mode=signup" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium transition-all hover:shadow-lg" style={{ background: '#C9A84C', color: '#1B3A4B' }}>
+          <p className="text-ivory/60 leading-relaxed mb-12 text-lg">Buat undangan pernikahan digital yang cantik, elegan, dan berkesan. Gratis untuk dicoba.</p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link to="/invitation/auth?mode=signup" className="px-10 py-4 bg-mocha text-ivory text-[11px] font-bold uppercase tracking-[0.2em] shadow-xl hover:bg-mocha-dark transition-all transform hover:-translate-y-1">
               Buat Undangan Gratis
             </Link>
-            <Link to="/templates" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium transition-all border" style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)' }}>
+            <Link to="/invitation/templates" className="px-10 py-4 border border-white/20 text-ivory text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-white/10 transition-all">
               Jelajahi Template
             </Link>
           </div>
@@ -398,21 +397,17 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-6 border-t" style={{ borderColor: '#E0D9CF' }}>
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5">
-            <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
-              <polygon points="14,1 27,7.5 27,20.5 14,27 1,20.5 1,7.5" fill="#1B3A4B" />
-              <polygon points="14,7 22,11 22,17 14,21 6,17 6,11" fill="none" stroke="#C9A84C" strokeWidth="0.8" />
-              <circle cx="14" cy="14" r="2.5" fill="#C9A84C" />
-            </svg>
-            <span style={{ fontFamily: 'DM Serif Display, serif', fontSize: 16, color: '#1B3A4B' }}>Nikahku</span>
+      <footer className="py-12 px-6 bg-charcoal border-t border-white/5">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex flex-col items-center md:items-start gap-2">
+            <div className="font-display text-xl tracking-wide text-ivory">YOVA</div>
+            <div className="text-[9px] tracking-[0.22em] uppercase text-ivory/30">Undangan Digital · Blangkejeren</div>
           </div>
-          <p className="text-stone-400 text-xs">© 2026 Nikahku. Platform undangan digital pernikahan Indonesia.</p>
-          <div className="flex gap-6 text-xs text-stone-400">
-            <a href="#" className="hover:text-stone-600">Privasi</a>
-            <a href="#" className="hover:text-stone-600">Syarat</a>
-            <a href="#" className="hover:text-stone-600">Kontak</a>
+          <p className="text-ivory/30 text-[10px] uppercase tracking-widest font-bold">© 2026 YOVA. Platform undangan digital pernikahan Indonesia.</p>
+          <div className="flex gap-8 text-[10px] uppercase tracking-widest font-bold text-ivory/30">
+            <a href="#" className="hover:text-mocha-light transition-colors">Privasi</a>
+            <a href="#" className="hover:text-mocha-light transition-colors">Syarat</a>
+            <a href="#" className="hover:text-mocha-light transition-colors">Kontak</a>
           </div>
         </div>
       </footer>

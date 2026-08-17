@@ -1,34 +1,59 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 import TemplateRenderer, { TEMPLATE_CONFIGS, type TemplateConfig } from '../../components/invitation/TemplateRenderer'
-
-// Mock Data
-const MOCK_USERS = [
-  { name: 'Al Yafi', email: 'alyafi@email.com', plan: 'published', invitations: 1, joined: '2 Jan 2027' },
-  { name: 'Siti Rahma', email: 'siti@email.com', plan: 'draft', invitations: 2, joined: '28 Des 2026' },
-  { name: 'Ahmad Fauzan', email: 'ahmad@email.com', plan: 'published', invitations: 1, joined: '15 Des 2026' },
-]
-
-const MOCK_TX = [
-  { id: 'TX-001', user: 'Al Yafi', amount: 49000, status: 'success', date: '10 Jan 2027', method: 'GoPay' },
-  { id: 'TX-002', user: 'Ahmad Fauzan', amount: 49000, status: 'success', date: '8 Jan 2027', method: 'BCA' },
-]
 
 // Reusable components for the integrated view
 export function InvitationOverview() {
+  const [stats, setStats] = useState({ users: 0, invitations: 0, rsvps: 0, wishes: 0 })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchStats()
+  }, [])
+
+  async function fetchStats() {
+    setLoading(true)
+    try {
+      // Mocked aggregations for now as specific SQL functions might be needed for counts
+      const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
+      const { count: invCount } = await supabase.from('invitations').select('*', { count: 'exact', head: true })
+      const { count: rsvpCount } = await supabase.from('rsvp').select('*', { count: 'exact', head: true })
+      const { count: wishCount } = await supabase.from('guest_wishes').select('*', { count: 'exact', head: true })
+
+      setStats({
+        users: userCount || 0,
+        invitations: invCount || 0,
+        rsvps: rsvpCount || 0,
+        wishes: wishCount || 0
+      })
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) return (
+    <div className="py-20 text-center">
+       <div className="w-10 h-10 border-2 border-mocha/20 border-t-mocha rounded-full animate-spin mx-auto mb-4" />
+       <p className="text-[10px] font-bold uppercase tracking-widest text-muted">Memuat Statistik...</p>
+    </div>
+  )
+
   return (
     <div className="space-y-10">
       <header>
         <h2 className="text-3xl font-display text-charcoal">Overview Undangan</h2>
-        <p className="text-sm text-muted mt-2">Performa platform undangan digital digital secara real-time</p>
+        <p className="text-sm text-muted mt-2">Performa platform undangan digital secara real-time</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Total Pengguna', value: '2,418', icon: '👥', color: 'bg-blue-50 text-blue-600' },
-          { label: 'Undangan Aktif', value: '1,847', icon: '💌', color: 'bg-emerald-50 text-emerald-600' },
-          { label: 'Pendapatan', value: 'Rp 90,5jt', icon: '💰', color: 'bg-amber-50 text-amber-600' },
-          { label: 'Konversi', value: '76.4%', icon: '📈', color: 'bg-mocha/10 text-mocha' },
+          { label: 'Total Pengguna', value: stats.users, icon: '👥', color: 'bg-blue-50 text-blue-600' },
+          { label: 'Undangan Aktif', value: stats.invitations, icon: '💌', color: 'bg-emerald-50 text-emerald-600' },
+          { label: 'Total RSVP', value: stats.rsvps, icon: '💰', color: 'bg-amber-50 text-amber-600' },
+          { label: 'Ucapan Masuk', value: stats.wishes, icon: '📈', color: 'bg-mocha/10 text-mocha' },
         ].map(stat => (
           <div key={stat.label} className="bg-white p-6 border border-nude flex justify-between items-center shadow-sm">
             <div>
@@ -185,40 +210,59 @@ function AdminTemplateEditorModal({ template, onChange, onSave, onClose }: any) 
 }
 
 export function InvitationUsersTab() {
+  const [users, setUsers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  async function fetchUsers() {
+    setLoading(true)
+    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
+    if (data) setUsers(data)
+    setLoading(false)
+  }
+
   return (
     <div className="space-y-8">
       <header>
         <h2 className="text-3xl font-display text-charcoal">Data Pengguna</h2>
         <p className="text-sm text-muted mt-2">Daftar pasangan yang menggunakan platform Marry-Invite</p>
       </header>
-      <div className="bg-white border border-nude shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 border-b border-nude text-[10px] font-bold uppercase tracking-widest text-muted">
-            <tr>
-              <th className="px-8 py-5">Nama Pasangan</th>
-              <th className="px-8 py-5">Email</th>
-              <th className="px-8 py-5">Status Akun</th>
-              <th className="px-8 py-5">Total Undangan</th>
-              <th className="px-8 py-5 text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {MOCK_USERS.map(u => (
-               <tr key={u.email} className="hover:bg-cream/20">
-                  <td className="px-8 py-6 font-medium text-charcoal">{u.name}</td>
-                  <td className="px-8 py-6 text-muted text-xs font-mono">{u.email}</td>
-                  <td className="px-8 py-6">
-                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[9px] font-bold uppercase rounded">{u.plan}</span>
-                  </td>
-                  <td className="px-8 py-6 text-charcoal">{u.invitations}</td>
-                  <td className="px-8 py-6 text-right">
-                    <button className="text-mocha font-bold text-[10px] uppercase hover:underline">Detail</button>
-                  </td>
-               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+
+      {loading ? (
+        <div className="py-20 text-center italic text-muted">Memuat data pengguna...</div>
+      ) : (
+        <div className="bg-white border border-nude shadow-sm overflow-x-auto">
+          <table className="w-full text-left text-sm whitespace-nowrap">
+            <thead className="bg-slate-50 border-b border-nude text-[10px] font-bold uppercase tracking-widest text-muted">
+              <tr>
+                <th className="px-8 py-5">Nama Pasangan</th>
+                <th className="px-8 py-5">Email</th>
+                <th className="px-8 py-5">Status Akun</th>
+                <th className="px-8 py-5">Dibuat Pada</th>
+                <th className="px-8 py-5 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {users.map(u => (
+                <tr key={u.id} className="hover:bg-cream/20">
+                    <td className="px-8 py-6 font-medium text-charcoal">{u.full_name || 'Tanpa Nama'}</td>
+                    <td className="px-8 py-6 text-muted text-xs font-mono">{u.email || '—'}</td>
+                    <td className="px-8 py-6">
+                      <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[9px] font-bold uppercase rounded">Active</span>
+                    </td>
+                    <td className="px-8 py-6 text-charcoal text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
+                    <td className="px-8 py-6 text-right">
+                      <button className="text-mocha font-bold text-[10px] uppercase hover:underline">Detail</button>
+                    </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }
