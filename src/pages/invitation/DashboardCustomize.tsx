@@ -56,19 +56,16 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
     setSaving(true)
     await invitationService.updateProject(project.id, { data: tempData })
     onUpdate({ ...project, data: tempData })
+    // Record revision
+    await invitationService.createRevision(project.id, 'Simpan draft (Editor)', tempData)
     setSaving(false)
     alert('Perubahan disimpan sebagai draft.')
   }
 
   const handlePublish = async () => {
-    if (confirm('Publikasikan perubahan? Tamu Anda akan melihat versi terbaru setelah dipublikasikan.')) {
-      setSaving(true)
-      await invitationService.updateProject(project.id, { data: tempData, status: 'published' })
-      onUpdate({ ...project, data: tempData, status: 'published' })
-      await invitationService.createRevision(project.id, 'Update konten via editor', tempData)
-      setSaving(false)
-      alert('Undangan berhasil diperbarui dan dipublikasikan!')
-    }
+    // Navigate to settings for activation/slug setup
+    alert('Anda akan diarahkan ke halaman Pengaturan untuk menyelesaikan aktivasi dan URL slug sebelum publikasi.')
+    window.location.hash = '/settings'
   }
 
   return (
@@ -180,11 +177,58 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
               >
                 {/* Dynamic Controls based on activeSection */}
                 {activeSection === 'cover' && (
-                  <ImageUpload
-                    label="Foto Utama (Watercolor Hero)"
-                    value={tempData.sections.find(s => s.id === 'cover')?.config.couplePhoto}
-                    onChange={(url) => handleUpdate('cover', 'couplePhoto', url)}
-                  />
+                  <>
+                    <ImageUpload
+                      label="Foto Utama (Watercolor Hero)"
+                      value={tempData.sections.find(s => s.id === 'cover')?.config.couplePhoto}
+                      onChange={(url) => handleUpdate('cover', 'couplePhoto', url)}
+                    />
+                    <div className="space-y-4 pt-4 border-t border-nude">
+                       <h4 className="text-[10px] font-bold uppercase tracking-widest text-mocha">Detail Informasi</h4>
+                       <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                             <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Nama Panggilan Wanita</label>
+                             <input
+                               type="text"
+                               value={tempData.couple.bride.name.split(' ')[0]}
+                               onChange={(e) => handleUpdate('couple', 'bride.name', e.target.value)}
+                               className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
+                               placeholder="Zahra"
+                             />
+                          </div>
+                          <div className="space-y-2">
+                             <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Nama Panggilan Pria</label>
+                             <input
+                               type="text"
+                               value={tempData.couple.groom.name.split(' ')[0]}
+                               onChange={(e) => handleUpdate('couple', 'groom.name', e.target.value)}
+                               className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
+                               placeholder="Rafi"
+                             />
+                          </div>
+                       </div>
+                       <div className="space-y-2">
+                          <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Tanggal Pernikahan (Teks)</label>
+                          <input
+                            type="text"
+                            value={tempData.sections.find(s => s.id === 'cover')?.config.dateText || ''}
+                            onChange={(e) => handleUpdate('cover', 'dateText', e.target.value)}
+                            className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
+                            placeholder="Contoh: Saturday 12/12/26"
+                          />
+                       </div>
+                       <div className="space-y-2">
+                          <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Lokasi Singkat</label>
+                          <input
+                            type="text"
+                            value={tempData.sections.find(s => s.id === 'cover')?.config.locationText || ''}
+                            onChange={(e) => handleUpdate('cover', 'locationText', e.target.value)}
+                            className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
+                            placeholder="Contoh: The Grand Ballroom • Santa Clara"
+                          />
+                       </div>
+                    </div>
+                  </>
                 )}
 
                 {activeSection === 'introduction' && (
@@ -284,30 +328,36 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                             />
                          </div>
                          <div className="space-y-2">
-                            <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Tanggal (Teks)</label>
-                            <input
-                              type="text"
-                              value={ev.date}
-                              onChange={(e) => {
-                                const nextEvents = [...tempData.sections.find(s => s.id === 'event')?.config.events]
-                                nextEvents[i].date = e.target.value
-                                handleUpdate('event', 'events', nextEvents)
-                              }}
-                              className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
-                            />
-                         </div>
-                         <div className="space-y-2">
-                            <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Waktu (Teks)</label>
-                            <input
-                              type="text"
-                              value={ev.time}
-                              onChange={(e) => {
-                                const nextEvents = [...tempData.sections.find(s => s.id === 'event')?.config.events]
-                                nextEvents[i].time = e.target.value
-                                handleUpdate('event', 'events', nextEvents)
-                              }}
-                              className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
-                            />
+                            <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Tanggal & Jam (Teks)</label>
+                            <div className="grid grid-cols-2 gap-2">
+                               <input
+                                 type="text"
+                                 value={ev.date}
+                                 onChange={(e) => {
+                                   const nextEvents = [...tempData.sections.find(s => s.id === 'event')?.config.events]
+                                   nextEvents[i].date = e.target.value
+                                   handleUpdate('event', 'events', nextEvents)
+                                   // Sync to Cover and Closing if this is first event
+                                   if (i === 0) {
+                                      handleUpdate('cover', 'dateText', e.target.value)
+                                      handleUpdate('closing', 'date', e.target.value)
+                                   }
+                                 }}
+                                 className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
+                                 placeholder="12/12/26"
+                               />
+                               <input
+                                 type="text"
+                                 value={ev.time}
+                                 onChange={(e) => {
+                                   const nextEvents = [...tempData.sections.find(s => s.id === 'event')?.config.events]
+                                   nextEvents[i].time = e.target.value
+                                   handleUpdate('event', 'events', nextEvents)
+                                 }}
+                                 className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
+                                 placeholder="17:00"
+                               />
+                            </div>
                          </div>
                          <div className="space-y-2">
                             <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Lokasi / Gedung</label>
@@ -322,6 +372,35 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                               className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
                             />
                          </div>
+                         <div className="space-y-2">
+                            <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Link Google Maps</label>
+                            <input
+                              type="text"
+                              value={ev.mapsLink || ''}
+                              onChange={(e) => {
+                                const nextEvents = [...tempData.sections.find(s => s.id === 'event')?.config.events]
+                                nextEvents[i].mapsLink = e.target.value
+                                handleUpdate('event', 'events', nextEvents)
+                              }}
+                              className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
+                              placeholder="https://maps.google.com/..."
+                            />
+                         </div>
+                         {/* Synchronized Global Date for Countdown */}
+                         {i === 0 && (
+                           <div className="space-y-2 bg-mocha/5 p-4 rounded-sm border border-mocha/10">
+                              <label className="text-[9px] font-bold uppercase tracking-widest text-mocha">Global Timer Sync</label>
+                              <p className="text-[8px] text-muted mb-2 italic">Tanggal ini akan otomatis digunakan untuk Countdown.</p>
+                              <input
+                                type="datetime-local"
+                                value={tempData.sections.find(s => s.id === 'countdown')?.config.targetDate.slice(0, 16)}
+                                onChange={(e) => {
+                                   handleUpdate('countdown', 'targetDate', e.target.value)
+                                }}
+                                className="w-full bg-white border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
+                              />
+                           </div>
+                         )}
                       </div>
                     ))}
                   </div>

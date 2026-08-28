@@ -44,11 +44,30 @@ function Countdown({ targetDate }: { targetDate: string }) {
 }
 
 export default function DashboardOverview({ project }: { project: InvitationProject }) {
+  const [statsData, setStatsData] = useState({ total: 0, sent: 0, opened: 0, rsvp: 0 })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchStats() {
+      const guests = await invitationService.getGuests(project.id)
+      const rsvps = await invitationService.getRSVPs(project.id)
+
+      setStatsData({
+        total: guests.length,
+        sent: guests.filter(g => g.status === 'sent' || g.status === 'opened').length,
+        opened: guests.filter(g => g.status === 'opened').length,
+        rsvp: rsvps.length
+      })
+      setLoading(false)
+    }
+    fetchStats()
+  }, [project.id])
+
   const stats = [
-    { label: 'Total Tamu', value: '245', icon: '👥' },
-    { label: 'Undangan Terkirim', value: '198', icon: '📤' },
-    { label: 'Dibuka', value: '176', icon: '👀' },
-    { label: 'RSVP', value: '142', icon: '✅' },
+    { label: 'Total Tamu', value: statsData.total, icon: '👥' },
+    { label: 'Undangan Terkirim', value: statsData.sent, icon: '📤' },
+    { label: 'Dibuka', value: statsData.opened, icon: '👀' },
+    { label: 'Konfirmasi RSVP', value: statsData.rsvp, icon: '✅' },
   ]
 
   return (

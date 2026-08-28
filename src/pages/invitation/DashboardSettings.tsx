@@ -3,9 +3,13 @@ import { invitationService } from '../../lib/invitation/invitationService'
 import type { InvitationProject } from '../../lib/invitation/types'
 
 export default function DashboardSettings({ project }: { project: InvitationProject }) {
-  const [voucher, setVoucher] = useState('')
+  const [voucher, setVoucher] = useState(project.voucherCode || '')
   const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  const [weddingName, setWeddingName] = useState(project.title)
+  const [slug, setSlug] = useState(project.slug)
 
   const handleVoucherSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -15,12 +19,32 @@ export default function DashboardSettings({ project }: { project: InvitationProj
     const result = await invitationService.validateVoucher(voucher)
     if (result.valid) {
       setMessage({ type: 'success', text: result.message })
-      // Update project status if needed
       await invitationService.updateProject(project.id, { isActive: true, voucherCode: voucher })
     } else {
       setMessage({ type: 'error', text: result.message })
     }
     setLoading(false)
+  }
+
+  const handleSaveInfo = async () => {
+    setSaving(true)
+    await invitationService.updateProject(project.id, { title: weddingName, slug: slug })
+    alert('Informasi akun berhasil diperbarui!')
+    setSaving(false)
+  }
+
+  const handlePublish = async () => {
+    if (!project.isActive && !confirm('Undangan belum diaktivasi. Anda tetap bisa mempublikasikannya, namun fitur premium mungkin terbatas. Lanjutkan?')) {
+       return
+    }
+
+    if (confirm('Publikasikan undangan Anda sekarang? Guest akan dapat mengakses via link slug.')) {
+       setSaving(true)
+       await invitationService.updateProject(project.id, { status: 'published' })
+       await invitationService.createRevision(project.id, 'Publikasi Undangan', project.data)
+       alert('Undangan berhasil dipublikasikan!')
+       window.location.reload()
+    }
   }
 
   return (
@@ -90,7 +114,8 @@ export default function DashboardSettings({ project }: { project: InvitationProj
                     <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Nama Wedding</label>
                     <input
                       type="text"
-                      defaultValue={project.title}
+                      value={weddingName}
+                      onChange={e => setWeddingName(e.target.value)}
                       className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
                     />
                  </div>
@@ -98,14 +123,45 @@ export default function DashboardSettings({ project }: { project: InvitationProj
                     <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Slug URL</label>
                     <input
                       type="text"
-                      defaultValue={project.slug}
+                      value={slug}
+                      onChange={e => setSlug(e.target.value)}
                       className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
                     />
                  </div>
               </div>
-              <button className="px-8 py-3 bg-mocha text-white text-[9px] font-bold uppercase tracking-widest hover:bg-mocha-dark transition-colors">
-                 Simpan Perubahan
-              </button>
+              <div className="flex gap-4">
+                <button
+                  onClick={handleSaveInfo}
+                  disabled={saving}
+                  className="px-8 py-3 bg-white border border-nude text-[9px] font-bold uppercase tracking-widest hover:bg-soft transition-colors disabled:opacity-50"
+                >
+                   {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+                {project.status === 'draft' && (
+                  <button
+                    onClick={handlePublish}
+                    disabled={saving}
+                    className="px-8 py-3 bg-mocha text-white text-[9px] font-bold uppercase tracking-widest hover:bg-mocha-dark transition-colors disabled:opacity-50 shadow-lg shadow-mocha/20"
+                  >
+                     Publikasikan Sekarang
+                  </button>
+                )}
+              </div>
+
+              {project.status === 'published' && (
+                <div className="mt-4 p-4 bg-emerald-50 border border-emerald-100 flex items-center justify-between">
+                   <div className="flex flex-col">
+                      <span className="text-[8px] uppercase text-emerald-600 font-bold tracking-widest mb-1">Undangan Anda Live</span>
+                      <span className="text-xs font-mono text-charcoal">{window.location.host}/i/{project.slug}</span>
+                   </div>
+                   <button
+                     onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/i/${project.slug}`); alert('Link undangan berhasil disalin!'); }}
+                     className="px-4 py-2 bg-emerald-600 text-white text-[8px] font-bold uppercase tracking-widest rounded-sm hover:bg-emerald-700 transition-colors"
+                   >
+                     Copy URL
+                   </button>
+                </div>
+              )}
            </div>
         </section>
 

@@ -168,6 +168,7 @@ export interface InvitationData {
     time: string
     location: string
     address: string
+    mapsLink?: string // Added missing maps link
   }
   rsvp: {
     enabled: boolean

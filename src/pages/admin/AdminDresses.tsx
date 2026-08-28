@@ -47,21 +47,27 @@ export default function AdminDresses() {
   async function handleSave() {
     if (!editingDress) return
 
+    // Strict validation for required fields
+    if (!editingDress.collectionCode || !editingDress.name) {
+      alert('Error: Kode Unik dan Nama Koleksi wajib diisi!')
+      return
+    }
+
     const payload = {
       collection_code: editingDress.collectionCode,
       name: editingDress.name,
-      category: editingDress.category,
-      description: editingDress.description,
-      price: editingDress.price,
+      category: editingDress.category || 'Wanita',
+      description: editingDress.description || '',
+      price: editingDress.price || 0,
       deposit: editingDress.deposit || 150000,
       status: editingDress.status || 'available',
       images: editingDress.images || [],
       measurements: editingDress.measurements || {},
       included_items: editingDress.includedItems || [],
-      resize_available: editingDress.resizeAvailable || false,
+      resize_available: editingDress.resizeAvailable ?? true,
       fit_notes: editingDress.fitNotes || '',
       recommended_height: editingDress.recommendedHeight || '',
-      size: editingDress.size,
+      size: editingDress.size || 'M',
       colors: editingDress.colors || [],
     }
 
@@ -102,6 +108,8 @@ export default function AdminDresses() {
         <button
           onClick={() => {
             setEditingDress({
+              collectionCode: '',
+              name: '',
               category: 'Wanita',
               status: 'available',
               price: 500000,

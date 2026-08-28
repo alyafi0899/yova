@@ -2,6 +2,7 @@ import { useState, type FormEvent, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { getWhatsAppLink, type Dress } from '../data/dresses'
+import { jsPDF } from 'jspdf'
 
 interface FormState {
   name: string
@@ -42,6 +43,7 @@ export default function Fitting() {
   const dressId = searchParams.get('dressId')
   const [form, setForm] = useState<FormState>(INITIAL)
   const [submitted, setSubmitted] = useState(false)
+  const [lastBookingId, setLastBookingId] = useState('')
   const [loading, setLoading] = useState(false)
   const [dbDresses, setDbDresses] = useState<Dress[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -80,9 +82,10 @@ export default function Fitting() {
     e.preventDefault()
     setLoading(true)
 
-    // Menambahkan 3 digit random di akhir agar tidak duplikat jika orang yang sama pesan baju yang sama
+    // Menambahkan 3 digit random di akhir agar tidak duplikat
     const randomSuffix = Math.floor(100 + Math.random() * 900)
     const bookingId = `${form.selectedDress}-${form.whatsapp.slice(-4)}-${randomSuffix}`
+    setLastBookingId(bookingId)
 
     const { error } = await supabase.from('rentals').insert([
       {
@@ -101,10 +104,73 @@ export default function Fitting() {
     if (!error) {
       setSubmitted(true)
       window.scrollTo({ top: 0, behavior: 'smooth' })
+      generatePDF(bookingId)
     } else {
       alert('Gagal mengirim permintaan: ' + error.message)
     }
     setLoading(false)
+  }
+
+  const generatePDF = (bookingId: string) => {
+    const doc = new jsPDF()
+
+    // Header
+    doc.setFillColor(23, 53, 47) // Forest Green
+    doc.rect(0, 0, 210, 40, 'F')
+
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(22)
+    doc.text('YOVA SEWA BAJU AKAD', 105, 20, { align: 'center' })
+    doc.setFontSize(10)
+    doc.text('Bukti Reservasi Jadwal Fitting', 105, 30, { align: 'center' })
+
+    // Body
+    doc.setTextColor(40, 40, 40)
+    doc.setFontSize(12)
+    doc.text('DETAIL RESERVASI', 20, 55)
+    doc.setDrawColor(200, 200, 200)
+    doc.line(20, 58, 190, 58)
+
+    const details = [
+      ['ID Reservasi', bookingId],
+      ['Nama Pelanggan', form.name],
+      ['WhatsApp', form.whatsapp],
+      ['Tanggal Acara', form.eventDate],
+      ['Koleksi Pilihan', form.selectedDress],
+      ['Tanggal Fitting', form.fittingDate],
+      ['Waktu Fitting', form.fittingTime],
+    ]
+
+    let y = 70
+    details.forEach(([label, value]) => {
+      doc.setFont('helvetica', 'bold')
+      doc.text(`${label}:`, 20, y)
+      doc.setFont('helvetica', 'normal')
+      doc.text(`${value}`, 70, y)
+      y += 10
+    })
+
+    // ID Section
+    doc.setFillColor(249, 247, 242) // Cream
+    doc.rect(20, y + 5, 170, 40, 'F')
+    doc.setDrawColor(199, 169, 107) // Gold
+    doc.setLineWidth(0.5)
+    doc.rect(20, y + 5, 170, 40, 'D')
+
+    doc.setTextColor(23, 53, 47)
+    doc.setFontSize(10)
+    doc.text('SIMPAN KODE ID BERIKUT:', 105, y + 15, { align: 'center' })
+    doc.setFontSize(24)
+    doc.setFont('courier', 'bold')
+    doc.text(bookingId, 105, y + 30, { align: 'center' })
+
+    // Footer
+    doc.setFontSize(9)
+    doc.setTextColor(150, 150, 150)
+    doc.text('Catatan: Tunjukkan dokumen ini saat kunjungan fitting.', 105, 280, { align: 'center' })
+    doc.text('Kunjungi yova.id untuk melihat progress baju sewa Anda.', 105, 285, { align: 'center' })
+
+    doc.save(`Booking-Fitting-${bookingId}.pdf`)
   }
 
   const openDressPicker = (type: 'primary' | 'secondary') => {
@@ -126,62 +192,63 @@ export default function Fitting() {
   if (submitted) {
     return (
       <div className="pt-20 min-h-screen flex items-center justify-center px-6 py-16">
-        <div className="max-w-md w-full text-center">
-          <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto mb-8">
-            <span className="text-xl text-emerald-500">✓</span>
+        <div className="max-w-xl w-full text-center">
+          <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto mb-8 shadow-sm">
+            <span className="text-2xl text-emerald-500">✓</span>
           </div>
-          <h1 className="font-display text-3xl text-charcoal mb-3">
-            Permintaan Fitting Berhasil Dikirim
-          </h1>
-          <div
-            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 mb-8"
-            style={{ borderRadius: '2px' }}
-          >
-            <span className="w-2 h-2 rounded-full bg-amber-400" />
-            <span className="text-xs text-amber-700 font-medium">Menunggu Konfirmasi</span>
-          </div>
-          <p className="text-muted text-sm leading-relaxed mb-8 max-w-xs mx-auto">
-            Kami akan menghubungi Anda melalui WhatsApp untuk mengkonfirmasi jadwal
-            fitting. Jika booking dikonfirmasi, ID Booking Anda akan berupa: <br/>
-            <span className="font-mono font-bold text-mocha">
-              {form.selectedDress || 'KODE'}-{form.whatsapp.slice(-4) || 'XXXX'}
-            </span>
-          </p>
 
-          <div className="p-5 bg-cream border border-nude text-left text-sm space-y-3 mb-8">
+          <h1 className="font-display text-4xl text-charcoal mb-4">
+            Permintaan Berhasil Dikirim
+          </h1>
+
+          <p className="text-muted text-sm mb-10">Dokumen bukti reservasi sedang diunduh secara otomatis.</p>
+
+          <div className="bg-white border-2 border-dashed border-mocha/30 p-8 mb-10 relative">
+             <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted mb-6 italic">ID Fitting Anda</p>
+             <div className="text-4xl sm:text-5xl font-mono font-bold text-mocha tracking-tighter mb-6">
+                {lastBookingId}
+             </div>
+             <div className="inline-block px-4 py-1.5 bg-mocha text-white text-[9px] font-bold uppercase tracking-widest rounded-full mb-4">
+                PENTING: JANGAN SAMPAI LUPA
+             </div>
+             <p className="text-[11px] text-muted leading-relaxed max-w-sm mx-auto italic">
+                Simpan ID di atas baik-baik. Gunakan ID ini sebagai <strong>Voucher Aktivasi E-Invitation</strong> dan untuk melihat <strong>Progress Baju Sewa</strong> Anda di website YOVA.
+             </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+             <button
+                onClick={() => generatePDF(lastBookingId)}
+                className="flex items-center justify-center gap-3 px-6 py-4 bg-white border border-nude text-charcoal text-xs font-bold uppercase tracking-widest hover:bg-soft transition-all"
+             >
+                <span>📄</span> Download Ulang PDF
+             </button>
+             <button
+                onClick={() => {
+                  setForm(INITIAL)
+                  setSubmitted(false)
+                  navigate('/')
+                }}
+                className="px-6 py-4 bg-mocha text-white text-xs font-bold uppercase tracking-widest hover:bg-mocha-dark transition-all"
+             >
+                Kembali ke Beranda
+             </button>
+          </div>
+
+          <div className="p-6 bg-ivory border border-nude text-left text-sm space-y-4">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-mocha border-b border-mocha/10 pb-2">Ringkasan Reservasi</h4>
             {[
               ['Nama', form.name],
               ['WhatsApp', form.whatsapp],
-              ['Tanggal Acara', form.eventDate],
-              ['Koleksi Pilihan', form.selectedDress],
-              ['Tanggal Fitting', form.fittingDate],
-              ['Waktu Fitting', form.fittingTime],
-              ['Status', 'Menunggu Konfirmasi'],
+              ['Koleksi', form.selectedDress],
+              ['Jadwal Fitting', `${form.fittingDate} • ${form.fittingTime}`],
             ].map(([label, value]) => (
               <div key={label} className="flex justify-between gap-4">
-                <span className="text-muted text-xs shrink-0">{label}</span>
-                <span
-                  className={`font-medium text-charcoal text-right ${
-                    label === 'Status' ? 'text-amber-600' : ''
-                  }`}
-                >
-                  {value || '—'}
-                </span>
+                <span className="text-muted text-[10px] uppercase font-bold tracking-tight shrink-0">{label}</span>
+                <span className="font-medium text-charcoal text-right">{value}</span>
               </div>
             ))}
           </div>
-
-          <button
-            onClick={() => {
-              setForm(INITIAL)
-              setSubmitted(false)
-              navigate('/')
-            }}
-            className="px-8 py-3 bg-mocha text-ivory text-sm font-medium hover:bg-mocha-dark transition-colors"
-            style={{ borderRadius: '2px' }}
-          >
-            Kembali ke Home
-          </button>
         </div>
       </div>
     )
