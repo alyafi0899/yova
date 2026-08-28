@@ -13,27 +13,19 @@ import CheckRental from './pages/CheckRental'
 import FAQ from './pages/FAQ'
 import Contact from './pages/Contact'
 
+// Invitation Pages
+import Marketplace from './pages/invitation/Marketplace'
+import InvitationTemplateDetail from './pages/invitation/TemplateDetail'
+import Auth from './pages/invitation/Auth'
+import Dashboard from './pages/invitation/Dashboard'
+import Builder from './pages/invitation/Builder'
+import PublicInvitation from './pages/invitation/PublicInvitation'
+
 // Admin Components
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminLayout from './components/admin/AdminLayout'
 import AdminDresses from './pages/admin/AdminDresses'
 import AdminOrders from './pages/admin/AdminOrders'
-
-// Invitation Pages
-import InvitationLanding from './pages/invitation/Landing'
-import InvitationTemplates from './pages/invitation/Templates'
-import InvitationAuth from './pages/invitation/Auth'
-import InvitationDashboard from './pages/invitation/Dashboard'
-import InvitationBuilder from './pages/invitation/Builder'
-import InvitationPublic from './pages/invitation/PublicInvitation'
-import InvitationPublish from './pages/invitation/Publish'
-import InvitationRSVP from './pages/invitation/RSVPDashboard'
-import {
-  InvitationOverview,
-  InvitationTemplatesTab,
-  InvitationUsersTab,
-  InvitationTransactionsTab
-} from './pages/invitation/Admin'
 
 const NAV_ITEMS = [
   { label: 'Koleksi', path: '/collection' },
@@ -128,11 +120,11 @@ function Navbar({ transparent, session }: { transparent: boolean; session: any }
                 transparent && !menuOpen
                   ? 'bg-white/15 text-white border border-white/30 hover:bg-white/25'
                   : 'bg-mocha text-ivory hover:bg-mocha-dark'
-              }`}
-              style={{ borderRadius: '2px' }}
-            >
-              Jadwalkan Fitting
-            </button>
+                }`}
+                style={{ borderRadius: '2px' }}
+              >
+                Jadwalkan Fitting
+              </button>
           )}
         </div>
 
@@ -234,12 +226,41 @@ function UserProtectedRoute({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<any>(undefined)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session))
-    return () => subscription.unsubscribe()
+    let mounted = true
+
+    // Check Supabase session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return
+      if (session) {
+        setSession(session)
+      } else {
+        // Fallback to invitationService mock session
+        const user = invitationService.getCurrentUser()
+        setSession(user || null)
+      }
+    }).catch(() => {
+      if (!mounted) return
+      const user = invitationService.getCurrentUser()
+      setSession(user || null)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return
+      if (session) {
+        setSession(session)
+      } else {
+        const user = invitationService.getCurrentUser()
+        setSession(user || null)
+      }
+    })
+
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
-  if (session === undefined) return <div className="min-h-screen flex items-center justify-center bg-ivory text-muted italic">Mengecek Sesi...</div>
+  if (session === undefined) return <div className="min-h-screen flex items-center justify-center bg-ivory text-muted italic text-[10px] uppercase tracking-widest">Mengecek Sesi...</div>
   if (!session) return <Navigate to="/invitation/auth" replace />
 
   return <>{children}</>
@@ -249,12 +270,24 @@ function AdminProtectedRoute({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<any>(undefined)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session))
-    return () => subscription.unsubscribe()
+    let mounted = true
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted) setSession(session || null)
+    }).catch(() => {
+      if (mounted) setSession(null)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) setSession(session || null)
+    })
+
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
-  if (session === undefined) return <div className="min-h-screen flex items-center justify-center bg-ivory text-muted italic">Mengecek Sesi...</div>
+  if (session === undefined) return <div className="min-h-screen flex items-center justify-center bg-ivory text-muted italic text-[10px] uppercase tracking-widest">Mengecek Sesi...</div>
   if (!session) return <Navigate to="/admin-login" replace />
 
   return <>{children}</>
@@ -279,25 +312,23 @@ export default function App() {
         <Route path="/faq" element={<MainLayout><FAQ /></MainLayout>} />
         <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
 
-        {/* Invitation Public Routes */}
-        <Route path="/invitation" element={<MainLayout><InvitationLanding /></MainLayout>} />
-        <Route path="/invitation/templates" element={<MainLayout><InvitationTemplates /></MainLayout>} />
-        <Route path="/invitation/auth" element={<InvitationAuth />} />
+        {/* Invitation Routes */}
+        <Route path="/invitation" element={<MainLayout><Marketplace /></MainLayout>} />
+        <Route path="/invitation/templates" element={<Navigate to="/invitation" replace />} />
+        <Route path="/invitation/templates/:id" element={<MainLayout><InvitationTemplateDetail /></MainLayout>} />
 
-        {/* Unified Dashboard */}
-        <Route path="/dashboard" element={
+        <Route path="/invitation/auth" element={<Auth />} />
+
+        {/* Invitation Dashboard */}
+        <Route path="/invitation/dashboard/*" element={
           <UserProtectedRoute>
-            <MainLayout>
-              <InvitationDashboard />
-            </MainLayout>
+            <Dashboard />
           </UserProtectedRoute>
         } />
+        <Route path="/dashboard" element={<Navigate to="/invitation/dashboard" replace />} />
 
-        <Route path="/invitation/dashboard" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/invitation/builder" element={<InvitationBuilder />} />
-        <Route path="/invitation/publish" element={<InvitationPublish />} />
-        <Route path="/invitation/rsvp-dashboard" element={<InvitationRSVP />} />
-        <Route path="/i/:slug" element={<InvitationPublic />} />
+        {/* Public Invitation View */}
+        <Route path="/i/:slug" element={<PublicInvitation />} />
 
         {/* Admin Routes */}
         <Route path="/admin-login" element={<AdminLoginWrapper />} />
@@ -307,11 +338,6 @@ export default function App() {
               <Routes>
                 <Route path="dresses" element={<AdminDresses />} />
                 <Route path="orders" element={<AdminOrders />} />
-                <Route path="invitation-overview" element={<InvitationOverview />} />
-                <Route path="invitation-templates" element={<InvitationTemplatesTab />} />
-                <Route path="invitation-users" element={<InvitationUsersTab />} />
-                <Route path="invitation-transactions" element={<InvitationTransactionsTab />} />
-                <Route path="invitation-rsvp" element={<InvitationRSVP />} />
                 <Route path="*" element={<Navigate to="orders" replace />} />
               </Routes>
             </AdminLayout>

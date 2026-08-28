@@ -1,5 +1,5 @@
-import type { Dress } from '../data/dresses'
 import { formatPrice } from '../data/dresses'
+import { normalizeImageUrl } from '../lib/utils/image'
 
 export const STATUS_CONFIG = {
   available: { dot: 'bg-emerald-500', label: 'Tersedia', text: 'text-emerald-700', bg: 'bg-emerald-50' },
@@ -19,7 +19,7 @@ export default function DressCard({ dress, onClick }: Props) {
     <div className="group cursor-pointer" onClick={onClick}>
       <div className="relative overflow-hidden bg-soft aspect-[3/4] mb-4">
         <img
-          src={dress.images[0]}
+          src={normalizeImageUrl(dress.images[0])}
           alt={dress.name}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
         />

@@ -1,0 +1,10 @@
+{
+  "description": "This web application simplifies markdown file management, allowing users to create, edit, and organize markdown documents efficiently for seamless collaboration.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

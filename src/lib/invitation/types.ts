@@ -123,6 +123,16 @@ export interface InvitationTemplate {
   animations?: AnimationConfig[] // global animations like petal float
   version: string
   status: 'draft' | 'published' | 'archived'
+  /** Price in IDR. 0 = free. Shown on marketplace card + detail page. */
+  price: number
+  /** One-line marketplace description shown on the card and detail page. */
+  description: string
+  /** Optional corner badge on the marketplace thumbnail, e.g. "3D Parallax", "Custom". Free templates show "Free" automatically. */
+  badge?: string
+  /** Short bullet list shown under "Key Features" on the detail page. */
+  keyFeatures: string[]
+  /** Longer paragraph shown under "Experience" on the detail page. */
+  experience: string
 }
 
 export interface UserInvitation {
@@ -145,4 +155,84 @@ export interface UserInvitation {
   status: 'draft' | 'published'
   createdAt: string
   updatedAt: string
+}
+
+export interface InvitationData {
+  title: string
+  couple: {
+    bride: { name: string; parents?: string; image?: string }
+    groom: { name: string; parents?: string; image?: string }
+  }
+  event: {
+    date: string
+    time: string
+    location: string
+    address: string
+  }
+  rsvp: {
+    enabled: boolean
+    deadline?: string
+  }
+  sections: {
+    id: string
+    type: SectionType
+    enabled: boolean
+    config: any
+  }[]
+}
+
+export interface InvitationProject {
+  id: string
+  userId: string
+  templateId: string
+  slug: string
+  title: string
+  status: 'draft' | 'published'
+  createdAt: string
+  updatedAt: string
+  data: InvitationData
+  isActive?: boolean
+  voucherCode?: string
+}
+
+export interface Guest {
+  id: string
+  projectId: string
+  name: string
+  whatsapp: string
+  category: string
+  guestCount: number
+  status: 'invited' | 'sent' | 'opened'
+  rsvpStatus: 'pending' | 'attending' | 'not_attending' | 'maybe'
+  notes?: string
+  slug: string
+  createdAt: string
+}
+
+export interface RSVPResponse {
+  id: string
+  projectId: string
+  guestId?: string
+  name: string
+  attendance: string // 'attending' | 'not_attending' | 'maybe'
+  guests: number
+  message?: string
+  createdAt: string
+}
+
+export interface GuestWish {
+  id: string
+  projectId: string
+  name: string
+  message: string
+  createdAt: string
+}
+
+export interface InvitationRevision {
+  id: string
+  projectId: string
+  version: string
+  note: string
+  data: InvitationData
+  createdAt: string
 }

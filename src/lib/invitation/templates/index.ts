@@ -1,14 +1,16 @@
 import { InvitationTemplate } from '../types'
-import { noura_v1 } from './noura_v1'
+import { sakinah_v1 } from './sakinah_v1'
 
 export const TEMPLATE_REGISTRY: Record<string, InvitationTemplate> = {
-  'noura': noura_v1,
+  'sakinah': sakinah_v1,
 }
+
+export const MOCK_TEMPLATES = Object.values(TEMPLATE_REGISTRY)
 
 export const getTemplate = (id: string): InvitationTemplate | undefined => {
   return TEMPLATE_REGISTRY[id]
 }
 
 export const getAllTemplates = (): InvitationTemplate[] => {
-  return Object.values(TEMPLATE_REGISTRY)
+  return MOCK_TEMPLATES
 }

@@ -16,16 +16,6 @@ const NAV_GROUPS = [
       { id: 'admin-dresses', label: 'Koleksi Baju', icon: '👗' },
       { id: 'admin-orders', label: 'Manajemen Order', icon: '📋' },
     ]
-  },
-  {
-    title: 'Undangan Digital',
-    items: [
-      { id: 'admin-invitation-overview', label: 'Overview', icon: '📊' },
-      { id: 'admin-invitation-templates', label: 'Manajemen Template', icon: '🎨' },
-      { id: 'admin-invitation-users', label: 'Data Pengguna', icon: '👥' },
-      { id: 'admin-invitation-transactions', label: 'Transaksi', icon: '💳' },
-      { id: 'admin-invitation-rsvp', label: 'RSVP & Tamu', icon: '📅' },
-    ]
   }
 ]
 

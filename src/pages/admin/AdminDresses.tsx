@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import type { Dress, DressCategory, DressStatus, Measurements } from '../../data/dresses'
+import { normalizeImageUrl } from '../../lib/utils/image'
+import ImageSlot from '../../components/admin/ImageSlot'
 
 export default function AdminDresses() {
   const [dresses, setDresses] = useState<Dress[]>([])
   const [loading, setLoading] = useState(true)
+  const [isUploading, setIsUploading] = useState(false)
   const [editingDress, setEditingDress] = useState<Partial<Dress> | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [activeTab, setActiveSelectTab] = useState<'info' | 'size' | 'media'>('info')
@@ -129,7 +132,7 @@ export default function AdminDresses() {
           {dresses.map((dress) => (
             <div key={dress.id} className="group bg-white border border-nude overflow-hidden hover:border-mocha transition-all hover:shadow-xl relative flex flex-col">
               <div className="aspect-[3/4] bg-soft relative overflow-hidden">
-                <img src={dress.images?.[0] || 'https://via.placeholder.com/400x533'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={dress.name} />
+                <img src={normalizeImageUrl(dress.images?.[0]) || 'https://via.placeholder.com/400x533'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={dress.name} />
                 <div className="absolute top-3 left-3 flex flex-col gap-2">
                   <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-charcoal text-[9px] font-bold uppercase tracking-tighter shadow-sm">{dress.collectionCode}</span>
                   <span className={`px-2 py-1 text-[9px] font-bold uppercase tracking-tighter shadow-sm ${
@@ -298,75 +301,77 @@ export default function AdminDresses() {
 
               {activeTab === 'media' && (
                 <div className="space-y-10 animate-in fade-in duration-500">
-                  <div className="bg-slate-50 p-6 border border-nude">
-                    <div className="flex justify-between items-center mb-6">
-                      <label className="block text-[10px] font-bold uppercase tracking-widest text-charcoal">
-                        Kelola URL Gambar Produk
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newImgs = [...(editingDress.images || []), '']
-                          setEditingDress({...editingDress, images: newImgs})
-                        }}
-                        className="px-4 py-2 bg-charcoal text-white text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors"
-                      >
-                        + Tambah Kolom Foto
-                      </button>
-                    </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10">
+                    {/* Management Section */}
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center bg-slate-50 p-6 border border-nude">
+                        <div>
+                          <label className="block text-[10px] font-bold uppercase tracking-widest text-charcoal">
+                            Kelola Foto Produk
+                          </label>
+                          <p className="text-[9px] text-muted mt-1 uppercase tracking-tight">Tarik foto langsung ke setiap kotak di bawah</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newImgs = [...(editingDress.images || []), '']
+                            setEditingDress({...editingDress, images: newImgs})
+                          }}
+                          className="px-6 py-2.5 bg-charcoal text-white text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors"
+                          style={{ borderRadius: '2px' }}
+                        >
+                          + Tambah Kolom Foto
+                        </button>
+                      </div>
 
-                    <div className="space-y-3">
-                      {(editingDress.images || []).map((url, idx) => (
-                        <div key={idx} className="flex gap-2">
-                          <div className="bg-white border border-nude px-3 py-3 text-[10px] font-bold text-muted min-w-[40px] flex items-center justify-center">
-                            #{idx + 1}
-                          </div>
-                          <input
-                            type="text"
-                            value={url}
-                            onChange={e => {
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {(editingDress.images || []).map((url, idx) => (
+                          <ImageSlot
+                            key={idx}
+                            index={idx}
+                            url={url}
+                            onUrlChange={(newUrl) => {
                               const newImgs = [...(editingDress.images || [])]
-                              newImgs[idx] = e.target.value
+                              newImgs[idx] = newUrl
                               setEditingDress({...editingDress, images: newImgs})
                             }}
-                            className="flex-1 px-4 py-3 bg-white border border-nude outline-none focus:border-mocha text-xs font-mono"
-                            placeholder="https://images.unsplash.com/photo-..."
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
+                            onRemove={() => {
                               const newImgs = [...(editingDress.images || [])]
                               newImgs.splice(idx, 1)
                               setEditingDress({...editingDress, images: newImgs})
                             }}
-                            className="px-4 bg-red-50 text-red-500 border border-red-100 hover:bg-red-500 hover:text-white transition-colors"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
+                          />
+                        ))}
+                      </div>
 
                       {(editingDress.images || []).length === 0 && (
-                        <div className="text-center py-10 bg-white border border-dashed border-nude text-muted text-xs italic">
-                          Belum ada foto yang ditambahkan. Klik tombol di atas untuk menambah URL foto.
+                        <div className="text-center py-16 bg-white border border-dashed border-nude text-muted text-xs italic">
+                          Belum ada kolom foto. Klik tombol di atas untuk menambah.
                         </div>
                       )}
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase mb-4 tracking-widest text-muted">Preview Galeri</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-                      {editingDress.images?.filter(url => url.trim()).map((url, idx) => (
-                        <div key={idx} className="aspect-[3/4] bg-soft border border-nude relative group overflow-hidden shadow-sm">
-                          <img src={url} className="w-full h-full object-cover" alt="" />
-                          <div className="absolute top-1 right-1">
-                            <span className="bg-charcoal/80 text-white text-[8px] px-1.5 py-0.5 rounded font-bold">#{idx + 1}</span>
+                    {/* Final Preview Section */}
+                    <div className="bg-cream/10 p-6 border border-nude h-fit sticky top-0">
+                      <label className="block text-[10px] font-bold uppercase mb-6 tracking-widest text-charcoal flex items-center gap-2">
+                        <span className="w-4 h-px bg-mocha"></span> Live Gallery Preview
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {editingDress.images?.filter(url => url.trim()).map((url, idx) => (
+                          <div key={idx} className="aspect-[3/4] bg-soft border border-nude relative group overflow-hidden shadow-sm">
+                            <img src={normalizeImageUrl(url)} className="w-full h-full object-cover" alt="" />
+                            <div className="absolute top-1 right-1">
+                              <span className="bg-charcoal/80 text-white text-[8px] px-1.5 py-0.5 rounded font-bold">#{idx + 1}</span>
+                            </div>
                           </div>
+                        ))}
+                        <div className="aspect-[3/4] border-2 border-dashed border-nude flex items-center justify-center text-muted text-center p-4">
+                          <p className="text-[9px] uppercase font-bold leading-relaxed opacity-40">Preview<br/>Otomatis</p>
                         </div>
-                      ))}
-                      <div className="aspect-[3/4] border-2 border-dashed border-nude flex items-center justify-center text-muted text-center p-4">
-                        <p className="text-[9px] uppercase font-bold leading-relaxed">Preview<br/>Otomatis</p>
+                      </div>
+
+                      <div className="mt-8 p-4 bg-white/50 border border-nude text-[9px] text-muted italic leading-relaxed">
+                        Tip: Tarik gambar ke kotak di sebelah kiri untuk mengganti foto secara spesifik.
                       </div>
                     </div>
                   </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatPrice, getWhatsAppLink, type Dress } from '../data/dresses'
+import { normalizeImageUrl } from '../lib/utils/image'
 
 export default function DressDetail({ navigate: _ }: { navigate?: any }) {
   const navigate = useNavigate()
@@ -69,7 +70,7 @@ export default function DressDetail({ navigate: _ }: { navigate?: any }) {
         <div className="lg:col-span-7">
           <div className="aspect-[3/4] bg-soft overflow-hidden mb-4">
             <img
-              src={dress.images[activeImage] || 'https://via.placeholder.com/800x1000?text=No+Image'}
+              src={normalizeImageUrl(dress.images[activeImage]) || 'https://via.placeholder.com/800x1000?text=No+Image'}
               alt={dress.name}
               className="w-full h-full object-cover"
             />
@@ -112,7 +113,7 @@ export default function DressDetail({ navigate: _ }: { navigate?: any }) {
                         activeImage === idx ? 'border-mocha' : 'border-transparent'
                       }`}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <img src={normalizeImageUrl(img)} alt="" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
