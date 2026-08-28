@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
+import { invitationService } from '../../lib/invitation/invitationService'
 import type { InvitationProject } from '../../lib/invitation/types'
 
 function Countdown({ targetDate }: { targetDate: string }) {
+  // ... (keep countdown logic)
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
 
   useEffect(() => {
@@ -47,8 +50,8 @@ export default function DashboardOverview({ project }: { project: InvitationProj
   const [statsData, setStatsData] = useState({ total: 0, sent: 0, opened: 0, rsvp: 0 })
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    async function fetchStats() {
+  const fetchStats = async () => {
+    try {
       const guests = await invitationService.getGuests(project.id)
       const rsvps = await invitationService.getRSVPs(project.id)
 
@@ -58,9 +61,26 @@ export default function DashboardOverview({ project }: { project: InvitationProj
         opened: guests.filter(g => g.status === 'opened').length,
         rsvp: rsvps.length
       })
+    } catch (err) {
+      console.error("Error fetching realtime stats:", err)
+    } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
     fetchStats()
+
+    // Realtime channel for guests & rsvps
+    const channel = supabase
+      .channel('invitation-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'invitation_guests' }, () => fetchStats())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'invitation_rsvps' }, () => fetchStats())
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [project.id])
 
   const stats = [

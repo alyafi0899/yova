@@ -539,35 +539,70 @@ function RSVPSection({ config, onSubmit }: { config: any, onSubmit: (data: any) 
        <div className="absolute inset-0 opacity-[0.05] grayscale bg-[url(https://images.unsplash.com/photo-1519741497674-611481863552?w=1200)] bg-cover" />
        <div className="h-full flex flex-col items-center justify-center p-10 text-center relative z-20 overflow-hidden">
           {submitted ? (
-            <div className="space-y-10">
-               <div className="w-20 h-20 rounded-full border border-gold/30 flex items-center justify-center mx-auto shadow-2xl"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="1.5"><path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
-               <h3 className="text-3xl text-white font-serif italic">Thank You</h3>
-               <p className="text-base text-gold/60 font-serif italic leading-loose px-4 max-w-xs mx-auto">"Kehadiran dan doa restu Anda adalah kado terindah bagi kami."</p>
+            <div className="space-y-10 animate-in fade-in zoom-in duration-700">
+               <div className="w-24 h-24 rounded-full border-2 border-white flex items-center justify-center mx-auto shadow-2xl bg-white/10">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                    <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+               </div>
+               <div className="space-y-4">
+                  <h3 className="text-4xl text-white font-serif italic">Thank You</h3>
+                  <div className="w-12 h-px bg-white/40 mx-auto" />
+                  <p className="text-lg text-white font-serif italic leading-loose px-4 max-w-xs mx-auto">
+                    "Kehadiran dan doa restu Anda adalah kado terindah bagi kami."
+                  </p>
+               </div>
             </div>
           ) : (
             <>
                <div className="space-y-3 mb-10 shrink-0">
-                  <p className="text-[10px] tracking-[0.8em] uppercase text-gold font-bold italic">R.S.V.P</p>
-                  <h2 className="text-4xl text-white font-serif italic tracking-tight leading-tight">Will You Join Us?</h2>
+                  <p className="text-[11px] tracking-[0.8em] uppercase text-white font-bold italic">R.S.V.P</p>
+                  <h2 className="text-5xl text-white font-serif italic tracking-tight leading-tight">Will You Join Us?</h2>
                </div>
-               <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6 bg-white/5 backdrop-blur-3xl p-10 border border-white/10 shadow-2xl overflow-y-auto pr-2 inv-scroll max-h-[70vh]">
-                  <div className="space-y-1.5 text-left">
-                     <label className="text-[9px] uppercase tracking-[0.4em] text-gold font-bold italic opacity-60">Full Name</label>
-                     <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-transparent border-b border-white/20 p-3 text-lg text-ivory focus:outline-none focus:border-gold font-serif italic transition-all placeholder:text-white/10" placeholder="Your name..." />
+               <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-8 bg-white/5 backdrop-blur-3xl p-10 border border-white/20 shadow-2xl overflow-y-auto pr-2 inv-scroll max-h-[75vh]">
+                  <div className="space-y-2 text-left">
+                     <label className="text-[10px] uppercase tracking-[0.4em] text-white font-bold">Full Name</label>
+                     <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full bg-transparent border-b-2 border-white/60 p-3 text-xl text-white focus:outline-none focus:border-white font-serif italic transition-all placeholder:text-white/40"
+                        placeholder="Your name..."
+                     />
                   </div>
-                  <div className="space-y-3 text-left">
-                     <label className="text-[9px] uppercase tracking-[0.4em] text-gold font-bold italic opacity-60">Attendance</label>
-                     <div className="flex gap-3">
+                  <div className="space-y-4 text-left">
+                     <label className="text-[10px] uppercase tracking-[0.4em] text-white font-bold">Attendance</label>
+                     <div className="flex flex-col gap-3">
                         {['Hadir', 'InsyaAllah', 'Tidak'].map(opt => (
-                          <button key={opt} type="button" onClick={() => setAttendance(opt)} className={`flex-1 py-3 text-[10px] font-bold border tracking-[0.3em] uppercase transition-all ${attendance === opt ? 'bg-gold text-forest border-gold shadow-2xl scale-[1.02]' : 'border-white/10 text-white hover:bg-white/5'}`}>{opt}</button>
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => setAttendance(opt)}
+                            className={`py-4 text-[11px] font-bold border-2 tracking-[0.3em] uppercase transition-all ${
+                              attendance === opt
+                              ? 'bg-white text-forest border-white shadow-2xl scale-[1.02]'
+                              : 'border-white text-white hover:bg-white/10'
+                            }`}
+                          >
+                            {opt}
+                          </button>
                         ))}
                      </div>
                   </div>
-                  <div className="space-y-1.5 text-left">
-                     <label className="text-[9px] uppercase tracking-[0.4em] text-gold font-bold italic opacity-60">Message / Wishes</label>
-                     <textarea value={message} onChange={(e) => setMessage(e.target.value)} className="w-full bg-transparent border border-white/10 p-3 text-sm text-ivory focus:outline-none focus:border-gold font-serif italic transition-all h-24 resize-none" placeholder="Tinggalkan pesan doa..." />
+                  <div className="space-y-2 text-left">
+                     <label className="text-[10px] uppercase tracking-[0.4em] text-white font-bold">Message / Wishes</label>
+                     <textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        className="w-full bg-transparent border-2 border-white/30 p-4 text-base text-white focus:outline-none focus:border-white font-serif italic transition-all h-32 resize-none placeholder:text-white/30 rounded-sm"
+                        placeholder="Tinggalkan pesan doa..."
+                     />
                   </div>
-                  <button type="submit" disabled={!name || !attendance} className="w-full py-5 bg-gold text-forest text-[11px] font-bold uppercase tracking-[0.6em] disabled:opacity-20 shadow-2xl hover:brightness-110 active:scale-95 transition-all mt-4 shrink-0">
+                  <button
+                    type="submit"
+                    disabled={!name || !attendance}
+                    className="w-full py-6 bg-white text-forest text-xs font-bold uppercase tracking-[0.8em] disabled:opacity-20 shadow-2xl hover:bg-ivory active:scale-95 transition-all mt-6 shrink-0"
+                  >
                      Confirm RSVP
                   </button>
                </form>
