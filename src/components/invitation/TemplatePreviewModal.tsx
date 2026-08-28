@@ -70,35 +70,19 @@ export default function TemplatePreviewModal({
           </div>
         </div>
 
-        {/* Preview area */}
-        <div className="flex-1 overflow-hidden flex justify-center bg-soft p-12">
+        {/* Preview area - No physical frame, centered and flexible */}
+        <div className="flex-1 overflow-hidden flex justify-center bg-soft p-0 md:p-8">
           <div
             className={`transition-all duration-500 shadow-2xl bg-white relative overflow-hidden ${
-              device === 'mobile' ? 'aspect-[9/19.5] h-[95%] max-h-[850px] rounded-[3rem] border-[8px] border-[#1A1210]' :
-              device === 'tablet' ? 'aspect-[3/4] h-[92%] max-h-[800px] rounded-[1.5rem] border-[8px] border-[#1A1210]' :
-              device === 'laptop-p' ? 'aspect-[9/16] h-[95%] rounded-lg border-2 border-nude' :
-              'aspect-[16/9] w-full max-w-5xl rounded-sm border border-nude'
+              device === 'mobile' ? 'w-full max-w-[430px] h-[95%] max-h-[850px] rounded-xl border border-nude/30' :
+              device === 'tablet' ? 'w-full max-w-[768px] h-[95%] max-h-[1024px] rounded-xl border border-nude/30' :
+              device === 'laptop-p' ? 'w-full max-w-[450px] h-full rounded-none border-x border-nude/30' :
+              'w-full max-w-[1200px] h-full rounded-none border-x border-nude/30'
             }`}
           >
-            <div className="w-full h-full overflow-y-auto no-scrollbar relative">
+            <div className="w-full h-full overflow-hidden relative">
               <SakinahInvitation data={previewData} previewMode={true} />
             </div>
-
-            {/* Device Specific Elements */}
-            {device === 'mobile' && (
-              <>
-                {/* Notch */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#1A1210] rounded-b-2xl z-50 flex items-center justify-center pt-1">
-                   <div className="w-10 h-1 bg-white/10 rounded-full" />
-                </div>
-                {/* Home Indicator */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-[#1A1210]/20 rounded-full z-50" />
-              </>
-            )}
-
-            {device === 'tablet' && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-6 bg-[#1A1210] rounded-full mt-2 z-50" />
-            )}
           </div>
         </div>
       </div>

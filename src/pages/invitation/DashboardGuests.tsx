@@ -6,6 +6,7 @@ export default function DashboardGuests({ project }: { project: InvitationProjec
   const [guests, setGuests] = useState<Guest[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [editingGuest, setEditingGuest] = useState<Guest | null>(null)
   const [newGuest, setNewGuest] = useState({ name: '', whatsapp: '', category: 'Friend', guestCount: 2 })
 
   useEffect(() => {
@@ -21,10 +22,38 @@ export default function DashboardGuests({ project }: { project: InvitationProjec
 
   const handleAddGuest = async (e: React.FormEvent) => {
     e.preventDefault()
-    await invitationService.addGuest(project.id, newGuest)
+    if (editingGuest) {
+       await invitationService.updateGuest(editingGuest.id, {
+          name: newGuest.name,
+          whatsapp: newGuest.whatsapp,
+          category: newGuest.category,
+          guestCount: newGuest.guestCount
+       })
+       setEditingGuest(null)
+    } else {
+       await invitationService.addGuest(project.id, newGuest)
+    }
     setNewGuest({ name: '', whatsapp: '', category: 'Friend', guestCount: 2 })
     setShowAddModal(false)
     fetchGuests()
+  }
+
+  const handleEditClick = (guest: Guest) => {
+     setEditingGuest(guest)
+     setNewGuest({
+        name: guest.name,
+        whatsapp: guest.whatsapp,
+        category: guest.category,
+        guestCount: guest.guestCount
+     })
+     setShowAddModal(true)
+  }
+
+  const handleDeleteGuest = async (id: string) => {
+     if (confirm('Hapus tamu ini?')) {
+        await invitationService.deleteGuest(id)
+        fetchGuests()
+     }
   }
 
   const getShareLink = (guest: Guest) => {
@@ -92,6 +121,16 @@ export default function DashboardGuests({ project }: { project: InvitationProjec
                 <td className="px-6 py-4">
                   <div className="flex gap-2">
                     <button
+                      onClick={() => handleEditClick(guest)}
+                      className="p-2 border border-nude hover:bg-white text-[10px] uppercase transition-colors"
+                      title="Edit Tamu"
+                    >🖋️</button>
+                    <button
+                      onClick={() => handleDeleteGuest(guest.id)}
+                      className="p-2 border border-red-100 text-red-500 hover:bg-red-50 text-[10px] uppercase transition-colors"
+                      title="Hapus Tamu"
+                    >🗑️</button>
+                    <button
                       onClick={() => handleCopyLink(guest)}
                       className="p-2 border border-nude hover:bg-white text-[10px] uppercase transition-colors"
                       title="Salin Link"
@@ -120,8 +159,8 @@ export default function DashboardGuests({ project }: { project: InvitationProjec
       {showAddModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-charcoal/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md p-10 border border-nude shadow-2xl relative">
-            <button onClick={() => setShowAddModal(false)} className="absolute top-4 right-4 text-muted hover:text-charcoal">✕</button>
-            <h3 className="font-display text-2xl text-charcoal mb-8">Tambah Tamu Baru</h3>
+            <button onClick={() => { setShowAddModal(false); setEditingGuest(null); }} className="absolute top-4 right-4 text-muted hover:text-charcoal">✕</button>
+            <h3 className="font-display text-2xl text-charcoal mb-8">{editingGuest ? 'Edit Data Tamu' : 'Tambah Tamu Baru'}</h3>
             <form onSubmit={handleAddGuest} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Nama Tamu</label>

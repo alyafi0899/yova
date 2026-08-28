@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import type { InvitationProject, InvitationData } from '../../lib/invitation/types'
 import { invitationService } from '../../lib/invitation/invitationService'
 import SakinahInvitation from '../../components/invitation/sakina/SakinahInvitation'
+import ImageUpload from '../../components/common/ImageUpload'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface DashboardCustomizeProps {
@@ -139,14 +140,14 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
           </div>
         </aside>
 
-        {/* CENTER: Preview - Perfectly Aligned and Large */}
-        <main className="flex-1 bg-[#FDFCFB] flex items-center justify-center p-6 md:p-12 overflow-auto relative bg-[radial-gradient(#C7A96B20_1.5px,transparent_1.5px)] [background-size:32px_32px]">
+        {/* CENTER: Preview - No physical frame, flexible and centered */}
+        <main className="flex-1 bg-[#FDFCFB] flex items-center justify-center p-0 md:p-6 overflow-auto relative bg-[radial-gradient(#C7A96B20_1.5px,transparent_1.5px)] [background-size:32px_32px]">
           <div
-            className={`transition-all duration-700 bg-white shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] relative overflow-hidden flex flex-col mx-auto shrink-0 ${
-              device === 'mobile' ? 'aspect-[9/19.5] h-[95%] max-h-[920px] rounded-[3rem] border-[8px] border-[#1A1210]' :
-              device === 'tablet' ? 'aspect-[3/4] h-[92%] max-h-[900px] rounded-[2rem] border-[8px] border-[#1A1210]' :
-              device === 'laptop-p' ? 'aspect-[9/16] h-[95%] max-h-[950px] rounded-2xl border-[3px] border-[#1A1210]' :
-              'aspect-[16/9] w-full max-w-[1200px] rounded-lg border-[3px] border-[#1A1210]'
+            className={`transition-all duration-700 bg-white shadow-2xl relative overflow-hidden flex flex-col mx-auto shrink-0 ${
+              device === 'mobile' ? 'w-full max-w-[430px] h-[95%] max-h-[900px] rounded-xl border border-nude/30' :
+              device === 'tablet' ? 'w-full max-w-[768px] h-[95%] max-h-[1024px] rounded-xl border border-nude/30' :
+              device === 'laptop-p' ? 'w-full max-w-[450px] h-full rounded-none border-x border-nude/30' :
+              'w-full max-w-[1200px] h-full rounded-none border-x border-nude/30'
             }`}
           >
             <div className="flex-1 w-full overflow-hidden relative bg-white">
@@ -156,22 +157,6 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                 externalIndex={dashboardSections.findIndex(s => s.id === activeSection)}
               />
             </div>
-
-            {/* Device Specific Elements */}
-            {device === 'mobile' && (
-              <>
-                {/* Notch */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#1A1210] rounded-b-2xl z-50 flex items-center justify-center pt-1">
-                   <div className="w-10 h-1 bg-white/10 rounded-full" />
-                </div>
-                {/* Home Indicator */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-[#1A1210]/20 rounded-full z-50" />
-              </>
-            )}
-
-            {device === 'tablet' && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-6 bg-[#1A1210] rounded-full mt-2 z-50" />
-            )}
           </div>
         </main>
 
@@ -195,18 +180,11 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
               >
                 {/* Dynamic Controls based on activeSection */}
                 {activeSection === 'cover' && (
-                  <>
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Foto Utama</label>
-                      <input
-                        type="text"
-                        value={tempData.sections.find(s => s.id === 'cover')?.config.couplePhoto}
-                        onChange={(e) => handleUpdate('cover', 'couplePhoto', e.target.value)}
-                        className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
-                        placeholder="URL Foto..."
-                      />
-                    </div>
-                  </>
+                  <ImageUpload
+                    label="Foto Utama (Watercolor Hero)"
+                    value={tempData.sections.find(s => s.id === 'cover')?.config.couplePhoto}
+                    onChange={(url) => handleUpdate('cover', 'couplePhoto', url)}
+                  />
                 )}
 
                 {activeSection === 'introduction' && (
@@ -243,15 +221,11 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                             className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-bold uppercase tracking-widest text-muted">URL Foto</label>
-                          <input
-                            type="text"
-                            value={tempData.sections.find(s => s.id === 'couple')?.config[p].image}
-                            onChange={(e) => handleUpdate('couple', `${p}.image`, e.target.value)}
-                            className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
-                          />
-                        </div>
+                        <ImageUpload
+                          label="Foto Portrait"
+                          value={tempData.sections.find(s => s.id === 'couple')?.config[p].image}
+                          onChange={(url) => handleUpdate('couple', `${p}.image`, url)}
+                        />
                       </div>
                     ))}
                   </>
@@ -408,6 +382,16 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                               className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
                             />
                          </div>
+                         <ImageUpload
+                            label="Foto Polaroid"
+                            value={s.image}
+                            onChange={(url) => {
+                               const nextItems = [...tempData.sections.find(s => s.id === 'story')?.config.items]
+                               nextItems[i].image = url
+                               handleUpdate('story', 'items', nextItems)
+                            }}
+                            aspectRatio="aspect-square"
+                         />
                          <div className="space-y-2">
                             <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Deskripsi</label>
                             <textarea
@@ -426,13 +410,22 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                 )}
 
                 {activeSection === 'gallery' && (
-                  <div className="space-y-4">
-                    <label className="text-[9px] font-bold uppercase tracking-widest text-muted">URL Foto Galeri (Satu per baris)</label>
-                    <textarea
-                      value={tempData.sections.find(s => s.id === 'gallery')?.config.images.join('\n')}
-                      onChange={(e) => handleUpdate('gallery', 'images', e.target.value.split('\n'))}
-                      className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha h-64 font-mono leading-tight"
-                    />
+                  <div className="space-y-6">
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Koleksi Galeri</label>
+                    <div className="grid grid-cols-2 gap-4">
+                       {tempData.sections.find(s => s.id === 'gallery')?.config.images.map((img: string, i: number) => (
+                          <ImageUpload
+                             key={i}
+                             value={img}
+                             onChange={(url) => {
+                                const nextImages = [...tempData.sections.find(s => s.id === 'gallery')?.config.images]
+                                nextImages[i] = url
+                                handleUpdate('gallery', 'images', nextImages)
+                             }}
+                             aspectRatio="aspect-[3/4]"
+                          />
+                       ))}
+                    </div>
                   </div>
                 )}
 
