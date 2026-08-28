@@ -2,41 +2,46 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import type { InvitationData } from '../../../lib/invitation/types';
 
+// ── Design System ──────────────────────────────────────────────────────────
+
 const C = {
   forest: '#17352F',
-  forestDark: '#0D241F',
+  forestDark: '#0A1A17',
   gold: '#C7A96B',
-  goldLight: '#E5D5A7',
+  goldFoil: 'linear-gradient(135deg, #A68B5B 0%, #E5D5A7 50%, #A68B5B 100%)',
   ivory: '#F8F4EC',
-  surface: '#FFFDF8',
-  ink: '#252522',
+  cream: '#FDFCFB',
+  ink: '#1A1210',
   muted: '#8D897E',
   accent: '#A68B5B',
+  paper: '#FFFDF8'
 };
 
 const serif = "'Playfair Display', Georgia, serif";
 
-// ── Shared Visual Elements ──────────────────────────────────────────────────
+// ── Shared Visual Components ────────────────────────────────────────────────
 
 function PaperTexture() {
   return (
-    <div className="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-multiply overflow-hidden z-0">
+    <div className="absolute inset-0 pointer-events-none opacity-[0.04] mix-blend-multiply overflow-hidden z-0">
       <svg width="100%" height="100%">
-        <filter id="noise">
-          <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch" />
+        <filter id="grain">
+          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
         </filter>
-        <rect width="100%" height="100%" filter="url(#noise)" />
+        <rect width="100%" height="100%" filter="url(#grain)" />
       </svg>
     </div>
   );
 }
 
-function GoldDivider() {
+function Monogram({ size = 80, opacity = 0.8 }: { size?: number; opacity?: number }) {
   return (
-    <div className="flex items-center justify-center gap-4 w-full max-w-[180px] mx-auto shrink-0">
-      <div className="h-[0.5px] flex-1 bg-gradient-to-r from-transparent via-gold to-transparent opacity-40" />
-      <div className="rotate-45 w-1 h-1 border border-gold/60" />
-      <div className="h-[0.5px] flex-1 bg-gradient-to-r from-transparent via-gold to-transparent opacity-40" />
+    <div className="relative flex items-center justify-center shrink-0" style={{ width: size, height: size, opacity }}>
+       <div className="absolute inset-0 rounded-full border border-gold/30 animate-pulse" />
+       <svg width={size * 0.7} height={size * 0.7} viewBox="0 0 100 100" fill="none">
+         <path d="M30 30 Q50 10 70 30 T70 70 Q50 90 30 70 T30 30" stroke={C.gold} strokeWidth="1" />
+         <text x="50" y="55" textAnchor="middle" fill={C.gold} style={{ fontFamily: serif, fontSize: 24 }}>S</text>
+       </svg>
     </div>
   );
 }
@@ -51,121 +56,122 @@ function IslamicStar({ size = 64, opacity = 0.08, color = C.gold }: { size?: num
   );
 }
 
+function GoldDivider() {
+  return (
+    <div className="flex items-center justify-center gap-4 w-full max-w-[180px] mx-auto shrink-0">
+      <div className="h-[0.5px] flex-1 bg-gradient-to-r from-transparent via-gold to-transparent opacity-40" />
+      <div className="rotate-45 w-1 h-1 border border-gold/60" />
+      <div className="h-[0.5px] flex-1 bg-gradient-to-r from-transparent via-gold to-transparent opacity-40" />
+    </div>
+  );
+}
+
 function OrnamentBorder() {
   return (
-    <div className="absolute inset-4 pointer-events-none border border-gold/10 z-10">
-       <div className="absolute -top-1 -left-1 w-3 h-3 border-t border-l border-gold/40" />
-       <div className="absolute -top-1 -right-1 w-3 h-3 border-t border-r border-gold/40" />
-       <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b border-l border-gold/40" />
-       <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b border-r border-gold/40" />
+    <div className="absolute inset-4 pointer-events-none border border-gold/10 z-10 transition-opacity duration-1000">
+       <div className="absolute -top-1 -left-1 w-4 h-4 border-t border-l border-gold/40" />
+       <div className="absolute -top-1 -right-1 w-4 h-4 border-t border-r border-gold/40" />
+       <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b border-l border-gold/40" />
+       <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b border-r border-gold/40" />
     </div>
   );
 }
 
 // ── Layout Wrappers ──────────────────────────────────────────────────────────
 
-function SectionWrapper({ id, children, light = false, customBg }: { id: string, children: React.ReactNode, light?: boolean, customBg?: string }) {
+function SectionScene({ id, children, bg = C.ivory, ornament = true }: { id: string, children: React.ReactNode, bg?: string, ornament?: boolean }) {
   return (
     <section
       id={id}
       className="relative w-full h-screen flex flex-col items-center justify-center overflow-hidden shrink-0"
-      style={{ backgroundColor: customBg || (light ? C.surface : C.ivory) }}
+      style={{ backgroundColor: bg }}
     >
       <PaperTexture />
-      <OrnamentBorder />
-      <div className="relative z-20 w-full h-full flex flex-col items-center justify-center p-6 max-w-lg mx-auto">
+      {ornament && <OrnamentBorder />}
+      <div className="relative z-20 w-full h-full">
         {children}
       </div>
     </section>
   );
 }
 
-function HorizontalTakeoverSection({ id, title, tagline, children, light = false, itemsCount, containerRef }: { id: string, title: string, tagline?: string, children: React.ReactNode, light?: boolean, itemsCount: number, containerRef: any }) {
+function VerticalTakeover({ id, title, tagline, children, bg = C.cream, itemsCount, containerRef }: { id: string, title: string, tagline?: string, children: React.ReactNode, bg?: string, itemsCount: number, containerRef: any }) {
   const targetRef = useRef(null);
   const heightFactor = Math.max(3, itemsCount * 2);
-
-  const { scrollYProgress } = useScroll({
-    target: targetRef,
-    container: containerRef,
-    offset: ["start start", "end end"]
-  });
-
-  const x = useTransform(scrollYProgress, [0, 1], ["0%", `-${(itemsCount - 1) * 100}%`]);
-  const smoothX = useSpring(x, { stiffness: 80, damping: 25, restDelta: 0.001 });
+  const { scrollYProgress } = useScroll({ target: targetRef, container: containerRef, offset: ["start start", "end end"] });
+  const x = useTransform(scrollYProgress, [0.05, 0.95], ["0%", `-${(itemsCount - 1) * 100}%`]);
+  const smoothX = useSpring(x, { stiffness: 60, damping: 25, restDelta: 0.001 });
 
   return (
     <section ref={targetRef} id={id} className="relative w-full" style={{ height: `${heightFactor * 100}vh` }}>
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col items-center bg-white/50" style={{ backgroundColor: light ? C.surface : C.ivory }}>
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col" style={{ backgroundColor: bg }}>
         <PaperTexture />
-        <OrnamentBorder />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
-        {/* Tight Header Area */}
-        <div className="text-center pt-24 pb-4 relative z-30 pointer-events-none shrink-0 px-4">
-          <p className="text-[8px] tracking-[0.4em] uppercase mb-1 text-gold font-bold">{tagline}</p>
-          <h2 className="text-3xl text-forest font-serif italic leading-tight">{title}</h2>
-          <div className="mt-2 shrink-0"><GoldDivider /></div>
+        <div className="px-10 pt-20 pb-4 relative z-30 pointer-events-none">
+          <p className="text-[9px] tracking-[0.6em] uppercase text-gold font-bold mb-1">{tagline}</p>
+          <h2 className="text-3xl text-forest font-serif italic">{title}</h2>
+          <div className="mt-4"><GoldDivider /></div>
         </div>
 
-        {/* Content Area - No flex-1 to keep it tight to header */}
-        <div className="w-full relative z-10 overflow-hidden flex items-start justify-center mt-4">
-          <motion.div style={{ x: smoothX }} className="flex">
+        <div className="flex-1 w-full relative z-10 overflow-hidden -mt-4">
+          <motion.div style={{ x: smoothX }} className="flex h-full">
              {children}
           </motion.div>
         </div>
 
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-30 opacity-30">
-           {Array.from({ length: itemsCount }).map((_, i) => (
-             <div key={i} className="w-1 h-1 rounded-full border border-gold/40" />
-           ))}
+        <div className="absolute bottom-8 left-10 flex gap-4 z-30 items-center opacity-40">
+           <span className="text-[8px] tracking-[0.4em] uppercase text-gold font-bold">Journey</span>
+           <div className="flex gap-2">
+             {Array.from({ length: itemsCount }).map((_, i) => (
+                <div key={i} className="w-1 h-1 rounded-full border border-gold/40" />
+             ))}
+           </div>
         </div>
       </div>
     </section>
   );
 }
 
-// ── Sections ────────────────────────────────────────────────────────────
+// ── Section Components ───────────────────────────────────────────────────────
 
 function Envelope({ guestName, onOpen, data }: { guestName: string, onOpen: () => void, data: InvitationData }) {
   const [isAnimating, setIsAnimating] = useState(false);
-
-  const handleOpen = () => {
-    setIsAnimating(true);
-    setTimeout(onOpen, 1500);
-  };
 
   return (
     <div className="fixed inset-0 z-[500] bg-forest flex items-center justify-center overflow-hidden">
       <PaperTexture />
       <motion.div
         animate={isAnimating ? { rotateX: -110, y: '-100%', opacity: 0 } : { rotateX: 0, y: 0 }}
-        transition={{ duration: 1.2, ease: [0.45, 0, 0.55, 1] }}
-        className="absolute inset-0 w-full h-1/2 bg-forestDark border-b border-gold/30 z-40 flex items-end justify-center pb-12 origin-top shadow-2xl"
+        transition={{ duration: 1.5, ease: [0.65, 0, 0.35, 1] }}
+        className="absolute inset-0 w-full h-1/2 bg-forestDark border-b border-gold/20 z-40 flex items-end justify-center pb-12 origin-top shadow-2xl"
       >
-        <div className="scale-125 mb-4"><IslamicStar size={120} opacity={0.15} /></div>
+        <Monogram size={100} opacity={0.15} />
       </motion.div>
       <motion.div
         animate={isAnimating ? { rotateX: 110, y: '100%', opacity: 0 } : { rotateX: 0, y: 0 }}
-        transition={{ duration: 1.2, ease: [0.45, 0, 0.55, 1] }}
-        className="absolute bottom-0 left-0 w-full h-1/2 bg-forest border-t border-gold/30 z-40 flex items-start justify-center pt-12 origin-bottom shadow-2xl"
+        transition={{ duration: 1.5, ease: [0.65, 0, 0.35, 1] }}
+        className="absolute bottom-0 left-0 w-full h-1/2 bg-forest border-t border-gold/20 z-40 flex items-start justify-center pt-16 origin-bottom shadow-2xl"
       >
-        <button onClick={handleOpen} className="group relative px-14 py-5 bg-transparent border border-gold text-gold uppercase tracking-[0.5em] text-[11px] font-bold overflow-hidden transition-all hover:text-forest active:scale-95 z-50">
+        <button onClick={() => { setIsAnimating(true); setTimeout(onOpen, 1600); }} className="group relative px-16 py-5 bg-transparent border border-gold/60 text-gold uppercase tracking-[0.6em] text-[10px] font-bold overflow-hidden transition-all hover:border-gold active:scale-95 z-50">
           <span className="relative z-10">Buka Undangan</span>
-          <div className="absolute inset-0 bg-gold transition-transform duration-700 -translate-x-full group-hover:translate-x-0" />
+          <div className="absolute inset-0 bg-gold/10 transition-transform duration-700 -translate-x-full group-hover:translate-x-0" />
         </button>
       </motion.div>
-      <div className="absolute inset-0 bg-ivory flex flex-col items-center justify-center p-12 text-center overflow-hidden">
-         <OrnamentBorder />
-         <div className="space-y-8 w-full max-w-xs mx-auto">
-            <div className="space-y-2">
-              <p className="text-[10px] tracking-[0.4em] uppercase text-muted font-bold">The Wedding of</p>
-              <h2 className="text-4xl text-forest font-serif italic truncate">
-                {data.couple.bride.name.split(' ')[0]} <span className="text-2xl font-sans not-italic text-gold">&</span> {data.couple.groom.name.split(' ')[0]}
+      <div className="absolute inset-0 bg-paper flex flex-col items-center justify-center p-12 text-center">
+         <div className="space-y-10 max-w-sm">
+            <div className="space-y-4">
+              <p className="text-[10px] tracking-[0.5em] uppercase text-muted font-bold">The Wedding of</p>
+              <h2 className="text-6xl text-forest font-serif italic leading-none">
+                {data.couple.bride.name.split(' ')[0]} <br/>
+                <span className="text-3xl font-sans not-italic text-gold my-2 block">&</span>
+                {data.couple.groom.name.split(' ')[0]}
               </h2>
             </div>
-            <div className="w-16 h-px bg-gold/40 mx-auto" />
-            <div className="space-y-3">
-              <p className="text-[10px] tracking-[0.3em] uppercase text-muted font-medium">Spesial Untuk</p>
-              <p className="text-xl font-serif text-forest border-b border-gold/20 pb-1 inline-block px-4">{guestName}</p>
+            <div className="w-16 h-px bg-gold/30 mx-auto" />
+            <div className="space-y-4">
+              <p className="text-[9px] tracking-[0.4em] uppercase text-muted font-medium italic">Spesial Untuk</p>
+              <p className="text-3xl font-serif text-ink border-b border-gold/10 pb-4 inline-block px-8">{guestName}</p>
             </div>
          </div>
       </div>
@@ -175,97 +181,84 @@ function Envelope({ guestName, onOpen, data }: { guestName: string, onOpen: () =
 
 function HeroSection({ config, data, guestName }: { config: any, data: InvitationData, guestName: string }) {
   return (
-    <SectionWrapper id="cover">
-       <div className="flex-1 flex flex-col items-center justify-between py-4 w-full relative z-10 overflow-hidden">
-        <div className="text-center shrink-0">
-          <p className="text-base leading-loose mb-0.5 text-gold tracking-[0.04em] font-serif" dir="rtl">
-            {config.bismillah || 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'}
-          </p>
-          <p className="text-[8px] tracking-[0.2em] uppercase text-muted font-bold opacity-60">
-            {config.bismillahTranslation || 'Bismillahirrahmanirrahim'}
-          </p>
-        </div>
-
-        <div className="relative flex-1 flex items-center justify-center my-4 overflow-hidden min-h-0">
-          <div className="h-full aspect-[4/5] max-h-[300px] overflow-hidden shadow-2xl relative z-10 rounded-sm">
-            <img src={config.couplePhoto} alt="Bride & Groom" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-forest/20 to-transparent" />
+    <SectionScene id="cover" bg={C.cream}>
+       <div className="h-full flex flex-col justify-between py-16 px-10 relative">
+          <div className="flex justify-between items-start">
+             <div className="text-left space-y-1 shrink-0">
+                <p className="text-xl text-gold font-serif" dir="rtl">{config.bismillah || 'بِسْمِ اللَّهِ'}</p>
+                <p className="text-[8px] tracking-[0.3em] uppercase text-muted font-bold opacity-50">As-Salaam-Alaikum</p>
+             </div>
+             <Monogram size={50} opacity={0.3} />
           </div>
-          <div className="absolute top-2 left-2 w-[calc(100%-8px)] h-[calc(100%-8px)] border border-gold/30 z-0 opacity-40 translate-x-1.5 translate-y-1.5" />
-        </div>
-
-        <div className="text-center space-y-2 shrink-0 pb-2">
-          <div className="space-y-0">
-            <p className="text-[8px] tracking-[0.4em] uppercase text-gold font-bold leading-none mb-1">{config.tagline || 'The Wedding of'}</p>
-            <h1 className="text-4xl leading-tight text-forest font-serif truncate">{data.couple.bride.name.split(' ')[0]}</h1>
-            <p className="text-xl text-gold font-serif italic font-light leading-none my-0.5">&</p>
-            <h1 className="text-4xl leading-tight text-forest font-serif truncate">{data.couple.groom.name.split(' ')[0]}</h1>
-          </div>
-          <div className="pt-1">
-             <GoldDivider />
-             <div className="mt-2 px-4 py-1 border-y border-gold/10 inline-block">
-                <p className="text-sm font-serif italic text-forest font-bold tracking-widest">{guestName}</p>
+          <div className="relative flex flex-col items-end flex-1 justify-center min-h-0">
+             <div className="absolute left-0 bottom-16 z-20 text-left pointer-events-none w-full">
+                <motion.h1 initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} className="text-[80px] leading-[0.8] text-forest font-serif italic drop-shadow-2xl">{data.couple.bride.name.split(' ')[0]}</motion.h1>
+                <div className="flex items-center gap-4 my-4"><div className="w-8 h-px bg-gold" /><span className="text-3xl font-serif text-gold">&</span><div className="w-8 h-px bg-gold" /></div>
+                <motion.h1 initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-[80px] leading-[0.8] text-forest font-serif italic drop-shadow-2xl">{data.couple.groom.name.split(' ')[0]}</motion.h1>
+             </div>
+             <div className="w-[85%] aspect-[3/4] max-h-[380px] relative z-10 overflow-hidden rounded-t-[10rem] border-4 border-white shadow-2xl">
+                <img src={config.couplePhoto} className="w-full h-full object-cover" alt="The Couple" />
+                <div className="absolute inset-0 bg-gradient-to-t from-forest/40 to-transparent" />
              </div>
           </div>
-        </div>
-      </div>
-    </SectionWrapper>
+          <div className="flex justify-between items-end border-t border-gold/10 pt-6 shrink-0">
+             <div className="space-y-1">
+                <p className="text-[8px] tracking-[0.4em] uppercase text-gold font-bold italic">Honored Guest</p>
+                <p className="text-lg font-serif italic text-ink truncate max-w-[200px]">{guestName}</p>
+             </div>
+             <p className="text-[9px] tracking-[0.4em] text-muted font-bold uppercase italic opacity-40">2024 Ceremony</p>
+          </div>
+       </div>
+    </SectionScene>
   );
 }
 
 function IntroductionSection({ config }: { config: any }) {
   return (
-    <SectionWrapper id="introduction">
-      <div className="max-w-xs text-center space-y-6 flex flex-col items-center justify-center">
-        <GoldDivider />
-        <p className="text-[13px] leading-relaxed text-muted font-serif italic px-4 line-clamp-[10]">{config.invitationText}</p>
-        <GoldDivider />
-        <div className="pt-8 flex flex-col items-center gap-2 opacity-20 shrink-0">
-           <p className="text-[7px] tracking-[0.4em] text-gold font-bold">Scroll Down</p>
-           <motion.div animate={{ y: [0, 6, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="w-px h-10 bg-gradient-to-b from-gold to-transparent" />
+    <SectionScene id="introduction">
+      <div className="h-full flex flex-col items-center justify-center p-12 text-center space-y-10">
+        <IslamicStar size={60} opacity={0.15} />
+        <div className="w-px h-16 bg-gradient-to-b from-transparent via-gold/30 to-transparent" />
+        <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 2 }} className="text-lg leading-[1.8] text-muted font-serif italic max-w-xs px-4">{config.invitationText}</motion.p>
+        <div className="w-px h-16 bg-gradient-to-b from-transparent via-gold/30 to-transparent" />
+        <div className="pt-10 flex flex-col items-center gap-4 opacity-20 animate-bounce">
+           <p className="text-[7px] tracking-[0.6em] text-gold font-bold uppercase">Begin Scrolling</p>
+           <div className="w-px h-10 bg-gold" />
         </div>
       </div>
-    </SectionWrapper>
+    </SectionScene>
   );
 }
 
 function QuranSection({ config }: { config: any }) {
   return (
-    <SectionWrapper id="quran" light>
-      <div className="absolute top-0 right-0 p-8 opacity-5 scale-75"><IslamicStar size={200} /></div>
-      <div className="max-w-xs text-center space-y-6 relative z-10 px-4">
-        <div className="space-y-4">
-          <p className="text-[9px] tracking-[0.4em] uppercase text-gold font-bold">Ayat Suci</p>
-          <p className="text-xl leading-relaxed text-forest font-serif italic overflow-hidden line-clamp-[8]">"{config.verse}"</p>
-          <div className="flex flex-col items-center gap-2 pt-2">
-             <div className="w-8 h-px bg-gold/20" />
-             <p className="text-[9px] tracking-[0.2em] text-accent font-bold uppercase">{config.reference}</p>
-          </div>
+    <SectionScene id="quran" bg={C.paper}>
+      <div className="absolute inset-0 opacity-[0.03] grayscale bg-[url(https://images.unsplash.com/photo-1584281723351-9d92ff1f8194?w=1200)] bg-cover" />
+      <div className="h-full flex flex-col items-center justify-center p-12 text-center space-y-10 relative">
+        <p className="text-[10px] tracking-[0.6em] uppercase text-gold font-bold border-b border-gold/10 pb-4 shrink-0">The Holy Verse</p>
+        <motion.p initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} className="text-2xl leading-[1.6] text-forest font-serif italic max-w-xs">{config.verse}</motion.p>
+        <div className="flex flex-col items-center gap-4 shrink-0">
+           <div className="w-12 h-[0.5px] bg-gold/30" />
+           <p className="text-[10px] tracking-[0.4em] text-accent font-bold uppercase">{config.reference}</p>
         </div>
       </div>
-    </SectionWrapper>
+    </SectionScene>
   );
 }
 
 function CoupleCard({ person, isBride }: { person: any, isBride: boolean }) {
   return (
-    <div className="min-w-full flex shrink-0 items-center justify-center p-4">
-       <div className="text-center flex flex-col items-center gap-4 max-w-[280px] w-full">
-          <div className="relative shrink-0">
-            <div className="w-40 h-52 overflow-hidden shadow-xl relative z-10 rounded-sm border-[4px] border-white">
-              <img src={person.image} className="w-full h-full object-cover" alt={person.name} />
-            </div>
-            <div className={`absolute -bottom-2 ${isBride ? '-right-2' : '-left-2'} w-full h-full border border-gold/30 z-0 opacity-40`} />
+    <div className="min-w-full h-full flex shrink-0 items-center justify-center p-10 overflow-hidden">
+       <div className={`w-full max-w-sm flex flex-col ${isBride ? 'items-start' : 'items-end'} relative`}>
+          <div className="w-[75%] aspect-[3/4] max-h-[340px] relative z-20 overflow-hidden shadow-2xl rounded-t-full border-[8px] border-white shrink-0">
+             <img src={person.image} className="w-full h-full object-cover" alt={person.name} />
+             <div className="absolute inset-0 bg-gradient-to-t from-forest/20 to-transparent" />
           </div>
-          <div className="space-y-1 w-full">
-            <h3 className="text-2xl text-forest font-serif italic tracking-tight truncate">{person.name}</h3>
-            <div className="flex flex-col items-center gap-1.5">
-               <div className="w-6 h-[0.5px] bg-gold/40" />
-               <p className="text-[9px] text-muted tracking-widest font-bold uppercase italic opacity-60">
-                  {isBride ? 'Putri Tercinta dari' : 'Putra Tercinta dari'}
-               </p>
-            </div>
-            <p className="text-xs text-forest font-serif leading-relaxed px-4 line-clamp-2">{person.parents}</p>
+          <div className={`absolute ${isBride ? 'right-0 top-1/2' : 'left-0 top-1/2'} -translate-y-1/2 z-30 text-center w-full max-w-[180px] bg-white/10 backdrop-blur-xl p-6 border border-white/20 shadow-2xl rounded-sm`}>
+             <h3 className="text-2xl text-forest font-serif italic tracking-tight mb-3 leading-tight">{person.name}</h3>
+             <div className="w-6 h-[0.5px] bg-gold/40 mx-auto mb-3" />
+             <p className="text-[9px] text-muted tracking-[0.3em] uppercase font-bold mb-1 opacity-60">Beloved {isBride ? 'Daughter' : 'Son'} of</p>
+             <p className="text-xs text-ink font-serif italic leading-relaxed">{person.parents}</p>
           </div>
        </div>
     </div>
@@ -274,12 +267,15 @@ function CoupleCard({ person, isBride }: { person: any, isBride: boolean }) {
 
 function StoryCard({ item }: { item: any }) {
   return (
-    <div className="min-w-full flex shrink-0 items-center justify-center p-4">
-       <div className="max-w-[260px] space-y-4 text-center relative w-full">
-          <div className="inline-block px-4 py-1 bg-forest text-[9px] tracking-[0.4em] uppercase text-gold font-bold shadow-lg">{item.year}</div>
-          <h3 className="text-xl text-forest font-serif italic leading-tight line-clamp-2">{item.title}</h3>
-          <div className="w-8 h-px bg-gold/40 mx-auto" />
-          <p className="text-[13px] leading-relaxed text-muted font-serif italic px-2 line-clamp-[6]">{item.desc}</p>
+    <div className="min-w-full h-full flex shrink-0 items-center justify-center p-8 overflow-hidden">
+       <div className="w-full max-w-xs relative flex flex-col justify-center">
+          <div className="absolute left-1/2 top-0 bottom-0 w-[0.5px] bg-gold/10 -translate-x-1/2" />
+          <div className="relative z-10 bg-paper p-10 border border-gold/10 shadow-2xl text-center space-y-6">
+             <div className="absolute -top-5 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-forest text-gold text-[10px] tracking-[0.5em] uppercase font-bold shadow-xl">{item.year}</div>
+             <h3 className="text-xl text-forest font-serif italic pt-3 leading-tight truncate">{item.title}</h3>
+             <div className="w-10 h-px bg-gold/40 mx-auto" />
+             <p className="text-base leading-relaxed text-muted font-serif italic px-2 line-clamp-6">{item.desc}</p>
+          </div>
        </div>
     </div>
   );
@@ -287,30 +283,33 @@ function StoryCard({ item }: { item: any }) {
 
 function EventCard({ event }: { event: any }) {
   return (
-    <div className="min-w-full flex shrink-0 items-center justify-center p-4">
-       <div className="w-full max-w-[280px] bg-surface border border-gold/10 p-6 text-center space-y-6 shadow-xl relative">
+    <div className="min-w-full h-full flex shrink-0 items-center justify-center p-8 overflow-hidden">
+       <div className="w-full max-w-xs bg-paper border border-gold/10 p-10 text-center space-y-10 shadow-2xl relative overflow-hidden group">
           <div className="space-y-3">
-            <p className="text-[9px] font-bold text-gold uppercase tracking-[0.4em]">{event.name}</p>
-            <p className="text-2xl text-forest font-serif italic tracking-tighter leading-none">{event.date}</p>
-            <p className="text-[10px] font-bold text-muted uppercase tracking-[0.4em] opacity-70">{event.time}</p>
+            <p className="text-[9px] font-bold text-gold uppercase tracking-[0.5em] opacity-80 italic">{event.name}</p>
+            <p className="text-3xl text-forest font-serif italic tracking-tighter leading-none">{event.date}</p>
+            <p className="text-[10px] font-bold text-muted uppercase tracking-[0.4em] pt-2">{event.time}</p>
           </div>
           <div className="w-full h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
-          <div className="space-y-2 px-2">
-            <p className="text-base font-serif text-forest font-medium truncate">{event.venue}</p>
-            <p className="text-[10px] text-muted uppercase tracking-widest leading-tight line-clamp-2">{event.address}</p>
+          <div className="space-y-3">
+            <p className="text-xl font-serif text-ink italic leading-tight truncate">{event.venue}</p>
+            <p className="text-[10px] text-muted uppercase tracking-[0.2em] leading-relaxed line-clamp-2">{event.address}</p>
           </div>
-          <button className="w-full py-3 bg-forest text-goldLight text-[9px] font-bold uppercase tracking-[0.3em] active:scale-95 transition-transform">Lihat Lokasi Maps</button>
+          <button className="relative w-full py-4 border border-forest text-forest text-[9px] font-bold uppercase tracking-[0.4em] overflow-hidden group/btn active:scale-95 transition-all"><span className="relative z-10 group-hover/btn:text-white transition-colors duration-500">View Map</span><div className="absolute inset-0 bg-forest translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500" /></button>
        </div>
     </div>
   );
 }
 
-function GalleryCard({ url }: { url: string }) {
+function GalleryCard({ url, index }: { url: string, index: number }) {
   return (
-    <div className="min-w-full flex shrink-0 items-center justify-center p-6">
-       <div className="w-full aspect-[3/4] max-h-[340px] shadow-2xl relative overflow-hidden rounded-sm border-2 border-white">
-          <img src={url} className="w-full h-full object-cover" alt="Gallery" />
-          <div className="absolute inset-0 bg-gradient-to-t from-forest/40 via-transparent to-transparent opacity-40" />
+    <div className="min-w-full h-full flex shrink-0 items-center justify-center p-10 overflow-hidden">
+       <div className={`w-full max-w-xs h-[60vh] relative ${index % 2 === 0 ? 'mt-8' : '-mt-8'}`}>
+          <div className="w-full h-full overflow-hidden shadow-2xl relative z-10 rounded-sm border-2 border-white">
+             <img src={url} className="w-full h-full object-cover transition-transform duration-[4s] hover:scale-110" alt="Gallery" />
+             <div className="absolute inset-0 bg-gradient-to-t from-forest/50 via-transparent to-transparent opacity-40" />
+          </div>
+          <div className="absolute -bottom-8 -right-4 text-right opacity-20 pointer-events-none"><p className="text-[32px] font-serif italic leading-none text-gold">#{String(index + 1).padStart(2, '0')}</p></div>
        </div>
     </div>
   );
@@ -337,33 +336,31 @@ function CountdownSection({ config }: { config: any }) {
   }, [config.targetDate]);
 
   return (
-    <SectionWrapper id="countdown">
-      <div className="absolute inset-0 bg-forestDark" />
-      <div className="relative z-10 text-center w-full px-8 flex flex-col items-center justify-center h-full">
-        <p className="text-[9px] tracking-[0.6em] uppercase text-gold/60 mb-6 font-bold shrink-0">Wedding Timeline</p>
-        <h2 className="text-2xl text-ivory font-serif italic mb-10 tracking-tight leading-tight shrink-0">{config.title}</h2>
-
-        <div className="grid grid-cols-4 gap-2 max-w-[280px] mx-auto shrink-0">
+    <SectionScene id="countdown" bg={C.forestDark}>
+      <div className="h-full flex flex-col items-center justify-center p-12 text-center space-y-16 relative">
+        <div className="space-y-4 relative z-10 shrink-0">
+           <p className="text-[10px] tracking-[0.8em] uppercase text-gold font-bold opacity-60">The Grand Countdown</p>
+           <h2 className="text-3xl text-ivory font-serif italic tracking-tight leading-tight">{config.title}</h2>
+        </div>
+        <div className="grid grid-cols-4 gap-4 max-w-sm mx-auto relative z-10 shrink-0">
           {[
             { v: t.days, l: 'Days' }, { v: t.hours, l: 'Hours' }, { v: t.minutes, l: 'Mins' }, { v: t.seconds, l: 'Secs' }
           ].map((unit, i) => (
-            <div key={i} className="flex flex-col items-center">
-               <div className="w-12 h-16 bg-forest border border-gold/20 flex items-center justify-center mb-3 rounded-sm shadow-2xl relative">
-                  <span className="text-2xl text-ivory font-serif tabular-nums tracking-tighter">{String(unit.v).padStart(2, '0')}</span>
+            <div key={i} className="flex flex-col items-center group">
+               <div className="w-14 h-20 bg-forest border border-gold/10 flex items-center justify-center mb-3 rounded-sm shadow-2xl relative transition-colors group-hover:border-gold/40">
+                  <span className="text-3xl text-ivory font-serif tabular-nums tracking-tighter">{String(unit.v).padStart(2, '0')}</span>
                </div>
-               <span className="text-[8px] uppercase tracking-[0.4em] text-gold/50 font-bold italic">{unit.l}</span>
+               <span className="text-[8px] uppercase tracking-[0.4em] text-gold/40 font-bold italic">{unit.l}</span>
             </div>
           ))}
         </div>
-
-        <div className="mt-8 space-y-3 shrink-0">
-           <GoldDivider />
-           <p className="text-xs italic text-ivory/80 font-serif tracking-[0.1em] pt-1 uppercase opacity-80">
-              {target.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        <div className="pt-8 relative z-10 shrink-0">
+           <p className="text-base italic text-gold/80 font-serif tracking-[0.2em] border-y border-gold/10 py-3 px-8 inline-block uppercase">
+              {target.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
            </p>
         </div>
       </div>
-    </SectionWrapper>
+    </SectionScene>
   );
 }
 
@@ -377,26 +374,27 @@ function GiftSection({ config }: { config: any }) {
   }
 
   return (
-    <SectionWrapper id="gift">
-      <div className="text-center mb-4 shrink-0 px-4">
-          <p className="text-[9px] tracking-[0.4em] uppercase mb-1 text-gold font-bold">Kado Pernikahan</p>
-          <h2 className="text-3xl text-forest font-serif italic tracking-tight">{config.title}</h2>
-          <p className="text-[11px] mt-1 italic text-muted max-w-[220px] mx-auto leading-relaxed font-serif line-clamp-3">{config.description}</p>
+    <SectionScene id="gift" bg={C.cream}>
+      <div className="h-full flex flex-col justify-center p-12 items-center space-y-10 overflow-hidden">
+        <div className="text-center space-y-4 max-w-xs shrink-0 px-4">
+            <p className="text-[10px] tracking-[0.6em] uppercase text-gold font-bold">Wedding Registry</p>
+            <h2 className="text-3xl text-forest font-serif italic tracking-tight leading-tight">{config.title}</h2>
+            <p className="text-sm leading-relaxed text-muted font-serif italic line-clamp-3">{config.description}</p>
+        </div>
+        <div className="w-full max-w-xs space-y-4 overflow-y-auto pr-2 inv-scroll max-h-[50vh] flex flex-col py-2 min-h-0">
+          {config.accounts.map((acc: any, i: number) => (
+            <div key={i} className="bg-paper p-8 border border-gold/5 text-center shadow-xl relative group shrink-0">
+               <div className="absolute top-0 right-0 p-4 opacity-[0.05]"><IslamicStar size={50} /></div>
+               <p className="text-[8px] uppercase tracking-[0.4em] text-muted mb-6 font-bold opacity-60">{acc.type}</p>
+               <p className="text-2xl text-forest font-serif mb-1 leading-none">{acc.bank}</p>
+               <p className="text-lg text-ink tracking-[0.1em] mb-1 font-bold">{acc.number}</p>
+               <p className="text-[10px] text-muted mb-8 italic uppercase font-medium tracking-widest truncate">a.n. {acc.holder}</p>
+               <button onClick={() => copy(acc.number, `acc-${i}`)} className="relative w-full py-3.5 bg-forest text-gold text-[9px] font-bold uppercase tracking-[0.4em] overflow-hidden group/btn active:scale-95 transition-all shrink-0"><span className="relative z-10">{copied === `acc-${i}` ? 'Account Copied' : 'Copy Number'}</span><div className="absolute inset-0 bg-forestDark translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500" /></button>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="w-full max-w-[280px] space-y-3 overflow-y-auto pr-1 inv-scroll max-h-[60vh]">
-        {config.accounts.map((acc: any, i: number) => (
-          <div key={i} className="bg-surface p-6 border border-gold/10 text-center shadow-lg relative group shrink-0">
-             <p className="text-[8px] uppercase tracking-[0.4em] text-muted mb-4 font-bold opacity-70 italic">{acc.type}</p>
-             <p className="text-xl text-forest font-serif mb-1 leading-tight">{acc.bank}</p>
-             <p className="text-lg text-forest tracking-[0.1em] mb-1 font-bold">{acc.number}</p>
-             <p className="text-[9px] text-muted mb-4 italic uppercase font-medium">a.n. {acc.holder}</p>
-             <button onClick={() => copy(acc.number, `acc-${i}`)} className={`w-full py-3 text-[9px] font-bold uppercase tracking-[0.3em] transition-all border ${copied === `acc-${i}` ? 'bg-forest text-gold border-forest shadow-lg scale-[0.98]' : 'border-forest/20 text-forest hover:bg-forest/5'}`}>
-               {copied === `acc-${i}` ? 'Copied' : 'Salin Rekening'}
-             </button>
-          </div>
-        ))}
-      </div>
-    </SectionWrapper>
+    </SectionScene>
   );
 }
 
@@ -413,90 +411,78 @@ function RSVPSection({ config, onSubmit }: { config: any, onSubmit: (data: any) 
     setSubmitted(true);
   }
 
-  if (submitted) {
-    return (
-      <SectionWrapper id="rsvp" light>
-        <div className="text-center space-y-6 px-8">
-           <div className="w-20 h-20 rounded-full bg-forest/5 border border-gold/20 flex items-center justify-center mx-auto shadow-inner">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.forest} strokeWidth="1.5"><path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-           </div>
-           <h3 className="text-2xl text-forest font-serif italic tracking-tight">Terima Kasih</h3>
-           <p className="text-sm text-muted font-serif italic leading-relaxed px-4">"Konfirmasi Anda telah kami simpan. Kehadiran dan doa restu Anda adalah kebahagiaan bagi kami."</p>
-        </div>
-      </SectionWrapper>
-    );
-  }
-
   return (
-    <SectionWrapper id="rsvp" light>
-       <div className="text-center mb-4 shrink-0">
-          <p className="text-[9px] tracking-[0.4em] uppercase text-gold font-bold mb-1">Kehadiran</p>
-          <h2 className="text-3xl text-forest font-serif italic tracking-tight leading-tight">{config.title}</h2>
+    <SectionScene id="rsvp" bg={C.forestDark}>
+       <div className="absolute inset-0 opacity-[0.05] grayscale bg-[url(https://images.unsplash.com/photo-1519741497674-611481863552?w=1200)] bg-cover" />
+       <div className="h-full flex flex-col items-center justify-center p-10 text-center relative z-20 overflow-hidden">
+          {submitted ? (
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-10">
+               <div className="w-20 h-20 rounded-full border border-gold/30 flex items-center justify-center mx-auto shadow-2xl"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="1.5"><path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+               <h3 className="text-3xl text-ivory font-serif italic">Terima Kasih</h3>
+               <p className="text-base text-gold/60 font-serif italic leading-loose px-4 max-w-xs mx-auto">"Kehadiran dan doa restu Anda adalah kado terindah bagi kami."</p>
+            </motion.div>
+          ) : (
+            <>
+               <div className="space-y-3 mb-10 shrink-0">
+                  <p className="text-[10px] tracking-[0.8em] uppercase text-gold font-bold">R.S.V.P</p>
+                  <h2 className="text-4xl text-ivory font-serif italic tracking-tight">{config.title}</h2>
+               </div>
+               <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6 bg-white/5 backdrop-blur-3xl p-10 border border-white/10 shadow-2xl shrink-0 min-h-0">
+                  <div className="space-y-1.5 text-left shrink-0">
+                     <label className="text-[9px] uppercase tracking-[0.4em] text-gold font-bold italic opacity-60">Full Name</label>
+                     <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-transparent border-b border-white/20 p-3 text-lg text-ivory focus:outline-none focus:border-gold font-serif italic transition-all placeholder:text-white/10" placeholder="Your name..." />
+                  </div>
+                  <div className="space-y-3 text-left shrink-0">
+                     <label className="text-[9px] uppercase tracking-[0.4em] text-gold font-bold italic opacity-60">Attendance</label>
+                     <div className="flex gap-3">
+                        {['Hadir', 'Tidak'].map(opt => (
+                          <button key={opt} type="button" onClick={() => setAttendance(opt)} className={`flex-1 py-3 text-[10px] font-bold border tracking-[0.3em] uppercase transition-all ${attendance === opt ? 'bg-gold text-forest border-gold shadow-2xl scale-[1.02]' : 'border-white/10 text-white hover:bg-white/5'}`}>{opt}</button>
+                        ))}
+                     </div>
+                  </div>
+                  <div className="space-y-3 text-left shrink-0">
+                     <label className="text-[9px] uppercase tracking-[0.4em] text-gold font-bold italic opacity-60">Guest Count</label>
+                     <div className="flex items-center justify-between border border-white/10 p-1.5 rounded-sm bg-white/5">
+                        <button type="button" onClick={() => setGuests(Math.max(1, guests-1))} className="w-10 h-10 text-gold text-2xl font-light hover:bg-white/5 transition-colors rounded-full">-</button>
+                        <span className="text-xl font-serif italic text-white font-bold">{guests}</span>
+                        <button type="button" onClick={() => setGuests(guests+1)} className="w-10 h-10 text-gold text-2xl font-light hover:bg-white/5 transition-colors rounded-full">+</button>
+                     </div>
+                  </div>
+                  <button type="submit" disabled={!name || !attendance} className="w-full py-5 bg-gold text-forest text-[10px] font-bold uppercase tracking-[0.6em] disabled:opacity-20 shadow-2xl hover:brightness-110 active:scale-95 transition-all mt-4 shrink-0">Confirm RSVP</button>
+               </form>
+            </>
+          )}
        </div>
-       <form onSubmit={handleSubmit} className="w-full max-w-[280px] space-y-4 bg-surface p-6 border border-gold/5 shadow-xl rounded-sm">
-          <div className="space-y-1 shrink-0">
-             <label className="text-[8px] uppercase tracking-[0.4em] text-muted font-bold opacity-80 italic">Nama Lengkap</label>
-             <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-ivory border-b border-gold/30 p-2 text-sm focus:outline-none focus:border-forest font-serif italic transition-all" placeholder="Nama Anda..." />
-          </div>
-          <div className="space-y-2 shrink-0">
-             <label className="text-[8px] uppercase tracking-[0.4em] text-muted font-bold opacity-80 italic">Konfirmasi</label>
-             <div className="flex gap-2">
-                {['Hadir', 'Tidak'].map(opt => (
-                  <button key={opt} type="button" onClick={() => setAttendance(opt)} className={`flex-1 py-2.5 text-[10px] font-bold border tracking-[0.2em] uppercase transition-all ${attendance === opt ? 'bg-forest text-gold border-forest shadow-lg' : 'border-gold/20 text-forest hover:bg-forest/5'}`}>{opt}</button>
-                ))}
-             </div>
-          </div>
-          <div className="space-y-2 shrink-0">
-             <label className="text-[8px] uppercase tracking-[0.4em] text-muted font-bold opacity-80 italic">Jumlah Tamu</label>
-             <div className="flex items-center justify-between border border-gold/20 bg-ivory p-1.5 rounded-sm">
-                <button type="button" onClick={() => setGuests(Math.max(1, guests-1))} className="w-8 h-8 text-forest text-xl font-light hover:bg-gold/10 transition-colors rounded-full">-</button>
-                <span className="text-lg font-serif italic text-forest font-bold">{guests}</span>
-                <button type="button" onClick={() => setGuests(guests+1)} className="w-8 h-8 text-forest text-xl font-light hover:bg-gold/10 transition-colors rounded-full">+</button>
-             </div>
-          </div>
-          <button type="submit" disabled={!name || !attendance} className="w-full py-4 bg-forest text-goldLight text-[10px] font-bold uppercase tracking-[0.5em] disabled:opacity-30 shadow-lg hover:bg-forestDark transition-all mt-1 shrink-0">Konfirmasi</button>
-       </form>
-    </SectionWrapper>
+    </SectionScene>
   );
 }
 
 function ClosingSection({ config, onBackToTop }: { config: any, onBackToTop: () => void }) {
   return (
-    <SectionWrapper id="closing">
-      <div className="absolute inset-0 opacity-[0.06] grayscale mix-blend-multiply bg-cover bg-center shrink-0" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1485700281629-290c5a704409?w=800)' }} />
-      <div className="relative z-10 text-center flex flex-col items-center justify-center h-full space-y-8 max-w-xs px-6">
-        <IslamicStar size={64} opacity={0.4} />
-        <div className="w-10 h-[0.5px] bg-gold/40 shrink-0" />
-        <p className="text-sm leading-relaxed italic text-muted font-serif line-clamp-4 shrink-0 px-2">{config.message}</p>
-        <div className="space-y-2 shrink-0">
-          <p className="text-4xl text-forest font-serif italic tracking-tighter truncate leading-none">{config.names}</p>
-          <div className="flex items-center justify-center gap-3">
-             <div className="h-px w-6 bg-gold/25" />
-             <p className="text-[10px] tracking-[0.4em] text-gold font-bold uppercase">{config.date}</p>
-             <div className="h-px w-6 bg-gold/25" />
-          </div>
+    <SectionScene id="closing" bg={C.forestDark}>
+      <div className="absolute inset-0 opacity-[0.15] grayscale contrast-125 mix-blend-screen bg-[url(https://images.unsplash.com/photo-1485700281629-290c5a704409?w=1200)] bg-cover" />
+      <div className="h-full flex flex-col items-center justify-center p-12 text-center space-y-12 max-w-sm mx-auto relative z-20 overflow-hidden">
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: "linear" }} className="opacity-30 scale-125 shrink-0"><IslamicStar size={80} opacity={0.6} /></motion.div>
+        <div className="w-16 h-[0.5px] bg-gold/40 shrink-0" />
+        <p className="text-lg leading-[1.8] italic text-gold/60 font-serif px-6 shrink-0">{config.message}</p>
+        <div className="space-y-4 shrink-0">
+          <p className="text-6xl leading-none text-ivory font-serif italic tracking-tighter truncate w-full">{config.names}</p>
+          <div className="flex items-center justify-center gap-6"><div className="h-px w-8 bg-gold/30" /><p className="text-[11px] tracking-[0.6em] text-gold font-bold uppercase italic">{config.date}</p><div className="h-px w-8 bg-gold/30" /></div>
         </div>
-        <div className="w-10 h-[0.5px] bg-gold/40 shrink-0" />
-        <button onClick={onBackToTop} className="flex flex-col items-center gap-3 text-[9px] uppercase tracking-[0.6em] text-muted group pt-8 transition-all hover:text-gold shrink-0">
-          <div className="w-10 h-10 border border-gold/20 rounded-full flex items-center justify-center transition-all duration-700 group-hover:bg-forest group-hover:border-forest group-hover:text-gold group-hover:-translate-y-2 shadow-xl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
-          <span className="font-bold tracking-[0.4em]">Ke Atas</span>
-        </button>
+        <div className="w-16 h-[0.5px] bg-gold/40 shrink-0" />
+        <button onClick={onBackToTop} className="flex flex-col items-center gap-4 text-[9px] uppercase tracking-[0.8em] text-gold/40 group pt-16 transition-all hover:text-gold active:scale-90 shrink-0"><div className="w-14 h-14 border border-gold/20 rounded-full flex items-center justify-center transition-all duration-700 group-hover:bg-gold group-hover:border-gold group-hover:text-forest group-hover:-translate-y-4 shadow-2xl"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round"/></svg></div><span className="font-bold">Restart</span></button>
       </div>
-    </SectionWrapper>
+    </SectionScene>
   );
 }
 
 function SideNavigation({ activeSection, sections, onNavigate }: { activeSection: string, sections: string[], onNavigate: (id: string) => void }) {
   return (
-    <div className="fixed right-6 top-1/2 -translate-y-1/2 z-[100] flex flex-col gap-6 scale-90 sm:scale-100">
+    <div className="fixed right-8 top-1/2 -translate-y-1/2 z-[100] flex flex-col gap-8 scale-90 sm:scale-100">
       {sections.map((id) => (
-        <button
-          key={id}
-          className={`w-[2px] rounded-full transition-all duration-1000 group relative ${activeSection === id ? 'bg-gold h-12 shadow-[0_0_15px_rgba(199,169,107,0.8)]' : 'bg-forest/15 h-1.5 hover:bg-gold/40'}`}
-          onClick={() => onNavigate(id)}
-        >
-           <span className={`absolute right-full mr-5 text-[8px] uppercase tracking-[0.4em] font-bold text-gold opacity-0 transition-all duration-500 whitespace-nowrap pointer-events-none group-hover:opacity-100 group-hover:-translate-x-1 ${activeSection === id ? 'opacity-100 -translate-x-1' : ''}`}>
-              {id === 'cover' ? 'Awal' : id === 'introduction' ? 'Mulai' : id === 'quran' ? 'Ayat' : id === 'couple' ? 'Mempelai' : id === 'story' ? 'Cerita' : id === 'event' ? 'Acara' : id === 'countdown' ? 'Waktu' : id === 'gallery' ? 'Momen' : id === 'gift' ? 'Kado' : id === 'rsvp' ? 'RSVP' : 'Akhir'}
+        <button key={id} className={`w-[1px] rounded-full transition-all duration-1000 group relative ${activeSection === id ? 'bg-gold h-14 shadow-[0_0_20px_rgba(199,169,107,1)]' : 'bg-gold/20 h-2 hover:bg-gold/60'}`} onClick={() => onNavigate(id)}>
+           <span className={`absolute right-full mr-6 text-[8px] uppercase tracking-[0.6em] font-bold text-gold opacity-0 transition-all duration-500 whitespace-nowrap pointer-events-none group-hover:opacity-100 group-hover:-translate-x-2 ${activeSection === id ? 'opacity-100 -translate-x-2' : ''}`}>
+              {id === 'cover' ? 'Title' : id === 'introduction' ? 'Start' : id === 'quran' ? 'Divine' : id === 'couple' ? 'The Union' : id === 'story' ? 'Legend' : id === 'event' ? 'Gala' : id === 'countdown' ? 'Moments' : id === 'gallery' ? 'Exhibition' : id === 'gift' ? 'Registry' : id === 'rsvp' ? 'RSVP' : 'End'}
            </span>
         </button>
       ))}
@@ -536,62 +522,30 @@ export default function SakinahInvitation({
   useEffect(() => {
     if (!opened) return;
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        });
-      },
+      (entries) => {entries.forEach((entry) => { if (entry.isIntersecting) setActiveSection(entry.target.id); });},
       { threshold: 0.5, root: containerRef.current }
     );
-    sectionIds.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
+    sectionIds.forEach((id) => { const el = document.getElementById(id); if (el) observer.observe(el); });
     return () => observer.disconnect();
   }, [opened]);
 
   const getSection = (id: string) => data.sections.find(s => s.id === id);
 
-  if (!opened) {
-    return <Envelope guestName={guestName} data={data} onOpen={() => setOpened(true)} />;
-  }
+  if (!opened) return <Envelope guestName={guestName} data={data} onOpen={() => setOpened(true)} />;
 
   return (
-    <div className={`${previewMode ? 'absolute' : 'fixed'} inset-0 bg-ivory overflow-y-auto overflow-x-hidden scroll-smooth inv-scroll select-none`} ref={containerRef}>
+    <div className={`${previewMode ? 'absolute' : 'fixed'} inset-0 bg-paper overflow-y-auto overflow-x-hidden scroll-smooth inv-scroll select-none`} ref={containerRef}>
       <div className="anim-fade-in relative min-h-full">
         <SideNavigation activeSection={activeSection} sections={sectionIds} onNavigate={(id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })} />
-        <button onClick={() => setMusicOn((v) => !v)} className="fixed top-10 left-10 z-[150] w-14 h-14 rounded-full flex items-center justify-center transition-all duration-1000 bg-forest shadow-xl border border-gold/30 hover:scale-110 active:scale-95 group overflow-hidden">
-          <div className="relative w-full h-full flex items-center justify-center">
-             <motion.div animate={musicOn ? { rotate: 360 } : { rotate: 0 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} className="absolute inset-0 rounded-full border-[1px] border-gold/10 border-t-gold/30 m-2" />
-             <span className="text-xl relative z-10">{musicOn ? '🔇' : '🎵'}</span>
-          </div>
-        </button>
-
+        <button onClick={() => setMusicOn((v) => !v)} className="fixed top-10 left-10 z-[150] w-14 h-14 rounded-full flex items-center justify-center transition-all duration-1000 bg-forest shadow-2xl border border-gold/30 hover:scale-110 active:scale-95 group overflow-hidden"><div className="relative w-full h-full flex items-center justify-center"><motion.div animate={musicOn ? { rotate: 360 } : { rotate: 0 }} transition={{ duration: 6, repeat: Infinity, ease: "linear" }} className="absolute inset-0 rounded-full border-[1px] border-gold/10 border-t-gold/50 m-2" /><span className="text-xl relative z-10">{musicOn ? '🔇' : '🎵'}</span></div></button>
         <HeroSection config={getSection('cover')?.config} data={data} guestName={guestName} />
         <IntroductionSection config={getSection('introduction')?.config} />
         <QuranSection config={getSection('quran')?.config} />
-
-        <HorizontalTakeoverSection id="couple" title="Mempelai Utama" tagline="The Bride & Groom" itemsCount={2} containerRef={containerRef}>
-           <CoupleCard person={data.couple.bride} isBride={true} />
-           <CoupleCard person={data.couple.groom} isBride={false} />
-        </HorizontalTakeoverSection>
-
-        <HorizontalTakeoverSection id="story" title="Kisah Cinta" tagline="Our Story" itemsCount={getSection('story')?.config.items.length || 1} light containerRef={containerRef}>
-           {getSection('story')?.config.items.map((item: any, i: number) => <StoryCard key={i} item={item} />)}
-        </HorizontalTakeoverSection>
-
-        <HorizontalTakeoverSection id="event" title="Acara Bahagia" tagline="Wedding Events" itemsCount={getSection('event')?.config.events.length || 1} containerRef={containerRef}>
-           {getSection('event')?.config.events.map((ev: any, i: number) => <EventCard key={i} event={ev} />)}
-        </HorizontalTakeoverSection>
-
+        <VerticalTakeover id="couple" title="The Union" tagline="Divine Love" itemsCount={2} containerRef={containerRef}><CoupleCard person={data.couple.bride} isBride={true} /><CoupleCard person={data.couple.groom} isBride={false} /></VerticalTakeover>
+        <VerticalTakeover id="story" title="The Legend" tagline="Our Odyssey" itemsCount={getSection('story')?.config.items.length || 1} bg={C.paper} containerRef={containerRef}>{getSection('story')?.config.items.map((item: any, i: number) => <StoryCard key={i} item={item} />)}</VerticalTakeover>
+        <VerticalTakeover id="event" title="The Gala" tagline="Wedding Ceremony" itemsCount={getSection('event')?.config.events.length || 1} containerRef={containerRef}>{getSection('event')?.config.events.map((ev: any, i: number) => <EventCard key={i} event={ev} />)}</VerticalTakeover>
         <CountdownSection config={getSection('countdown')?.config} />
-
-        <HorizontalTakeoverSection id="gallery" title="Galeri Foto" tagline="Our Gallery" itemsCount={getSection('gallery')?.config.images.length || 1} light containerRef={containerRef}>
-           {getSection('gallery')?.config.images.map((img: string, i: number) => <GalleryCard key={i} url={img} />)}
-        </HorizontalTakeoverSection>
-
+        <VerticalTakeover id="gallery" title="The Exhibition" tagline="Captured Moments" itemsCount={getSection('gallery')?.config.images.length || 1} bg={C.paper} containerRef={containerRef}>{getSection('gallery')?.config.images.map((img: string, i: number) => <GalleryCard key={i} url={img} index={i} />)}</VerticalTakeover>
         <GiftSection config={getSection('gift')?.config} />
         <RSVPSection config={getSection('rsvp')?.config} onSubmit={(rsvp) => onRSVP?.(rsvp)} />
         <ClosingSection config={getSection('closing')?.config} onBackToTop={() => document.getElementById('cover')?.scrollIntoView({ behavior: 'smooth' })} />
