@@ -231,27 +231,15 @@ function UserProtectedRoute({ children }: { children: React.ReactNode }) {
     // Check Supabase session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return
-      if (session) {
-        setSession(session)
-      } else {
-        // Fallback to invitationService mock session
-        const user = invitationService.getCurrentUser()
-        setSession(user || null)
-      }
+      setSession(session || null)
     }).catch(() => {
       if (!mounted) return
-      const user = invitationService.getCurrentUser()
-      setSession(user || null)
+      setSession(null)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return
-      if (session) {
-        setSession(session)
-      } else {
-        const user = invitationService.getCurrentUser()
-        setSession(user || null)
-      }
+      setSession(session || null)
     })
 
     return () => {

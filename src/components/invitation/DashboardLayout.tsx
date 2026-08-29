@@ -18,11 +18,10 @@ const NAV_ITEMS = [
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigate = useNavigate()
   const location = useLocation()
-  const user = invitationService.getCurrentUser()
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const handleLogout = () => {
-    invitationService.logout()
+  const handleLogout = async () => {
+    await invitationService.logout()
     navigate('/invitation/auth')
   }
 

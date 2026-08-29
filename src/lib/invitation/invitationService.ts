@@ -9,6 +9,22 @@ export const invitationService = {
     return user
   },
 
+  async login(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) throw error
+    return data.user
+  },
+
+  async signUp(email: string, password: string) {
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    if (error) throw error
+    return data.user
+  },
+
+  async logout() {
+    await supabase.auth.signOut()
+  },
+
   // Templates
   async getTemplates(): Promise<InvitationTemplate[]> {
     return MOCK_TEMPLATES

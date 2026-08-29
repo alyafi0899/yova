@@ -183,53 +183,105 @@ function EnvelopeReveal({ guestName, onOpen, data }: { guestName: string, onOpen
   const [isOpening, setIsOpening] = useState(false);
 
   return (
-    <div className="fixed inset-0 z-[1000] bg-[#E8E4DF] flex items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 z-[1000] bg-ivory flex items-center justify-center overflow-hidden">
       <PaperTexture />
-      <div className="relative w-[320px] h-[220px] perspective-1000">
-        <div className="absolute inset-0 bg-[#D4CFC7] shadow-inner" />
-        <motion.div
-          initial={{ y: 0 }}
-          animate={isOpening ? { y: -150, z: 50, scale: 1.1 } : { y: 0 }}
-          transition={{ delay: 0.8, duration: 1.2, ease: "easeOut" }}
-          className="absolute inset-2 bg-white shadow-2xl p-6 text-center flex flex-col items-center justify-center border border-gold/10"
-        >
-          <p className="text-[8px] uppercase tracking-widest text-muted mb-2 font-bold">Formal Invitation</p>
-          <h2 className="text-2xl text-forest font-serif italic leading-tight">
-            {data.couple.bride.name.split(' ')[0]} & {data.couple.groom.name.split(' ')[0]}
-          </h2>
-          <div className="w-8 h-px bg-gold/30 my-4" />
-          <p className="text-lg text-ink font-serif">{guestName}</p>
-        </motion.div>
-        <div className="absolute inset-0 bg-[#E0DDD5] z-30" style={{ clipPath: 'polygon(0% 0%, 50% 50%, 0% 100%)' }} />
-        <div className="absolute inset-0 bg-[#E0DDD5] z-30" style={{ clipPath: 'polygon(100% 0%, 50% 50%, 100% 100%)' }} />
-        <div className="absolute inset-0 bg-[#F4F1EA] z-40 border-t border-white/20 shadow-[-5px_-5px_15px_rgba(0,0,0,0.05)]" style={{ clipPath: 'polygon(0% 100%, 50% 50%, 100% 100%)' }} />
-        <motion.div
-          animate={isOpening ? { rotateX: 180, zIndex: 10 } : { rotateX: 0, zIndex: 50 }}
-          transition={{ duration: 1, ease: "easeInOut" }}
-          className="absolute inset-0 bg-[#F4F1EA] origin-top border-b border-black/5 shadow-2xl"
-          style={{ clipPath: 'polygon(0% 0%, 50% 50%, 100% 0%)' }}
-        >
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-gold rounded-full flex items-center justify-center shadow-lg border border-white/20">
-             <span className="text-white text-xs font-serif">S</span>
-          </div>
-        </motion.div>
-        {!isOpening && (
-          <button
-            onClick={() => { setIsOpening(true); setTimeout(onOpen, 2500); }}
-            className="absolute -bottom-24 left-1/2 -translate-x-1/2 px-10 py-3 bg-forest text-gold text-[10px] font-bold uppercase tracking-[0.4em] shadow-2xl active:scale-95 transition-all z-[100]"
+
+      {/* Cinematic Background Atmosphere */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#ffffff_0%,_#E8E4DF_100%)] opacity-50" />
+
+      <div className="relative w-[340px] h-[480px] perspective-2000 flex flex-col items-center">
+
+        {/* Envelope Base Container */}
+        <div className="relative w-full h-[240px] mt-20">
+
+          {/* Internal Invitation Card (The reveal) */}
+          <motion.div
+            initial={{ y: 0 }}
+            animate={isOpening ? { y: -180, z: 100, scale: 1.05 } : { y: 0 }}
+            transition={{ delay: 0.8, duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute inset-2 bg-white shadow-2xl p-6 text-center flex flex-col items-center justify-center border border-gold/10 z-10"
+            style={{ backgroundImage: 'radial-gradient(circle at top right, #FDFCFB 0%, #F4F1EC 100%)' }}
           >
-            Buka Undangan
-          </button>
+            <div className="w-12 h-12 opacity-10 mb-4"><IslamicStar size={48} /></div>
+            <p className="text-[8px] uppercase tracking-[0.4em] text-muted mb-3 font-bold">Official Invitation</p>
+            <h2 className="text-3xl text-forest font-serif italic leading-tight">
+              {data.couple.bride.name.split(' ')[0]} & {data.couple.groom.name.split(' ')[0]}
+            </h2>
+            <div className="w-8 h-px bg-gold/30 my-6" />
+            <div className="space-y-1">
+               <p className="text-[9px] uppercase tracking-widest text-muted">Kepada Yth.</p>
+               <p className="text-xl text-ink font-serif italic">{guestName}</p>
+            </div>
+          </motion.div>
+
+          {/* Envelope Body (Back & Sides) */}
+          <div className="absolute inset-0 bg-[#E0DDD5] shadow-2xl z-20" style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 50% 45%)' }} />
+
+          {/* Left Flap */}
+          <div className="absolute inset-0 bg-[#D8D4CC] z-30 shadow-inner" style={{ clipPath: 'polygon(0% 0%, 50% 50%, 0% 100%)' }} />
+
+          {/* Right Flap */}
+          <div className="absolute inset-0 bg-[#D8D4CC] z-30 shadow-inner" style={{ clipPath: 'polygon(100% 0%, 50% 50%, 100% 100%)' }} />
+
+          {/* Bottom Flap */}
+          <div className="absolute inset-0 bg-[#EBE7DF] z-40 border-t border-white/20 shadow-[-5px_-5px_20px_rgba(0,0,0,0.03)]" style={{ clipPath: 'polygon(0% 100%, 50% 50%, 100% 100%)' }} />
+
+          {/* Top Flap (The animated part) */}
+          <motion.div
+            animate={isOpening ? { rotateX: 180, zIndex: 5 } : { rotateX: 0, zIndex: 50 }}
+            transition={{ duration: 1.2, ease: "easeInOut" }}
+            className="absolute inset-0 bg-[#F4F1EA] origin-top border-b border-black/5 shadow-2xl"
+            style={{ clipPath: 'polygon(0% 0%, 50% 50%, 100% 0%)', backfaceVisibility: 'hidden' }}
+          >
+            {/* Monogram Seal */}
+            <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-gold rounded-full flex items-center justify-center shadow-lg border-[3px] border-white/30">
+               <span className="text-white text-lg font-serif">S</span>
+               <div className="absolute inset-0 rounded-full border border-forest/10 m-1" />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Action Button */}
+        {!isOpening && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-24 flex flex-col items-center gap-6"
+          >
+            <div className="text-center">
+               <p className="text-[10px] tracking-[0.6em] uppercase text-gold font-bold mb-2">You're Invited</p>
+               <h3 className="text-2xl text-charcoal font-serif italic">{data.couple.bride.name.split(' ')[0]} & {data.couple.groom.name.split(' ')[0]}</h3>
+            </div>
+
+            <button
+              onClick={() => { setIsOpening(true); setTimeout(onOpen, 3500); }}
+              className="group relative px-12 py-4 bg-forest text-gold text-[10px] font-bold uppercase tracking-[0.5em] shadow-2xl active:scale-95 transition-all overflow-hidden"
+            >
+              <span className="relative z-10">Buka Undangan</span>
+              <div className="absolute inset-0 bg-gold/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+            </button>
+          </motion.div>
         )}
       </div>
+
+      {/* Elegant Transition Screen */}
       <AnimatePresence>
         {isOpening && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 2, duration: 0.8 }}
-            className="absolute inset-0 bg-cream z-[2000]"
-          />
+            exit={{ opacity: 0 }}
+            transition={{ delay: 2.8, duration: 1 }}
+            className="absolute inset-0 bg-cream z-[2000] flex items-center justify-center"
+          >
+             <motion.div
+               animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
+               transition={{ duration: 2, repeat: Infinity }}
+               className="w-20 h-20"
+             >
+                <IslamicStar size={80} />
+             </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

@@ -1,0 +1,10 @@
+{
+  "description": "Transform Markdown files into visually appealing web pages, enabling users to easily share and present their content with a professional touch.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

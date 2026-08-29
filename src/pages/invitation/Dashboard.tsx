@@ -15,7 +15,6 @@ import DashboardSettings from './DashboardSettings'
 export default function Dashboard() {
   const [project, setProject] = useState<InvitationProject | null>(null)
   const [loading, setLoading] = useState(true)
-  const user = invitationService.getCurrentUser()
 
   useEffect(() => {
     async function fetchProject() {

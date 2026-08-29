@@ -5,19 +5,32 @@ import { invitationService } from '../../lib/invitation/invitationService'
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setErrorMsg(null)
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800))
-
-    await invitationService.login(email)
-    setLoading(false)
-    navigate('/invitation/dashboard')
+    try {
+      if (isLogin) {
+        await invitationService.login(email, password)
+      } else {
+        await invitationService.signUp(email, password)
+        alert('Akun berhasil dibuat! Silakan cek email Anda (jika konfirmasi email aktif) atau silakan login.')
+        setIsLogin(true)
+        setLoading(false)
+        return
+      }
+      navigate('/invitation/dashboard')
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Gagal autentikasi. Periksa kembali email dan password Anda.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -51,10 +64,18 @@ export default function Auth() {
             <input
               type="password"
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-soft border border-nude px-4 py-3 text-sm focus:outline-none focus:border-mocha transition-colors"
               placeholder="••••••••"
             />
           </div>
+
+          {errorMsg && (
+            <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-[10px] uppercase font-bold tracking-widest">
+               {errorMsg}
+            </div>
+          )}
 
           <button
             type="submit"
