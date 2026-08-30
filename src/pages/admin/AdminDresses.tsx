@@ -17,25 +17,33 @@ export default function AdminDresses() {
   }, [])
 
   async function fetchDresses() {
-    setLoading(true)
-    const { data } = await supabase
-      .from('dresses')
-      .select('*')
-      .order('created_at', { ascending: false })
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('dresses')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-    if (data) {
-      const mapped = data.map((d: any) => ({
-        ...d,
-        collectionCode: d.collection_code,
-        includedItems: d.included_items,
-        resizeAvailable: d.resize_available,
-        fitNotes: d.fit_notes,
-        recommendedHeight: d.recommended_height,
-        estimatedAvailable: d.estimated_available,
-      }))
-      setDresses(mapped)
+      if (error) throw error
+
+      if (data) {
+        const mapped = data.map((d: any) => ({
+          ...d,
+          collectionCode: d.collection_code,
+          includedItems: d.included_items,
+          resizeAvailable: d.resize_available,
+          fitNotes: d.fit_notes,
+          recommendedHeight: d.recommended_height,
+          estimatedAvailable: d.estimated_available,
+        }))
+        setDresses(mapped)
+      }
+    } catch (err: any) {
+      console.error('FETCH ERROR:', err)
+      alert('Gagal mengambil data koleksi. Coba refresh halaman atau periksa koneksi internet.\n\nDetail: ' + err.message)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const updateMeasurement = (key: keyof Measurements, value: string) => {
@@ -58,8 +66,8 @@ export default function AdminDresses() {
       name: editingDress.name,
       category: editingDress.category || 'Wanita',
       description: editingDress.description || '',
-      price: editingDress.price || 0,
-      deposit: editingDress.deposit || 150000,
+      price: Number(editingDress.price) || 0,
+      deposit: Number(editingDress.deposit) || 150000,
       status: editingDress.status || 'available',
       images: editingDress.images || [],
       measurements: editingDress.measurements || {},
@@ -71,28 +79,33 @@ export default function AdminDresses() {
       colors: editingDress.colors || [],
     }
 
-    let error
-    if (editingDress.id) {
-      const { error: e } = await supabase
-        .from('dresses')
-        .update(payload)
-        .eq('id', editingDress.id)
-      error = e
-    } else {
-      const { error: e } = await supabase.from('dresses').insert([payload])
-      error = e
-    }
-
-    if (!error) {
-      setIsModalOpen(false)
-      setEditingDress(null)
-      fetchDresses()
-    } else {
-      if (error.code === '23505') {
-        alert(`Error: Kode Unik "${editingDress.collectionCode}" sudah digunakan oleh koleksi lain. Gunakan kode yang berbeda.`)
+    try {
+      let error
+      if (editingDress.id) {
+        const { error: e } = await supabase
+          .from('dresses')
+          .update(payload)
+          .eq('id', editingDress.id)
+        error = e
       } else {
-        alert(error.message)
+        const { error: e } = await supabase.from('dresses').insert([payload])
+        error = e
       }
+
+      if (!error) {
+        setIsModalOpen(false)
+        setEditingDress(null)
+        fetchDresses()
+      } else {
+        if (error.code === '23505') {
+          alert(`Error: Kode Unik "${editingDress.collectionCode}" sudah digunakan oleh koleksi lain.`)
+        } else {
+          alert('Gagal menyimpan: ' + error.message)
+        }
+      }
+    } catch (err: any) {
+      console.error('CRITICAL SAVE ERROR:', err)
+      alert('FAILED TO FETCH: Ada gangguan koneksi atau payload terlalu besar. Coba gunakan foto dengan resolusi lebih kecil atau periksa internet Anda.\n\nDetail: ' + err.message)
     }
   }
 

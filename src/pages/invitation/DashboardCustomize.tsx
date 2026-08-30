@@ -17,20 +17,16 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
   const [device, setDevice] = useState<'mobile' | 'tablet' | 'laptop-p' | 'desktop'>('mobile')
   const [tempData, setTempData] = useState<InvitationData>(JSON.parse(JSON.stringify(project.data)))
 
-  // Re-map the section IDs to match the ones in SakinahInvitation
-  const dashboardSections = [
-    { id: 'cover', label: 'Cover' },
-    { id: 'introduction', label: 'Pendahuluan' },
-    { id: 'quran', label: 'Ayat Quran' },
-    { id: 'couple', label: 'Mempelai' },
-    { id: 'story', label: 'Kisah Cinta' },
-    { id: 'event', label: 'Acara' },
-    { id: 'countdown', label: 'Countdown' },
-    { id: 'gallery', label: 'Galeri' },
-    { id: 'gift', label: 'Kado' },
-    { id: 'rsvp', label: 'RSVP' },
-    { id: 'closing', label: 'Penutup' }
-  ]
+  // Dynamically generate sections from project data for multi-template support
+  const dashboardSections = tempData.sections.map(s => ({
+    id: s.id,
+    label: s.id.charAt(0).toUpperCase() + s.id.slice(1).replace(/_/g, ' ')
+  }))
+
+  // Add closing section if not in sections list (some templates treat it as a footer)
+  if (!dashboardSections.find(s => s.id === 'closing')) {
+    dashboardSections.push({ id: 'closing', label: 'Penutup' })
+  }
 
   const handleUpdate = useCallback((sectionId: string, property: string, value: any) => {
     setTempData(prev => {
@@ -160,6 +156,7 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
               {project.templateId === 'yasmin' ? (
                 <YasminInvitation
                    data={tempData}
+                   externalIndex={dashboardSections.findIndex(s => s.id === activeSection)}
                 />
               ) : (
                 <SakinahInvitation

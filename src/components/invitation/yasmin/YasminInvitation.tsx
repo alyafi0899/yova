@@ -667,14 +667,33 @@ export default function YasminInvitation({
   data,
   guestName = 'Bapak Ahmad & Keluarga',
   onRSVP,
+  externalIndex
 }: {
   data: InvitationData;
   guestName?: string;
   onRSVP?: (rsvp: any) => void;
+  externalIndex?: number;
 }) {
   const [opened, setOpened] = useState(false);
   const [coverGone, setCoverGone] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
+
+  const sectionIds = ['cover', 'quran', 'couple', 'story', 'countdown', 'event', 'gallery', 'gift', 'rsvp', 'closing'];
+
+  useEffect(() => {
+    if (externalIndex !== undefined && externalIndex >= 0) {
+       const id = sectionIds[externalIndex];
+       if (id) {
+          if (!opened && id !== 'cover') {
+             setOpened(true);
+             setCoverGone(true);
+          }
+          setTimeout(() => {
+             document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+       }
+    }
+  }, [externalIndex]);
 
   const getSection = (id: string) => data?.sections?.find(s => s.id === id);
 
