@@ -88,7 +88,11 @@ export default function AdminDresses() {
       setEditingDress(null)
       fetchDresses()
     } else {
-      alert(error.message)
+      if (error.code === '23505') {
+        alert(`Error: Kode Unik "${editingDress.collectionCode}" sudah digunakan oleh koleksi lain. Gunakan kode yang berbeda.`)
+      } else {
+        alert(error.message)
+      }
     }
   }
 

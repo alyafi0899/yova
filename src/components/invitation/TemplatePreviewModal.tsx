@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import SakinahInvitation from './sakina/SakinahInvitation'
+import YasminInvitation from './yasmin/YasminInvitation'
 import type { InvitationTemplate, InvitationData } from '../../lib/invitation/types'
 
 export default function TemplatePreviewModal({
@@ -13,7 +14,7 @@ export default function TemplatePreviewModal({
 }) {
   const [device, setDevice] = useState<'mobile' | 'tablet' | 'laptop-p' | 'desktop'>('mobile')
 
-  // Convert Template to InvitationData for Sakinah renderer
+  // Convert Template to InvitationData for renderer
   const previewData: InvitationData = {
     title: `Wedding of ${template.name}`,
     couple: {
@@ -70,7 +71,7 @@ export default function TemplatePreviewModal({
           </div>
         </div>
 
-        {/* Preview area - No physical frame, centered and flexible */}
+        {/* Preview area - Dynamic Template Selection */}
         <div className="flex-1 overflow-hidden flex justify-center bg-soft p-0 md:p-8">
           <div
             className={`transition-all duration-500 shadow-2xl bg-white relative overflow-hidden ${
@@ -81,7 +82,11 @@ export default function TemplatePreviewModal({
             }`}
           >
             <div className="w-full h-full overflow-hidden relative">
-              <SakinahInvitation data={previewData} previewMode={true} />
+              {template.id === 'yasmin' ? (
+                <YasminInvitation data={previewData} />
+              ) : (
+                <SakinahInvitation data={previewData} previewMode={true} />
+              )}
             </div>
           </div>
         </div>

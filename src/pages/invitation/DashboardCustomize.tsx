@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import type { InvitationProject, InvitationData } from '../../lib/invitation/types'
 import { invitationService } from '../../lib/invitation/invitationService'
 import SakinahInvitation from '../../components/invitation/sakina/SakinahInvitation'
+import YasminInvitation from '../../components/invitation/yasmin/YasminInvitation'
 import ImageUpload from '../../components/common/ImageUpload'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -34,16 +35,24 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
   const handleUpdate = useCallback((sectionId: string, property: string, value: any) => {
     setTempData(prev => {
       const next = JSON.parse(JSON.stringify(prev))
+
+      // Update global couple/event data if path matches
+      if (property.startsWith('bride.') || property.startsWith('groom.')) {
+        const [p, c] = property.split('.')
+        if (next.couple[p]) next.couple[p][c] = value
+      }
+
       const section = next.sections.find((s: any) => s.id === sectionId)
       if (section) {
-        // Handle nested properties like bride.name
+        // Handle nested properties safely
         if (property.includes('.')) {
-          const [parent, child] = property.split('.')
-          section.config[parent][child] = value
-          // Also update global couple data if applicable
-          if (sectionId === 'couple') {
-            next.couple[parent][child] = value
+          const parts = property.split('.')
+          let current = section.config
+          for (let i = 0; i < parts.length - 1; i++) {
+            if (!current[parts[i]]) current[parts[i]] = {}
+            current = current[parts[i]]
           }
+          current[parts[parts.length - 1]] = value
         } else {
           section.config[property] = value
         }
@@ -148,11 +157,17 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
             }`}
           >
             <div className="flex-1 w-full overflow-hidden relative bg-white">
-              <SakinahInvitation
-                data={tempData}
-                previewMode={true}
-                externalIndex={dashboardSections.findIndex(s => s.id === activeSection)}
-              />
+              {project.templateId === 'yasmin' ? (
+                <YasminInvitation
+                   data={tempData}
+                />
+              ) : (
+                <SakinahInvitation
+                  data={tempData}
+                  previewMode={true}
+                  externalIndex={dashboardSections.findIndex(s => s.id === activeSection)}
+                />
+              )}
             </div>
           </div>
         </main>

@@ -124,6 +124,7 @@ export const invitationService = {
     if (update.title) dbUpdate.title = update.title
     if (update.slug) dbUpdate.slug = update.slug
     if (update.status) dbUpdate.status = update.status
+    if (update.templateId) dbUpdate.template_id = update.templateId
     if (update.isActive !== undefined) dbUpdate.is_active = update.isActive
     if (update.voucherCode) dbUpdate.voucher_code = update.voucherCode
     if (update.data) dbUpdate.data = update.data

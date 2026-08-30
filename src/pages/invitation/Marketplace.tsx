@@ -114,10 +114,10 @@ export default function Marketplace() {
         <div className="text-center mb-24 animate-in fade-in slide-in-from-bottom-4 duration-1000">
           <p className="text-[11px] tracking-[0.4em] uppercase text-mocha mb-6 font-bold">The Design Collection</p>
           <h1 className="font-display text-5xl md:text-7xl text-charcoal leading-tight mb-8">
-             Undangan Digital<br /><em className="italic font-normal">Sakinah</em>
+             Digital Invitation<br /><em className="italic font-normal">Collections</em>
           </h1>
           <p className="mt-4 text-muted max-w-xl mx-auto text-sm md:text-base leading-relaxed">
-             Desain eksklusif yang dirancang with penuh ketulusan untuk mengabadikan momen suci pernikahan Anda.
+             Exclusive designs crafted with sincerity to immortalize your sacred wedding moments.
           </p>
         </div>
 
