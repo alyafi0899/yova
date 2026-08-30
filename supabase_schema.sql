@@ -88,7 +88,8 @@ create table public.rentals (
   customer_name text not null,
   whatsapp text not null,
   event_date date not null,
-  dress_code text references public.dresses(collection_code),
+  -- FIXED: Added ON UPDATE CASCADE and ON DELETE SET NULL to prevent constraint errors
+  dress_code text references public.dresses(collection_code) on update cascade on delete set null,
   fitting_date date,
   fitting_time text,
   status text check (status in ('pending', 'confirmed', 'completed', 'cancelled')) default 'pending',
@@ -112,7 +113,7 @@ create policy "RSVP insert" on public.invitation_rsvps for insert with check (tr
 create policy "RSVP owner read" on public.invitation_rsvps for select using (exists (select 1 from public.invitation_projects where id = invitation_rsvps.project_id and user_id = auth.uid()));
 create policy "Revisions manage" on public.invitation_revisions for all using (exists (select 1 from public.invitation_projects where id = invitation_revisions.project_id and user_id = auth.uid()));
 create policy "Dresses public read" on public.dresses for select using (true);
-create policy "Dresses admin manage" on public.dresses for all using (true); -- Set to admin check in real prod
+create policy "Dresses admin manage" on public.dresses for all using (true);
 create policy "Rentals insert" on public.rentals for insert with check (true);
 create policy "Rentals read" on public.rentals for select using (true);
 

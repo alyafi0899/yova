@@ -4,9 +4,12 @@ import { supabase } from '../lib/supabase'
 import { getWhatsAppLink, type Dress } from '../data/dresses'
 import DressCard from '../components/DressCard'
 
+import heroBg from '../assets/bg_hero.png'
+import aboutImg from '../assets/pics_home.jpeg'
+
 const SLIDES = [
   {
-    image: 'https://images.unsplash.com/photo-1771808022279-cf15a2a9eaca?w=1920&h=1200&fit=crop&auto=format',
+    image: heroBg,
     title: 'Baju Akad untuk Hari yang Berarti.',
     subtitle: 'Temukan koleksi baju akad terbaik, lihat detail ukuran, dan jadwalkan fitting sebelum hari istimewa Anda.',
     cta: 'Lihat Koleksi',
@@ -24,7 +27,7 @@ const SLIDES = [
   }
 ]
 
-const ABOUT_IMG = 'https://images.unsplash.com/photo-1676132068619-f015a54cee3d?w=1200&h=900&fit=crop&auto=format'
+const ABOUT_IMG = aboutImg
 
 export default function Home() {
   const navigate = useNavigate()

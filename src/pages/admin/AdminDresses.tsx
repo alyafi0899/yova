@@ -273,11 +273,11 @@ export default function AdminDresses() {
                       <span className="w-8 h-px bg-mocha"></span> Ukuran Tag
                     </h3>
                     <div className="grid grid-cols-3 gap-3">
-                      {['S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(s => (
+                      {['All Size', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(s => (
                         <button
                           key={s}
                           onClick={() => setEditingDress({...editingDress, size: s})}
-                          className={`py-4 border-2 transition-all font-bold ${
+                          className={`py-4 border-2 transition-all font-bold text-[10px] ${
                             editingDress.size === s ? 'border-mocha bg-mocha text-white scale-105 shadow-lg' : 'border-nude bg-white text-muted hover:border-mocha/50'
                           }`}
                         >

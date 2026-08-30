@@ -1,12 +1,40 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { invitationService } from '../../lib/invitation/invitationService'
-import type { InvitationProject, GuestWish } from '../../lib/invitation/types'
+import type { InvitationProject } from '../../lib/invitation/types'
 import SakinahInvitation from '../../components/invitation/sakina/SakinahInvitation'
 import YasminInvitation from '../../components/invitation/yasmin/YasminInvitation'
+import MalamInvitation from '../../components/invitation/malam/MalamInvitation'
 
 export default function PublicInvitation() {
-  // ... (keep state and effect)
+  const { slug } = useParams<{ slug: string }>()
+  const [searchParams] = useSearchParams()
+  const guestSlug = searchParams.get('to')
+
+  const [project, setProject] = useState<InvitationProject | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [guestName, setGuestName] = useState('Bapak Ahmad & Keluarga')
+
+  useEffect(() => {
+    async function fetchInvitation() {
+      if (slug) {
+        const p = await invitationService.getProjectBySlug(slug)
+        if (p) {
+          setProject(p)
+
+          if (guestSlug) {
+            const guests = await invitationService.getGuests(p.id)
+            const guest = guests.find(g => g.slug === guestSlug)
+            if (guest) {
+              setGuestName(guest.name)
+            }
+          }
+        }
+      }
+      setLoading(false)
+    }
+    fetchInvitation()
+  }, [slug, guestSlug])
 
   const handleRSVP = async (rsvp: any) => {
     if (!project) return;
@@ -35,6 +63,16 @@ export default function PublicInvitation() {
   if (project.templateId === 'yasmin') {
     return (
       <YasminInvitation
+        data={project.data}
+        guestName={guestName}
+        onRSVP={handleRSVP}
+      />
+    )
+  }
+
+  if (project.templateId === 'malam') {
+    return (
+      <MalamInvitation
         data={project.data}
         guestName={guestName}
         onRSVP={handleRSVP}

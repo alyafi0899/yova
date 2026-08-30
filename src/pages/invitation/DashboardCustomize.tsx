@@ -3,6 +3,7 @@ import type { InvitationProject, InvitationData } from '../../lib/invitation/typ
 import { invitationService } from '../../lib/invitation/invitationService'
 import SakinahInvitation from '../../components/invitation/sakina/SakinahInvitation'
 import YasminInvitation from '../../components/invitation/yasmin/YasminInvitation'
+import MalamInvitation from '../../components/invitation/malam/MalamInvitation'
 import ImageUpload from '../../components/common/ImageUpload'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -155,6 +156,11 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
             <div className="flex-1 w-full overflow-hidden relative bg-white">
               {project.templateId === 'yasmin' ? (
                 <YasminInvitation
+                   data={tempData}
+                   externalIndex={dashboardSections.findIndex(s => s.id === activeSection)}
+                />
+              ) : project.templateId === 'malam' ? (
+                <MalamInvitation
                    data={tempData}
                    externalIndex={dashboardSections.findIndex(s => s.id === activeSection)}
                 />

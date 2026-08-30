@@ -4,54 +4,54 @@ import { getWhatsAppLink, formatPrice, DEPOSIT_AMOUNT } from '../data/dresses'
 const STEPS = [
   {
     n: '01',
-    title: 'Pilih Koleksi',
-    desc: 'Browse koleksi yang tersedia di website. Lihat foto, ukuran, kelengkapan, dan detail setiap baju. Bandingkan pilihan sebelum memutuskan.',
+    title: 'Konsultasi Awal',
+    desc: 'Diskusikan kebutuhan dan preferensi gaya Anda melalui WhatsApp atau langsung di studio untuk menemukan koleksi yang paling sesuai.',
   },
   {
     n: '02',
-    title: 'Cek Jadwal',
-    desc: 'Periksa ketersediaan baju pilihan Anda untuk tanggal acara melalui kalender di halaman detail. Pastikan baju tidak sedang disewa atau dipesan.',
+    title: 'Pengecekan Jadwal',
+    desc: 'Tim kami akan memverifikasi ketersediaan koleksi pilihan Anda untuk tanggal acara yang telah ditentukan.',
   },
   {
     n: '03',
-    title: 'Jadwalkan Fitting',
-    desc: 'Ajukan jadwal fitting melalui form di website. Isi nama, nomor WhatsApp, tanggal acara, dan koleksi pilihan Anda.',
+    title: 'Kunjungan & Fitting',
+    desc: 'Lakukan fitting langsung di studio untuk memastikan ukuran dan kenyamanan baju akad Anda sebelum melakukan reservasi.',
   },
   {
     n: '04',
-    title: 'Sesi Fitting',
-    desc: 'Datang ke studio Yova sesuai jadwal yang telah dikonfirmasi via WhatsApp. Coba koleksi pilihan dan pastikan ukuran sesuai dengan tubuh Anda.',
+    title: 'Pengisian Formulir',
+    desc: 'Lengkapi formulir reservasi resmi dengan data diri, detail acara, dan ID reservasi untuk pencatatan di database kami.',
   },
   {
     n: '05',
-    title: 'Konfirmasi Koleksi',
-    desc: 'Setelah fitting, pilih koleksi final yang akan disewa. Minor resize dapat dilakukan jika diperlukan, berdasarkan hasil fitting.',
-  },
-  {
-    n: '06',
-    title: 'Pembayaran + Deposit',
-    desc: `Selesaikan pembayaran biaya sewa dan deposit ${formatPrice(DEPOSIT_AMOUNT)}. Deposit adalah uang jaminan yang dikembalikan setelah pengembalian barang.`,
+    title: 'Pembayaran Penuh & Uang Jaminan',
+    desc: `Selesaikan pembayaran biaya sewa secara penuh beserta uang jaminan (deposit) sebesar ${formatPrice(DEPOSIT_AMOUNT)} untuk mengunci jadwal.`,
     note: true,
   },
   {
+    n: '06',
+    title: 'Pengambilan & Penyesuaian (H-1)',
+    desc: 'Ambil baju akad Anda H-1 sebelum acara. Dilakukan penyesuaian akhir (minor resize) jika diperlukan agar tampil sempurna.',
+  },
+  {
     n: '07',
-    title: 'Booking Dikonfirmasi',
-    desc: 'Setelah pembayaran selesai, booking Anda resmi dikonfirmasi. Tanggal acara Anda telah terlindungi dan baju tidak dapat disewa oleh orang lain.',
+    title: 'Pengembalian Gaun/Jas',
+    desc: 'Kembalikan koleksi beserta seluruh kelengkapannya ke studio paling lambat H+1 setelah acara selesai.',
   },
   {
     n: '08',
-    title: 'Pengambilan (H-1)',
-    desc: 'Ambil baju akad paling cepat H-1 sebelum acara. Periksa semua kelengkapan dan pastikan kondisi baju sesuai sebelum meninggalkan studio.',
+    title: 'Pengecekan Kondisi',
+    desc: 'Tim YOVA akan memeriksa kondisi fisik koleksi yang dikembalikan untuk memastikan tidak ada kerusakan berat atau kehilangan.',
   },
   {
     n: '09',
-    title: 'Pengembalian (H+1)',
-    desc: 'Kembalikan baju beserta semua kelengkapan paling lambat H+1 setelah acara. Baju dikembalikan dalam kondisi bersih dan lengkap.',
+    title: 'Pencairan Uang Jaminan',
+    desc: 'Setelah pengecekan selesai dan kondisi dinyatakan baik, uang jaminan (deposit) akan dikembalikan sepenuhnya ke rekening Anda.',
   },
   {
     n: '10',
-    title: 'Pemeriksaan & Pengembalian Deposit',
-    desc: 'Baju dan kelengkapan diperiksa kondisinya. Deposit dikembalikan sesuai ketentuan sewa apabila semua item kembali dalam kondisi baik.',
+    title: 'Ulasan Pelanggan',
+    desc: 'Berikan ulasan dan testimoni mengenai pengalaman Anda menggunakan layanan YOVA untuk membantu kami terus berkembang.',
   },
 ]
 
