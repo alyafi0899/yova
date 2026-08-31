@@ -9,21 +9,21 @@ import type { InvitationData } from '../../../lib/invitation/types';
 
 // ── tokens ────────────────────────────────────────────────────────────────────
 const T = {
-  bg: '#110C08',
-  surface: '#1A1208',
-  elevated: '#221A0A',
-  high: '#2C2010',
-  gold: '#D4A553',
-  goldBright: '#F0C96A',
-  goldDim: '#7A5C25',
-  goldBorder: '#4A3818',
-  cream: '#F2E8D5',
-  muted: '#9A8060',
-  blush: '#B87860',
-  wax: '#7A1515',
-  border: '#362514',
-  vine: '#3A4E22',
-  leaf: '#2D4520',
+  bg: '#2D0B0F',         // Deep Burgundy
+  surface: '#3D1217',    // Deep Wine
+  elevated: '#4A181D',   // Rich Maroon
+  high: '#5C1F26',       // Bright Maroon
+  gold: '#E0B394',       // Rose Gold
+  goldBright: '#F7D7C4', // Soft Rose Gold
+  goldDim: '#8A5A44',    // Muted Bronze
+  goldBorder: '#632B2E', // Dark Wine Border
+  cream: '#F7E7E8',      // Warm Ivory with Pink Hint
+  muted: '#A37F7F',      // Muted Mauve
+  blush: '#D48C8C',      // Deep Blush
+  wax: '#5C0A0A',        // Deep Blood Red Wax
+  border: '#4A181D',     // Maroon Border
+  vine: '#4A5D23',       // Olive Vine
+  leaf: '#3A4B1C',       // Dark Olive Leaf
 };
 
 const serif = "'Playfair Display', Georgia, serif";
@@ -119,7 +119,7 @@ function AnimStyles() {
         to   { transform:scaleX(1); }
       }
       .gold-shimmer-text {
-        background: linear-gradient(90deg, #D4A553 0%, #F0C96A 30%, #D4A553 50%, #F0C96A 70%, #D4A553 100%);
+        background: linear-gradient(90deg, #E0B394 0%, #F7D7C4 30%, #E0B394 50%, #F7D7C4 70%, #E0B394 100%);
         background-size: 200% auto;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -654,7 +654,7 @@ export default function MalamInvitation({
   const gName = data?.couple?.groom?.name?.split(' ')[0] || 'Groom';
 
   return (
-    <div ref={topRef} className="fixed inset-0 overflow-y-auto bg-[#110C08] scroll-smooth" style={{ backgroundColor: T.bg, fontFamily: sans }}>
+    <div ref={topRef} className="fixed inset-0 overflow-y-auto bg-[#2D0B0F] scroll-smooth" style={{ backgroundColor: T.bg, fontFamily: sans }}>
       <AnimStyles />
       <FloatingPetals />
       <FloralFrame animate={frameAnimated} />

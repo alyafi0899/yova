@@ -15,12 +15,12 @@ export const malam_v1: InvitationTemplate = {
   experience: 'Misterius, intim, dan sangat mewah. Memberikan kesan eksklusif dan mendalam bagi para tamu undangan Anda.',
   theme: {
     colors: {
-      primary: '#D4A553', // Gold
-      secondary: '#1A1208', // Surface
-      accent: '#F0C96A', // Bright Gold
-      background: '#110C08', // Dark Noir
-      text: '#F2E8D5', // Cream
-      card: '#221A0A', // Elevated
+      primary: '#E0B394',    // Rose Gold
+      secondary: '#3D1217',  // Deep Wine
+      accent: '#F7D7C4',     // Soft Rose Gold
+      background: '#2D0B0F', // Deep Burgundy
+      text: '#F7E7E8',       // Warm Ivory
+      card: '#4A181D',       // Rich Maroon
     },
     fonts: {
       heading: 'Playfair Display',

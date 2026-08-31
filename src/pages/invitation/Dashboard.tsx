@@ -21,7 +21,11 @@ export default function Dashboard() {
       try {
         const projects = await invitationService.getProjects()
         if (projects && projects.length > 0) {
-          setProject(projects[0])
+          // Check if there's a recently selected project ID in session storage
+          const lastId = sessionStorage.getItem('yova_last_proj_id')
+          const target = lastId ? projects.find(p => p.id === lastId) : projects[0]
+
+          setProject(target || projects[0])
         }
       } catch (err) {
         console.error("Dashboard: Error fetching projects", err)

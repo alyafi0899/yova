@@ -115,6 +115,10 @@ export const invitationService = {
       .single()
 
     if (error) throw error
+
+    // Store last project ID for instant dashboard focus
+    if (data?.id) sessionStorage.setItem('yova_last_proj_id', data.id)
+
     return this.mapProject(data)
   },
 

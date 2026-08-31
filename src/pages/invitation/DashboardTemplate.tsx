@@ -42,9 +42,12 @@ export default function DashboardTemplate({ project }: { project: InvitationProj
          }))
 
          await invitationService.updateProject(project.id, {
-            templateId: templateId,
+            template_id: templateId,
             data: newData
          })
+
+         // Set this as last project to ensure focus on refresh
+         sessionStorage.setItem('yova_last_proj_id', project.id)
 
          await invitationService.createRevision(project.id, `Ganti template ke ${templateId}`, newData)
          alert('Template berhasil diganti!')
