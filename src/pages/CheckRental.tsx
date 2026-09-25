@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import type { NavProps } from '../App'
 import { supabase } from '../lib/supabase'
 import { formatPrice } from '../data/dresses'
 
@@ -18,7 +17,7 @@ interface RentalData {
   }
 }
 
-export default function CheckRental({ navigate }: NavProps) {
+export default function CheckRental({ navigate }: { navigate?: (path: string) => void }) {
   const [bookingId, setBookingId] = useState('')
   const [rental, setRental] = useState<RentalData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -170,7 +169,7 @@ export default function CheckRental({ navigate }: NavProps) {
               Ada perubahan jadwal atau butuh bantuan fitting ulang?
             </p>
             <button
-              onClick={() => navigate('contact')}
+              onClick={() => navigate?.('contact')}
               className="text-xs font-bold uppercase tracking-widest text-mocha hover:text-mocha-dark transition-colors"
             >
               Hubungi Admin Yova →

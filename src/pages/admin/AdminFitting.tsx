@@ -33,6 +33,19 @@ export default function AdminFitting() {
     setLoading(false)
   }
 
+  async function updateStatus(id: string, status: string) {
+    const { error } = await supabase
+      .from('fitting_requests')
+      .update({ status })
+      .eq('id', id)
+
+    if (error) {
+      alert('Gagal mengupdate status: ' + error.message)
+    } else {
+      fetchRequests()
+    }
+  }
+
   async function createRental(req: FittingRequest) {
     const bookingId = `${req.dress_code}-${req.whatsapp.slice(-4)}`
 

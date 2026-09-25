@@ -1,4 +1,3 @@
-import type { NavProps } from '../App'
 import { getWhatsAppLink } from '../data/dresses'
 
 function WhatsAppIcon() {

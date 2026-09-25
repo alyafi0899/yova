@@ -1,4 +1,4 @@
-import { formatPrice } from '../data/dresses'
+import { formatPrice, type Dress } from '../data/dresses'
 import { normalizeImageUrl } from '../lib/utils/image'
 
 export const STATUS_CONFIG = {
@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function DressCard({ dress, onClick }: Props) {
-  const status = STATUS_CONFIG[dress.status]
+  const status = STATUS_CONFIG[dress.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.available
   return (
     <div className="group cursor-pointer" onClick={onClick}>
       <div className="relative overflow-hidden bg-soft aspect-[3/4] mb-4">

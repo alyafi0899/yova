@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import type { Page } from '../../App'
+
+export type Page = string
 
 interface AdminLayoutProps {
   children: ReactNode

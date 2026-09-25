@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import type { NavProps } from '../App'
 import { getWhatsAppLink, formatPrice, DEPOSIT_AMOUNT } from '../data/dresses'
 
 const FAQS = [

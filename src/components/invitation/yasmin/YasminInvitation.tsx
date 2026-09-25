@@ -696,6 +696,26 @@ export default function YasminInvitation({
   }, [externalIndex]);
 
   const getSection = (id: string) => data?.sections?.find(s => s.id === id);
+  const isSectionEnabled = (id: string) => {
+    const s = getSection(id);
+    return s ? s.enabled !== false : true;
+  };
+
+  useEffect(() => {
+    if (externalIndex !== undefined && externalIndex >= 0) {
+       if (!opened) {
+          setOpened(true);
+          setCoverGone(true);
+       }
+       const sectionIds = ['cover', 'quran', 'couple', 'story', 'countdown', 'event', 'gallery', 'gift', 'rsvp', 'closing'];
+       const id = sectionIds[externalIndex];
+       if (id && id !== 'cover') {
+          setTimeout(() => {
+             document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+       }
+    }
+  }, [externalIndex]);
 
   function handleOpen() {
     setOpened(true);
@@ -719,15 +739,15 @@ export default function YasminInvitation({
         <div className="relative animate-in fade-in duration-1000">
           <MusicButton />
           <ProgressDots count={SECTION_COUNT} />
-          <div data-section="0"><QuranSection config={getSection('quran')?.config} /></div>
-          <div data-section="1"><CoupleSection data={data} config={getSection('couple')?.config} /></div>
-          <div data-section="2"><StorySection config={getSection('story')?.config} /></div>
-          <div data-section="3"><CountdownSection brideName={bName} groomName={gName} config={getSection('countdown')?.config} /></div>
-          <div data-section="4"><EventsSection config={getSection('event')?.config} /></div>
-          <div data-section="5"><GallerySection config={getSection('gallery')?.config} /></div>
-          <div data-section="6"><GiftSection config={getSection('gift')?.config} /></div>
-          <div data-section="7"><RSVPSection brideName={bName} groomName={gName} onRSVP={onRSVP} /></div>
-          <ClosingSection brideName={bName} groomName={gName} config={getSection('closing')?.config} onBackToTop={backToTop} />
+          {isSectionEnabled('quran') && <div data-section="0" id="quran"><QuranSection config={getSection('quran')?.config} /></div>}
+          {isSectionEnabled('couple') && <div data-section="1" id="couple"><CoupleSection data={data} config={getSection('couple')?.config} /></div>}
+          {isSectionEnabled('story') && <div data-section="2" id="story"><StorySection config={getSection('story')?.config} /></div>}
+          {isSectionEnabled('countdown') && <div data-section="3" id="countdown"><CountdownSection brideName={bName} groomName={gName} config={getSection('countdown')?.config} /></div>}
+          {isSectionEnabled('event') && <div data-section="4" id="event"><EventsSection config={getSection('event')?.config} /></div>}
+          {isSectionEnabled('gallery') && <div data-section="5" id="gallery"><GallerySection config={getSection('gallery')?.config} /></div>}
+          {isSectionEnabled('gift') && <div data-section="6" id="gift"><GiftSection config={getSection('gift')?.config} /></div>}
+          {isSectionEnabled('rsvp') && <div data-section="7" id="rsvp"><RSVPSection brideName={bName} groomName={gName} onRSVP={onRSVP} /></div>}
+          {isSectionEnabled('closing') && <div id="closing"><ClosingSection brideName={bName} groomName={gName} config={getSection('closing')?.config} onBackToTop={backToTop} /></div>}
         </div>
       )}
     </div>

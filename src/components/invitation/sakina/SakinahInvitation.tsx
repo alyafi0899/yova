@@ -12,7 +12,8 @@ const C = {
   ink: '#2A2A2A',
   muted: '#8D897E',
   watercolor: '#F4F1EC',
-  paper: '#FFFDF9'
+  paper: '#FFFDF9',
+  surface: '#FFFDF9'
 };
 
 const serif = "'Playfair Display', Georgia, serif";
@@ -81,7 +82,7 @@ function SectionScene({ id, children, bg = C.cream, minHeight = "100vh" }: { id:
   );
 }
 
-function HorizontalTakeoverSection({ id, title, tagline, children, light = false, itemsCount, containerRef }: { id: string, title: string, tagline?: string, children: React.ReactNode, light?: boolean, itemsCount: number, containerRef: any }) {
+function HorizontalTakeoverSection({ id, title, tagline, children, light = false, bg, itemsCount, containerRef }: { id: string, title: string, tagline?: string, children: React.ReactNode, light?: boolean, bg?: string, itemsCount: number, containerRef: any }) {
   const targetRef = useRef(null);
   const heightFactor = Math.max(2, itemsCount * 1.2);
 
@@ -96,7 +97,7 @@ function HorizontalTakeoverSection({ id, title, tagline, children, light = false
 
   return (
     <section ref={targetRef} id={id} className="relative w-full" style={{ height: `${heightFactor * 100}vh` }}>
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col items-center pt-16" style={{ backgroundColor: light ? C.surface : C.ivory }}>
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col items-center pt-16" style={{ backgroundColor: bg || (light ? C.surface : C.ivory) }}>
         <PaperTexture />
 
         <div className="text-center relative z-30 pointer-events-none shrink-0 px-4">
@@ -487,7 +488,15 @@ export default function SakinahInvitation({
   const [activeSection, setActiveSection] = useState('cover');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const sectionIds = ['cover', 'introduction', 'quran', 'couple', 'story', 'event', 'countdown', 'gallery', 'gift', 'rsvp', 'closing'];
+  const ALL_SECTION_IDS = ['cover', 'introduction', 'quran', 'couple', 'story', 'event', 'countdown', 'gallery', 'gift', 'rsvp', 'closing'];
+
+  const getSection = (id: string) => data?.sections?.find(s => s.id === id);
+  const isSectionEnabled = (id: string) => {
+    const s = getSection(id);
+    return s ? s.enabled !== false : true;
+  };
+
+  const activeSectionIds = ALL_SECTION_IDS.filter(id => isSectionEnabled(id));
 
   // Record viewed status if guestSlug is present
   useEffect(() => {
@@ -501,9 +510,11 @@ export default function SakinahInvitation({
   }, [opened]);
 
   useEffect(() => {
-    if (externalIndex !== undefined && externalIndex >= 0 && externalIndex < sectionIds.length) {
-       const id = sectionIds[externalIndex];
-       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    if (externalIndex !== undefined && externalIndex >= 0) {
+       const targetId = ALL_SECTION_IDS[externalIndex];
+       if (targetId && isSectionEnabled(targetId)) {
+          document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
+       }
     }
   }, [externalIndex]);
 
@@ -513,37 +524,35 @@ export default function SakinahInvitation({
       (entries) => {entries.forEach((entry) => { if (entry.isIntersecting) setActiveSection(entry.target.id); });},
       { threshold: 0.5, root: containerRef.current }
     );
-    sectionIds.forEach((id) => { const el = document.getElementById(id); if (el) observer.observe(el); });
+    activeSectionIds.forEach((id) => { const el = document.getElementById(id); if (el) observer.observe(el); });
     return () => observer.disconnect();
-  }, [opened]);
-
-  const getSection = (id: string) => data?.sections?.find(s => s.id === id);
+  }, [opened, activeSectionIds.join(',')]);
 
   if (!opened) return <EnvelopeReveal guestName={guestName} data={data} onOpen={() => setOpened(true)} />;
 
   return (
     <div className={`${previewMode ? 'absolute' : 'fixed'} inset-0 bg-cream overflow-y-auto overflow-x-hidden scroll-smooth inv-scroll select-none shadow-[inset_0_0_100px_rgba(0,0,0,0.05)]`} ref={containerRef}>
       <div className="anim-fade-in relative min-h-full">
-        <SideNavigation activeSection={activeSection} sections={sectionIds} onNavigate={(id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })} />
+        <SideNavigation activeSection={activeSection} sections={activeSectionIds} onNavigate={(id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })} />
         <button onClick={() => setMusicOn((v) => !v)} className="fixed top-12 left-10 z-[150] w-14 h-14 rounded-full flex items-center justify-center transition-all duration-1000 bg-forest shadow-2xl border border-gold/30 hover:scale-110 active:scale-95 group overflow-hidden"><div className="relative w-full h-full flex items-center justify-center"><motion.div animate={musicOn ? { rotate: 360 } : { rotate: 0 }} transition={{ duration: 6, repeat: Infinity, ease: "linear" }} className="absolute inset-0 rounded-full border-[1.5px] border-gold/10 border-t-gold/50 m-2" /><span className="text-xl relative z-10">{musicOn ? '🔇' : '🎵'}</span></div></button>
-        <HeroSection config={getSection('cover')?.config} data={data} guestName={guestName} />
-        <IntroductionSection config={getSection('introduction')?.config} />
-        <QuranSection config={getSection('quran')?.config} />
-        <HorizontalTakeoverSection id="couple" title="The Union" tagline="Divine Love" itemsCount={2} containerRef={containerRef}><CoupleCard person={data?.couple?.bride} isBride={true} /><CoupleCard person={data?.couple?.groom} isBride={false} /></HorizontalTakeoverSection>
+        {isSectionEnabled('cover') && <HeroSection config={getSection('cover')?.config} data={data} guestName={guestName} />}
+        {isSectionEnabled('introduction') && <IntroductionSection config={getSection('introduction')?.config} />}
+        {isSectionEnabled('quran') && <QuranSection config={getSection('quran')?.config} />}
+        {isSectionEnabled('couple') && <HorizontalTakeoverSection id="couple" title="The Union" tagline="Divine Love" itemsCount={2} containerRef={containerRef}><CoupleCard person={data?.couple?.bride} isBride={true} /><CoupleCard person={data?.couple?.groom} isBride={false} /></HorizontalTakeoverSection>}
 
-        <VerticalTakeoverSection id="story" title="story" tagline="Our Love" itemsCount={getSection('story')?.config?.items?.length || 1} containerRef={containerRef}>
+        {isSectionEnabled('story') && <VerticalTakeoverSection id="story" title="story" tagline="Our Love" itemsCount={getSection('story')?.config?.items?.length || 1} containerRef={containerRef}>
            {(getSection('story')?.config?.items || []).map((item: any, i: number) => <StoryCard key={i} item={item} index={i} />)}
-        </VerticalTakeoverSection>
+        </VerticalTakeoverSection>}
 
-        <HorizontalTakeoverSection id="event" title="The Gala" tagline="Wedding Ceremony" itemsCount={getSection('event')?.config?.events?.length || 1} containerRef={containerRef}>{(getSection('event')?.config?.events || []).map((ev: any, i: number) => <EventCard key={i} event={ev} />)}</HorizontalTakeoverSection>
-        <CountdownSection config={getSection('countdown')?.config} />
+        {isSectionEnabled('event') && <HorizontalTakeoverSection id="event" title="The Gala" tagline="Wedding Ceremony" itemsCount={getSection('event')?.config?.events?.length || 1} containerRef={containerRef}>{(getSection('event')?.config?.events || []).map((ev: any, i: number) => <EventCard key={i} event={ev} />)}</HorizontalTakeoverSection>}
+        {isSectionEnabled('countdown') && <CountdownSection config={getSection('countdown')?.config} />}
 
-        <HorizontalTakeoverSection id="gallery" title="The Exhibition" tagline="Captured Moments" itemsCount={Math.min(3, getSection('gallery')?.config?.images?.length || 1)} bg={C.paper} containerRef={containerRef}>
+        {isSectionEnabled('gallery') && <HorizontalTakeoverSection id="gallery" title="The Exhibition" tagline="Captured Moments" itemsCount={Math.min(3, getSection('gallery')?.config?.images?.length || 1)} bg={C.paper} containerRef={containerRef}>
            {(getSection('gallery')?.config?.images || []).slice(0, 3).map((img: string, i: number) => <GalleryCard key={i} url={img} index={i} />)}
-        </HorizontalTakeoverSection>
-        <GiftSection config={getSection('gift')?.config} />
-        <RSVPSection config={getSection('rsvp')?.config} onSubmit={(rsvp) => onRSVP?.(rsvp)} />
-        <ClosingSection config={getSection('closing')?.config} onBackToTop={() => document.getElementById('cover')?.scrollIntoView({ behavior: 'smooth' })} />
+        </HorizontalTakeoverSection>}
+        {isSectionEnabled('gift') && <GiftSection config={getSection('gift')?.config} />}
+        {isSectionEnabled('rsvp') && <RSVPSection config={getSection('rsvp')?.config} onSubmit={(rsvp) => onRSVP?.(rsvp)} />}
+        {isSectionEnabled('closing') && <ClosingSection config={getSection('closing')?.config} onBackToTop={() => document.getElementById(activeSectionIds[0] || 'cover')?.scrollIntoView({ behavior: 'smooth' })} />}
       </div>
     </div>
   );

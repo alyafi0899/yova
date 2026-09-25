@@ -635,17 +635,22 @@ export default function MalamInvitation({
 
   const sectionIds = ['cover', 'quran', 'couple', 'story', 'countdown', 'event', 'gallery', 'gift', 'rsvp', 'closing'];
 
+  const getSection = (id: string) => data?.sections?.find(s => s.id === id);
+  const isSectionEnabled = (id: string) => {
+    const s = getSection(id);
+    return s ? s.enabled !== false : true;
+  };
+
   useEffect(() => {
     if (externalIndex !== undefined && externalIndex >= 0) {
+       if (!opened) { setOpened(true); setCoverGone(true); setFrameAnimated(true); }
+       const sectionIds = ['cover', 'quran', 'couple', 'story', 'countdown', 'event', 'gallery', 'gift', 'rsvp', 'closing'];
        const id = sectionIds[externalIndex];
-       if (id) {
-          if (!opened && id !== 'cover') { setOpened(true); setCoverGone(true); setFrameAnimated(true); }
+       if (id && id !== 'cover') {
           setTimeout(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); }, 100);
        }
     }
-  }, [externalIndex, opened]);
-
-  const getSection = (id: string) => data?.sections?.find(s => s.id === id);
+  }, [externalIndex]);
 
   function handleFullyOpen() { setOpened(true); setTimeout(() => { setCoverGone(true); setFrameAnimated(true); }, 600); }
   function backToTop() { topRef.current?.scrollIntoView({ behavior: 'smooth' }); }
@@ -670,15 +675,15 @@ export default function MalamInvitation({
 
       {opened && (
         <div className="relative animate-in fade-in duration-1000">
-          <div data-malam-section="1" id="quran"><QuranSection config={getSection('quran')?.config} /></div>
-          <div data-malam-section="2" id="couple"><CoupleSection data={data} config={getSection('couple')?.config} /></div>
-          <div data-malam-section="3" id="story"><StorySection config={getSection('story')?.config} /></div>
-          <div data-malam-section="4" id="countdown"><CountdownSection brideName={bName} groomName={gName} config={getSection('countdown')?.config} /></div>
-          <div data-malam-section="5" id="event"><EventsSection config={getSection('event')?.config} /></div>
-          <div data-malam-section="6" id="gallery"><GallerySection config={getSection('gallery')?.config} /></div>
-          <div data-malam-section="7" id="gift"><GiftSection config={getSection('gift')?.config} /></div>
-          <div data-malam-section="8" id="rsvp" className="pb-20"><RSVPSection brideName={bName} groomName={gName} onRSVP={onRSVP} /></div>
-          <div id="closing"><ClosingSection brideName={bName} groomName={gName} config={getSection('closing')?.config} onBackToTop={backToTop} /></div>
+          {isSectionEnabled('quran') && <div data-malam-section="1" id="quran"><QuranSection config={getSection('quran')?.config} /></div>}
+          {isSectionEnabled('couple') && <div data-malam-section="2" id="couple"><CoupleSection data={data} config={getSection('couple')?.config} /></div>}
+          {isSectionEnabled('story') && <div data-malam-section="3" id="story"><StorySection config={getSection('story')?.config} /></div>}
+          {isSectionEnabled('countdown') && <div data-malam-section="4" id="countdown"><CountdownSection brideName={bName} groomName={gName} config={getSection('countdown')?.config} /></div>}
+          {isSectionEnabled('event') && <div data-malam-section="5" id="event"><EventsSection config={getSection('event')?.config} /></div>}
+          {isSectionEnabled('gallery') && <div data-malam-section="6" id="gallery"><GallerySection config={getSection('gallery')?.config} /></div>}
+          {isSectionEnabled('gift') && <div data-malam-section="7" id="gift"><GiftSection config={getSection('gift')?.config} /></div>}
+          {isSectionEnabled('rsvp') && <div data-malam-section="8" id="rsvp" className="pb-20"><RSVPSection brideName={bName} groomName={gName} onRSVP={onRSVP} /></div>}
+          {isSectionEnabled('closing') && <div id="closing"><ClosingSection brideName={bName} groomName={gName} config={getSection('closing')?.config} onBackToTop={backToTop} /></div>}
         </div>
       )}
     </div>

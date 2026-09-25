@@ -18,7 +18,6 @@ import Marketplace from './pages/invitation/Marketplace'
 import InvitationTemplateDetail from './pages/invitation/TemplateDetail'
 import Auth from './pages/invitation/Auth'
 import Dashboard from './pages/invitation/Dashboard'
-import Builder from './pages/invitation/Builder'
 import PublicInvitation from './pages/invitation/PublicInvitation'
 
 // Admin Components

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { InvitationProject, InvitationData } from '../../lib/invitation/types'
 import { invitationService } from '../../lib/invitation/invitationService'
 import SakinahInvitation from '../../components/invitation/sakina/SakinahInvitation'
@@ -18,6 +18,11 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
   const [device, setDevice] = useState<'mobile' | 'tablet' | 'laptop-p' | 'desktop'>('mobile')
   const [tempData, setTempData] = useState<InvitationData>(JSON.parse(JSON.stringify(project.data)))
 
+  // Re-sync tempData if project changes
+  useEffect(() => {
+    setTempData(JSON.parse(JSON.stringify(project.data)))
+  }, [project.id, project.templateId])
+
   // Dynamically generate sections from project data for multi-template support
   const dashboardSections = tempData.sections.map(s => ({
     id: s.id,
@@ -29,19 +34,44 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
     dashboardSections.push({ id: 'closing', label: 'Penutup' })
   }
 
+  const handleToggleSection = useCallback((sectionId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    setTempData(prev => {
+      const next = JSON.parse(JSON.stringify(prev))
+      const section = next.sections.find((s: any) => s.id === sectionId)
+      if (section) {
+        section.enabled = section.enabled === false ? true : false
+      } else {
+        // If section is not yet in sections array, add it with enabled: false
+        next.sections.push({
+          id: sectionId,
+          type: sectionId,
+          enabled: false,
+          config: {}
+        })
+      }
+      return next
+    })
+  }, [])
+
   const handleUpdate = useCallback((sectionId: string, property: string, value: any) => {
     setTempData(prev => {
       const next = JSON.parse(JSON.stringify(prev))
 
-      // Update global couple/event data if path matches
+      // Update global couple data
       if (property.startsWith('bride.') || property.startsWith('groom.')) {
         const [p, c] = property.split('.')
         if (next.couple[p]) next.couple[p][c] = value
+
+        // Sync couple section config if present
+        const coupleSec = next.sections.find((s: any) => s.id === 'couple')
+        if (coupleSec?.config?.[p]) {
+          coupleSec.config[p][c] = value
+        }
       }
 
       const section = next.sections.find((s: any) => s.id === sectionId)
       if (section) {
-        // Handle nested properties safely
         if (property.includes('.')) {
           const parts = property.split('.')
           let current = section.config
@@ -60,19 +90,26 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
 
   const handleSave = async () => {
     setSaving(true)
-    await invitationService.updateProject(project.id, { data: tempData })
-    onUpdate({ ...project, data: tempData })
-    // Record revision
-    await invitationService.createRevision(project.id, 'Simpan draft (Editor)', tempData)
-    setSaving(false)
-    alert('Perubahan disimpan sebagai draft.')
+    try {
+      await invitationService.updateProject(project.id, { data: tempData })
+      onUpdate({ ...project, data: tempData })
+      await invitationService.createRevision(project.id, 'Simpan draft (Editor)', tempData)
+      alert('Perubahan berhasil disimpan sebagai draft.')
+    } catch (err) {
+      console.error('Error saving draft:', err)
+      alert('Gagal menyimpan draft.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handlePublish = async () => {
-    // Navigate to settings for activation/slug setup
-    alert('Anda akan diarahkan ke halaman Pengaturan untuk menyelesaikan aktivasi dan URL slug sebelum publikasi.')
+    alert('Perubahan draft telah disimpan. Anda akan diarahkan ke halaman Pengaturan untuk publikasi.')
     window.location.hash = '/settings'
   }
+
+  const activeSecObj = tempData.sections.find(s => s.id === activeSection)
+  const isActiveSecEnabled = activeSecObj ? activeSecObj.enabled !== false : true
 
   return (
     <div className="flex flex-col h-[calc(100vh-80px)] -m-6 md:-m-12 lg:-m-16 overflow-hidden bg-white">
@@ -122,24 +159,44 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
         <aside className="w-72 bg-cream/5 border-r border-nude flex flex-col shrink-0 z-10">
           <div className="p-8 border-b border-nude bg-ivory/50">
             <h3 className="text-[11px] font-bold uppercase tracking-[0.3em] text-charcoal">Struktur Undangan</h3>
+            <p className="text-[8px] uppercase tracking-widest text-muted mt-1 font-bold">Klik toggle untuk ON / OFF section</p>
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar py-4">
-            {dashboardSections.map(s => (
-              <button
-                key={s.id}
-                onClick={() => setActiveSection(s.id)}
-                className={`w-full text-left px-8 py-4 text-[11px] uppercase tracking-[0.25em] transition-all relative group flex items-center justify-between ${
-                  activeSection === s.id
-                    ? 'bg-mocha text-white font-bold shadow-inner'
-                    : 'text-charcoal/60 hover:bg-mocha/5 hover:text-mocha'
-                }`}
-              >
-                <span>{s.label}</span>
-                {activeSection === s.id && (
-                  <motion.div layoutId="active-pill" className="w-1.5 h-6 bg-white rounded-full" />
-                )}
-              </button>
-            ))}
+            {dashboardSections.map(s => {
+              const secItem = tempData.sections.find(sec => sec.id === s.id)
+              const isEnabled = secItem ? secItem.enabled !== false : true
+
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => setActiveSection(s.id)}
+                  className={`w-full cursor-pointer px-6 py-3.5 text-[11px] uppercase tracking-[0.2em] transition-all relative group flex items-center justify-between border-b border-nude/20 ${
+                    activeSection === s.id
+                      ? 'bg-mocha text-white font-bold shadow-inner'
+                      : 'text-charcoal/70 hover:bg-mocha/5 hover:text-mocha'
+                  }`}
+                >
+                  <span className={`truncate ${!isEnabled ? 'line-through opacity-50' : ''}`}>{s.label}</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => handleToggleSection(s.id, e)}
+                      title={isEnabled ? 'Klik untuk menonaktifkan section ini' : 'Klik untuk mengaktifkan section ini'}
+                      className={`text-[8px] font-bold px-2 py-0.5 rounded tracking-wider uppercase transition-colors shrink-0 ${
+                        isEnabled
+                          ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                          : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                      }`}
+                    >
+                      {isEnabled ? 'ON' : 'OFF'}
+                    </button>
+                    {activeSection === s.id && (
+                      <motion.div layoutId="active-pill" className="w-1.5 h-5 bg-white rounded-full shrink-0" />
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </aside>
 
@@ -177,14 +234,40 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
 
         {/* RIGHT: Editing Controls - Expanded and Full Height */}
         <aside className="w-[520px] bg-white border-l border-nude flex flex-col shrink-0 z-10 shadow-2xl shadow-black/5">
-          <div className="p-8 border-b border-nude bg-ivory/50 flex items-center justify-between">
-            <h3 className="text-[12px] font-bold uppercase tracking-[0.3em] text-charcoal flex items-center gap-3">
-               <span className="text-lg">🖋️</span>
-               <span>Edit: {activeSection}</span>
-            </h3>
-            <span className="text-[9px] px-3 py-1 bg-mocha/10 text-mocha rounded-full font-bold uppercase tracking-widest">Active Section</span>
+          <div className="p-8 border-b border-nude bg-ivory/50 flex items-center justify-between gap-4">
+            <div>
+              <h3 className="text-[12px] font-bold uppercase tracking-[0.25em] text-charcoal flex items-center gap-2">
+                <span>🖋️</span>
+                <span>Edit: {activeSection}</span>
+              </h3>
+            </div>
+
+            {/* Toggle Switch in Header */}
+            <button
+              onClick={() => handleToggleSection(activeSection)}
+              className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 ${
+                isActiveSecEnabled
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${isActiveSecEnabled ? 'bg-white' : 'bg-gray-500'}`} />
+              <span>{isActiveSecEnabled ? 'Seksi Tampil (ON)' : 'Seksi Sembunyi (OFF)'}</span>
+            </button>
           </div>
+
           <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
+            {!isActiveSecEnabled && (
+              <div className="bg-amber-50 border border-amber-200 p-4 rounded text-xs text-amber-800 space-y-1 mb-6">
+                <div className="font-bold flex items-center gap-2">
+                  <span>⚠️</span> Section Ini Sedang Nonaktif (OFF)
+                </div>
+                <p className="text-[11px] leading-relaxed">
+                  Bagian <strong>"{activeSection}"</strong> disembunyikan dari tampilan undangan. Pengunjung tidak akan melihat bagian ini. Anda dapat mengaktifkannya kembali dengan menekan tombol toggle di kanan atas.
+                </p>
+              </div>
+            )}
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeSection}
@@ -253,7 +336,7 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                   <div className="space-y-2">
                     <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Teks Undangan (Pendahuluan)</label>
                     <textarea
-                      value={tempData.sections.find(s => s.id === 'introduction')?.config.invitationText}
+                      value={tempData.sections.find(s => s.id === 'introduction')?.config.invitationText || ''}
                       onChange={(e) => handleUpdate('introduction', 'invitationText', e.target.value)}
                       className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha h-32 resize-none"
                     />
@@ -269,7 +352,7 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                           <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Nama Lengkap</label>
                           <input
                             type="text"
-                            value={tempData.sections.find(s => s.id === 'couple')?.config[p].name}
+                            value={tempData.couple[p as 'bride'|'groom']?.name || ''}
                             onChange={(e) => handleUpdate('couple', `${p}.name`, e.target.value)}
                             className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
                           />
@@ -278,14 +361,14 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                           <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Orang Tua</label>
                           <input
                             type="text"
-                            value={tempData.sections.find(s => s.id === 'couple')?.config[p].parents}
+                            value={tempData.couple[p as 'bride'|'groom']?.parents || ''}
                             onChange={(e) => handleUpdate('couple', `${p}.parents`, e.target.value)}
                             className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
                           />
                         </div>
                         <ImageUpload
                           label="Foto Portrait"
-                          value={tempData.sections.find(s => s.id === 'couple')?.config[p].image}
+                          value={tempData.couple[p as 'bride'|'groom']?.image}
                           onChange={(url) => handleUpdate('couple', `${p}.image`, url)}
                         />
                       </div>
@@ -298,7 +381,7 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                     <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Tanggal Pernikahan</label>
                     <input
                       type="datetime-local"
-                      value={tempData.sections.find(s => s.id === 'countdown')?.config.targetDate.slice(0, 16)}
+                      value={(tempData.sections.find(s => s.id === 'countdown')?.config.targetDate || '').slice(0, 16)}
                       onChange={(e) => handleUpdate('countdown', 'targetDate', e.target.value)}
                       className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
                     />
@@ -310,7 +393,7 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                     <div className="space-y-2">
                       <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Ayat Al-Quran</label>
                       <textarea
-                        value={tempData.sections.find(s => s.id === 'quran')?.config.verse}
+                        value={tempData.sections.find(s => s.id === 'quran')?.config.verse || ''}
                         onChange={(e) => handleUpdate('quran', 'verse', e.target.value)}
                         className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha h-32 resize-none"
                       />
@@ -319,7 +402,7 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                       <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Referensi (Surah:Ayat)</label>
                       <input
                         type="text"
-                        value={tempData.sections.find(s => s.id === 'quran')?.config.reference}
+                        value={tempData.sections.find(s => s.id === 'quran')?.config.reference || ''}
                         onChange={(e) => handleUpdate('quran', 'reference', e.target.value)}
                         className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
                       />
@@ -329,7 +412,7 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
 
                 {activeSection === 'event' && (
                   <div className="space-y-6">
-                    {tempData.sections.find(s => s.id === 'event')?.config.events.map((ev: any, i: number) => (
+                    {(tempData.sections.find(s => s.id === 'event')?.config.events || []).map((ev: any, i: number) => (
                       <div key={i} className="space-y-4 pt-4 border-t border-nude first:border-0 first:pt-0">
                          <h4 className="text-[10px] font-bold uppercase tracking-widest text-mocha">{ev.name}</h4>
                          <div className="space-y-2">
@@ -355,7 +438,6 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                                    const nextEvents = [...tempData.sections.find(s => s.id === 'event')?.config.events]
                                    nextEvents[i].date = e.target.value
                                    handleUpdate('event', 'events', nextEvents)
-                                   // Sync to Cover and Closing if this is first event
                                    if (i === 0) {
                                       handleUpdate('cover', 'dateText', e.target.value)
                                       handleUpdate('closing', 'date', e.target.value)
@@ -404,14 +486,13 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                               placeholder="https://maps.google.com/..."
                             />
                          </div>
-                         {/* Synchronized Global Date for Countdown */}
                          {i === 0 && (
                            <div className="space-y-2 bg-mocha/5 p-4 rounded-sm border border-mocha/10">
                               <label className="text-[9px] font-bold uppercase tracking-widest text-mocha">Global Timer Sync</label>
                               <p className="text-[8px] text-muted mb-2 italic">Tanggal ini akan otomatis digunakan untuk Countdown.</p>
                               <input
                                 type="datetime-local"
-                                value={tempData.sections.find(s => s.id === 'countdown')?.config.targetDate.slice(0, 16)}
+                                value={(tempData.sections.find(s => s.id === 'countdown')?.config.targetDate || '').slice(0, 16)}
                                 onChange={(e) => {
                                    handleUpdate('countdown', 'targetDate', e.target.value)
                                 }}
@@ -429,7 +510,7 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                     <div className="space-y-2">
                       <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Pesan Penutup</label>
                       <textarea
-                        value={tempData.sections.find(s => s.id === 'closing')?.config.message}
+                        value={tempData.sections.find(s => s.id === 'closing')?.config.message || ''}
                         onChange={(e) => handleUpdate('closing', 'message', e.target.value)}
                         className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha h-32 resize-none"
                       />
@@ -438,7 +519,7 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                       <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Nama Singkat Mempelai</label>
                       <input
                         type="text"
-                        value={tempData.sections.find(s => s.id === 'closing')?.config.names}
+                        value={tempData.sections.find(s => s.id === 'closing')?.config.names || ''}
                         onChange={(e) => handleUpdate('closing', 'names', e.target.value)}
                         className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
                       />
@@ -448,7 +529,7 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
 
                 {activeSection === 'story' && (
                   <div className="space-y-6">
-                    {tempData.sections.find(s => s.id === 'story')?.config.items.map((s: any, i: number) => (
+                    {(tempData.sections.find(s => s.id === 'story')?.config.items || []).map((s: any, i: number) => (
                       <div key={i} className="space-y-4 pt-4 border-t border-nude first:border-0 first:pt-0">
                          <div className="flex justify-between items-center">
                             <h4 className="text-[10px] font-bold uppercase tracking-widest text-mocha">Cerita #{i+1}</h4>
@@ -510,7 +591,7 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                   <div className="space-y-6">
                     <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Koleksi Galeri</label>
                     <div className="grid grid-cols-2 gap-4">
-                       {tempData.sections.find(s => s.id === 'gallery')?.config.images.map((img: string, i: number) => (
+                       {(tempData.sections.find(s => s.id === 'gallery')?.config.images || []).map((img: string, i: number) => (
                           <ImageUpload
                              key={i}
                              value={img}
@@ -531,12 +612,12 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                     <div className="space-y-2">
                        <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Deskripsi Kado</label>
                        <textarea
-                         value={tempData.sections.find(s => s.id === 'gift')?.config.description}
+                         value={tempData.sections.find(s => s.id === 'gift')?.config.description || ''}
                          onChange={(e) => handleUpdate('gift', 'description', e.target.value)}
                          className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha h-24 resize-none"
                        />
                     </div>
-                    {tempData.sections.find(s => s.id === 'gift')?.config.accounts.map((acc: any, i: number) => (
+                    {(tempData.sections.find(s => s.id === 'gift')?.config.accounts || []).map((acc: any, i: number) => (
                       <div key={i} className="space-y-4 pt-4 border-t border-nude">
                          <h4 className="text-[10px] font-bold uppercase tracking-widest text-mocha">Rekening #{i+1}</h4>
                          <div className="space-y-2">

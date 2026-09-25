@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { invitationService } from '../../lib/invitation/invitationService'
 import type { InvitationProject, InvitationRevision } from '../../lib/invitation/types'
 
 export default function DashboardTemplate({ project }: { project: InvitationProject }) {
+  const navigate = useNavigate()
   const [revisions, setRevisions] = useState<InvitationRevision[]>([])
   const [loading, setLoading] = useState(true)
   const [isSwitching, setIsSwitching] = useState(false)
@@ -26,34 +28,39 @@ export default function DashboardTemplate({ project }: { project: InvitationProj
 
   const handleSwitchTemplate = async (templateId: string) => {
     if (templateId === project.templateId) return
-    if (confirm(`Ganti desain ke template ${templateId.toUpperCase()}? Data Anda akan dipertahankan, namun tata letak akan berubah mengikuti desain baru.`)) {
+    const targetTemplate = allTemplates.find(t => t.id === templateId)
+    if (!targetTemplate) return
+
+    if (confirm(`Ganti desain ke template ${targetTemplate.name.toUpperCase()}? Data Anda akan dipertahankan, namun tata letak akan berubah mengikuti desain baru.`)) {
        setIsSwitching(true)
        try {
-         const newTemplate = allTemplates.find(t => t.id === templateId)
-         if (!newTemplate) return
-
          // Preserve user data while adapting to new section structure
          const newData = { ...project.data }
-         newData.sections = newTemplate.sections.map((s: any) => ({
-            id: s.id,
-            type: s.type,
-            enabled: true,
-            config: JSON.parse(JSON.stringify(s.config))
-         }))
+         newData.sections = targetTemplate.sections.map((s: any) => {
+            // Match existing section config if same type/id exists
+            const existing = project.data.sections.find(es => es.id === s.id)
+            return {
+               id: s.id,
+               type: s.type,
+               enabled: existing ? existing.enabled !== false : true,
+               config: existing ? { ...s.config, ...existing.config } : JSON.parse(JSON.stringify(s.config))
+            }
+         })
 
          await invitationService.updateProject(project.id, {
-            template_id: templateId,
+            templateId: templateId,
             data: newData
          })
 
          // Set this as last project to ensure focus on refresh
          sessionStorage.setItem('yova_last_proj_id', project.id)
 
-         await invitationService.createRevision(project.id, `Ganti template ke ${templateId}`, newData)
-         alert('Template berhasil diganti!')
-         window.location.reload()
+         await invitationService.createRevision(project.id, `Ganti template ke ${targetTemplate.name}`, newData)
+         alert(`Template berhasil diganti ke ${targetTemplate.name}! Anda akan diarahkan ke halaman pengeditan.`)
+         window.location.href = '/invitation/dashboard/customize'
        } catch (err) {
-         alert('Gagal mengganti template.')
+         console.error('Gagal mengganti template:', err)
+         alert('Gagal mengganti template. Silakan coba lagi.')
        } finally {
          setIsSwitching(false)
        }
@@ -80,25 +87,34 @@ export default function DashboardTemplate({ project }: { project: InvitationProj
                      className="w-full h-full object-cover"
                    />
                 </div>
-                <div className="flex-1">
-                   <div className="flex items-center gap-3 mb-4">
-                      <h3 className="font-display text-3xl text-charcoal uppercase">{activeTemplate?.name}</h3>
-                      <span className="text-[9px] px-2 py-0.5 bg-emerald-50 text-emerald-600 font-bold uppercase rounded-full">Aktif</span>
-                   </div>
-                   <p className="text-sm text-muted leading-relaxed mb-8">
-                      {activeTemplate?.description}
-                   </p>
+                <div className="flex-1 flex flex-col justify-between">
+                   <div>
+                      <div className="flex items-center gap-3 mb-4">
+                         <h3 className="font-display text-3xl text-charcoal uppercase">{activeTemplate?.name}</h3>
+                         <span className="text-[9px] px-2 py-0.5 bg-emerald-50 text-emerald-600 font-bold uppercase rounded-full">Aktif</span>
+                      </div>
+                      <p className="text-sm text-muted leading-relaxed mb-6">
+                         {activeTemplate?.description}
+                      </p>
 
-                   <div className="grid grid-cols-2 gap-6 text-[10px] uppercase tracking-widest font-bold">
-                      <div className="space-y-1">
-                         <div className="text-muted text-[8px]">Versi</div>
-                         <div>{activeTemplate?.version || '1.0'}</div>
-                      </div>
-                      <div className="space-y-1">
-                         <div className="text-muted text-[8px]">Kategori</div>
-                         <div>{activeTemplate?.category}</div>
+                      <div className="grid grid-cols-2 gap-6 text-[10px] uppercase tracking-widest font-bold mb-6">
+                         <div className="space-y-1">
+                            <div className="text-muted text-[8px]">Versi</div>
+                            <div>{activeTemplate?.version || '1.0'}</div>
+                         </div>
+                         <div className="space-y-1">
+                            <div className="text-muted text-[8px]">Kategori</div>
+                            <div>{activeTemplate?.category}</div>
+                         </div>
                       </div>
                    </div>
+
+                   <Link
+                      to="/invitation/dashboard/customize"
+                      className="inline-flex items-center justify-center px-8 py-3.5 bg-mocha text-white text-[10px] font-bold uppercase tracking-widest hover:bg-mocha-dark transition-all shadow-md shadow-mocha/20 w-full sm:w-auto text-center"
+                   >
+                      ✏️ Edit & Sesuaikan Undangan Ini
+                   </Link>
                 </div>
              </div>
           </div>
@@ -115,7 +131,19 @@ export default function DashboardTemplate({ project }: { project: InvitationProj
               </div>
 
               <div className="mt-12 space-y-3">
-                 <button className="w-full py-3 bg-white text-charcoal text-[9px] font-bold uppercase tracking-widest transition-colors opacity-30 cursor-not-allowed">Download Aset</button>
+                 <Link
+                    to="/invitation/dashboard/customize"
+                    className="block w-full py-3 bg-mocha text-white text-[9px] font-bold uppercase tracking-widest text-center hover:bg-mocha-dark transition-colors"
+                 >
+                    Sesuaikan Konten
+                 </Link>
+                 <Link
+                    to={`/i/${project.slug}`}
+                    target="_blank"
+                    className="block w-full py-3 bg-white/10 text-white text-[9px] font-bold uppercase tracking-widest text-center hover:bg-white/20 transition-colors"
+                 >
+                    Preview Undangan
+                 </Link>
               </div>
            </div>
         </div>
@@ -153,7 +181,7 @@ export default function DashboardTemplate({ project }: { project: InvitationProj
       <div>
         <h2 className="font-display text-3xl text-charcoal mb-8">Riwayat Revisi</h2>
         <div className="space-y-4">
-           {revisions.map((rev, i) => (
+           {revisions.map((rev) => (
              <div key={rev.id} className="bg-white border border-nude p-6 flex items-center justify-between group hover:border-mocha transition-colors">
                 <div className="flex items-center gap-6">
                    <div className="w-12 h-12 bg-ivory text-mocha flex items-center justify-center font-display text-xl">
@@ -165,8 +193,7 @@ export default function DashboardTemplate({ project }: { project: InvitationProj
                    </div>
                 </div>
                 <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                   <button className="px-4 py-2 bg-soft text-[9px] font-bold uppercase tracking-widest hover:bg-nude">Lihat</button>
-                   <button className="px-4 py-2 border border-nude text-[9px] font-bold uppercase tracking-widest hover:bg-soft">Pulihkan</button>
+                   <Link to="/invitation/dashboard/customize" className="px-4 py-2 bg-soft text-[9px] font-bold uppercase tracking-widest hover:bg-nude">Edit Draft</Link>
                 </div>
              </div>
            ))}
