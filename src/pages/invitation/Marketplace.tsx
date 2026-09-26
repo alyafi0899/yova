@@ -2,14 +2,13 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { getAllTemplates } from '../../lib/invitation/templates'
-import { formatPrice } from '../../lib/invitation/format'
 import { invitationService } from '../../lib/invitation/invitationService'
 import TemplatePreviewModal from '../../components/invitation/TemplatePreviewModal'
 import type { InvitationTemplate } from '../../lib/invitation/types'
 
 const TEMPLATES = getAllTemplates()
 
-function TemplateCard({ t, onPreview }: { t: InvitationTemplate; onPreview: () => void }) {
+function TemplateCard({ t, onPreview, onSelect }: { t: InvitationTemplate; onPreview: () => void; onSelect: () => void }) {
   const cornerBadge = t.badge
 
   return (
@@ -60,7 +59,7 @@ function TemplateCard({ t, onPreview }: { t: InvitationTemplate; onPreview: () =
             Preview Design
           </button>
           <button
-            onClick={() => onPreview()} // Use preview then "Pilih" in modal
+            onClick={onSelect}
             className="w-full sm:w-auto px-8 py-3 bg-mocha text-ivory text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-mocha-dark transition-all text-center"
           >
             Pilih Desain Ini
@@ -86,11 +85,44 @@ export default function Marketplace() {
     }
 
     try {
-      await invitationService.createProject(template.id, `Wedding of ${user.email?.split('@')[0]}`)
-      navigate(`/invitation/dashboard`)
+      const existingProjects = await invitationService.getProjects()
+      let targetProjectId = ''
+
+      if (existingProjects && existingProjects.length > 0) {
+        const proj = existingProjects[0]
+        targetProjectId = proj.id
+
+        if (proj.templateId !== template.id) {
+          const newData = { ...proj.data }
+          newData.sections = template.sections.map((s: any) => {
+             const existing = proj.data.sections?.find(es => es.id === s.id)
+             return {
+                id: s.id,
+                type: s.type,
+                enabled: existing ? existing.enabled !== false : true,
+                config: existing ? { ...s.config, ...existing.config } : JSON.parse(JSON.stringify(s.config))
+             }
+          })
+
+          await invitationService.updateProject(proj.id, {
+             templateId: template.id,
+             data: newData
+          })
+        }
+      } else {
+        const newProj = await invitationService.createProject(template.id, `Wedding of ${user.email?.split('@')[0]}`)
+        targetProjectId = newProj.id
+      }
+
+      if (targetProjectId) {
+        sessionStorage.setItem('yova_last_proj_id', targetProjectId)
+      }
+
+      // Navigate directly to template editor in dashboard
+      navigate('/invitation/dashboard/customize')
     } catch (err) {
       console.error(err)
-      alert('Gagal menyiapkan dashboard. Silakan coba lagi.')
+      alert('Gagal menyiapkan editor undangan. Silakan coba lagi.')
     } finally {
       setLoading(false)
     }
@@ -121,10 +153,15 @@ export default function Marketplace() {
           </p>
         </div>
 
-        {/* Focused Layout for SAKINAH only */}
-        <div className="max-w-5xl mx-auto">
+        {/* Focused Layout */}
+        <div className="max-w-5xl mx-auto space-y-12">
            {TEMPLATES.map(t => (
-             <TemplateCard key={t.id} t={t} onPreview={() => setPreview(t)} />
+             <TemplateCard
+               key={t.id}
+               t={t}
+               onPreview={() => setPreview(t)}
+               onSelect={() => handleUseTemplate(t)}
+             />
            ))}
         </div>
 

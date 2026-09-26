@@ -18,7 +18,7 @@ export default function TemplateDetail() {
       <div className="min-h-screen bg-ivory font-sans flex items-center justify-center px-6">
         <div className="text-center space-y-4">
           <p className="font-display text-2xl text-charcoal">Template tidak ditemukan</p>
-          <Link to="/invitation/templates" className="text-[10px] font-bold uppercase tracking-widest text-mocha hover:underline">
+          <Link to="/invitation" className="text-[10px] font-bold uppercase tracking-widest text-mocha hover:underline">
             ← Kembali ke Marketplace
           </Link>
         </div>
@@ -36,11 +36,43 @@ export default function TemplateDetail() {
     }
 
     try {
-      const project = await invitationService.createProject(template.id, `Wedding of ${user.email?.split('@')[0]}`)
-      navigate('/invitation/dashboard')
+      const existingProjects = await invitationService.getProjects()
+      let targetProjectId = ''
+
+      if (existingProjects && existingProjects.length > 0) {
+        const proj = existingProjects[0]
+        targetProjectId = proj.id
+
+        if (proj.templateId !== template.id) {
+          const newData = { ...proj.data }
+          newData.sections = template.sections.map((s: any) => {
+             const existing = proj.data.sections?.find(es => es.id === s.id)
+             return {
+                id: s.id,
+                type: s.type,
+                enabled: existing ? existing.enabled !== false : true,
+                config: existing ? { ...s.config, ...existing.config } : JSON.parse(JSON.stringify(s.config))
+             }
+          })
+
+          await invitationService.updateProject(proj.id, {
+             templateId: template.id,
+             data: newData
+          })
+        }
+      } else {
+        const newProj = await invitationService.createProject(template.id, `Wedding of ${user.email?.split('@')[0]}`)
+        targetProjectId = newProj.id
+      }
+
+      if (targetProjectId) {
+        sessionStorage.setItem('yova_last_proj_id', targetProjectId)
+      }
+
+      navigate('/invitation/dashboard/customize')
     } catch (err) {
       console.error(err)
-      alert('Gagal membuat undangan. Silakan coba lagi.')
+      alert('Gagal menyiapkan editor undangan. Silakan coba lagi.')
     } finally {
       setLoading(false)
     }
@@ -59,15 +91,15 @@ export default function TemplateDetail() {
       </header>
 
       <div className="max-w-6xl mx-auto px-6 pt-32 pb-24">
-        <Link to="/invitation/templates" className="inline-block text-[10px] font-bold uppercase tracking-widest text-muted hover:text-mocha transition-colors mb-10">
-          ← Back to Marketplace
+        <Link to="/invitation" className="inline-block text-[10px] font-bold uppercase tracking-widest text-muted hover:text-mocha transition-colors mb-10">
+          ← Kembali ke Marketplace
         </Link>
 
         <div className="grid md:grid-cols-2 gap-16">
           {/* Image */}
           <div className="relative aspect-[3/4] overflow-hidden bg-soft">
             <img
-              src={`https://images.unsplash.com/${template.thumbnail}?w=900&h=1200&fit=crop&auto=format`}
+              src={template.thumbnail}
               alt={template.name}
               className="w-full h-full object-cover"
             />
@@ -81,7 +113,7 @@ export default function TemplateDetail() {
             <p className="text-sm text-muted leading-relaxed mb-10">{template.description}</p>
 
             <div className="mb-10">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-charcoal mb-5">Key Features</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-charcoal mb-5">Fitur Utama</p>
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                 {template.keyFeatures.map(feat => (
                   <div key={feat} className="flex items-start gap-2 text-xs text-charcoal">
@@ -93,7 +125,7 @@ export default function TemplateDetail() {
             </div>
 
             <div className="mb-12">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-charcoal mb-4">Experience</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-charcoal mb-4">Pengalaman Desain</p>
               <p className="text-sm text-muted leading-relaxed italic">{template.experience}</p>
             </div>
 
@@ -103,13 +135,13 @@ export default function TemplateDetail() {
                 disabled={loading}
                 className="flex-1 px-8 py-4 bg-charcoal text-ivory text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-black transition-all disabled:opacity-50"
               >
-                {loading ? 'Menyiapkan…' : 'Use This Template'}
+                {loading ? 'Menyiapkan…' : 'Pilih Template Ini & Edit'}
               </button>
               <button
                 onClick={() => setShowPreview(true)}
                 className="flex-1 px-8 py-4 bg-white border border-nude text-charcoal text-[10px] font-bold uppercase tracking-[0.2em] hover:border-mocha hover:text-mocha transition-all"
               >
-                Preview Invitation
+                Preview Desain
               </button>
             </div>
           </div>
@@ -124,7 +156,7 @@ export default function TemplateDetail() {
                 <Link key={t.id} to={`/invitation/templates/${t.id}`} className="group block">
                   <div className="relative h-48 overflow-hidden bg-soft mb-3">
                     <img
-                      src={`https://images.unsplash.com/${t.thumbnail}?w=400&h=500&fit=crop&auto=format`}
+                      src={t.thumbnail}
                       alt={t.name}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
