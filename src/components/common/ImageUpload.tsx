@@ -8,6 +8,51 @@ interface ImageUploadProps {
   aspectRatio?: string;
 }
 
+const compressAndConvertToDataUrl = (
+  file: File,
+  maxWidth = 1200,
+  maxHeight = 1200,
+  quality = 0.82
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Gagal membaca file gambar'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Gagal memproses gambar'));
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          if (width / height > maxWidth / maxHeight) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(e.target?.result as string);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedDataUrl);
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
 export default function ImageUpload({ value, onChange, label, aspectRatio = 'aspect-video' }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -20,20 +65,34 @@ export default function ImageUpload({ value, onChange, label, aspectRatio = 'asp
       const fileName = `${Math.random()}-${Math.random()}.${fileExt}`;
       const filePath = `user-uploads/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('invitations')
-        .upload(filePath, file);
+      let uploadedUrl: string | null = null;
 
-      if (uploadError) throw uploadError;
+      try {
+        const { error: uploadError } = await supabase.storage
+          .from('invitations')
+          .upload(filePath, file);
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('invitations')
-        .getPublicUrl(filePath);
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('invitations')
+            .getPublicUrl(filePath);
+          if (publicUrl) {
+            uploadedUrl = publicUrl;
+          }
+        }
+      } catch (storageErr) {
+        console.warn('Supabase storage upload error, switching to compressed base64 fallback:', storageErr);
+      }
 
-      onChange(publicUrl);
+      if (uploadedUrl) {
+        onChange(uploadedUrl);
+      } else {
+        const dataUrl = await compressAndConvertToDataUrl(file);
+        onChange(dataUrl);
+      }
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Gagal mengunggah gambar.');
+      alert('Gagal mengunggah gambar. Silakan coba file gambar lain.');
     } finally {
       setUploading(false);
     }

@@ -280,9 +280,12 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                 {activeSection === 'cover' && (
                   <>
                     <ImageUpload
-                      label="Foto Utama (Watercolor Hero)"
-                      value={tempData.sections.find(s => s.id === 'cover')?.config.couplePhoto}
-                      onChange={(url) => handleUpdate('cover', 'couplePhoto', url)}
+                      label="Foto Utama (Watercolor Hero / Sampul)"
+                      value={tempData.sections.find(s => s.id === 'cover')?.config.couplePhoto || tempData.sections.find(s => s.id === 'cover')?.config.coverImage}
+                      onChange={(url) => {
+                        handleUpdate('cover', 'couplePhoto', url)
+                        handleUpdate('cover', 'coverImage', url)
+                      }}
                     />
                     <div className="space-y-4 pt-4 border-t border-nude">
                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-mocha">Detail Informasi</h4>
@@ -589,19 +592,44 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
 
                 {activeSection === 'gallery' && (
                   <div className="space-y-6">
-                    <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Koleksi Galeri</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Koleksi Galeri</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const current = tempData.sections.find(s => s.id === 'gallery')?.config.images || []
+                          handleUpdate('gallery', 'images', [...current, ''])
+                        }}
+                        className="px-3 py-1 bg-mocha text-white text-[9px] font-bold uppercase tracking-wider rounded hover:bg-mocha-dark transition-colors"
+                      >
+                        + Tambah Foto
+                      </button>
+                    </div>
                     <div className="grid grid-cols-2 gap-4">
                        {(tempData.sections.find(s => s.id === 'gallery')?.config.images || []).map((img: string, i: number) => (
-                          <ImageUpload
-                             key={i}
-                             value={img}
-                             onChange={(url) => {
-                                const nextImages = [...tempData.sections.find(s => s.id === 'gallery')?.config.images]
-                                nextImages[i] = url
-                                handleUpdate('gallery', 'images', nextImages)
-                             }}
-                             aspectRatio="aspect-[3/4]"
-                          />
+                          <div key={i} className="relative group">
+                            <ImageUpload
+                               value={img}
+                               onChange={(url) => {
+                                  const nextImages = [...(tempData.sections.find(s => s.id === 'gallery')?.config.images || [])]
+                                  nextImages[i] = url
+                                  handleUpdate('gallery', 'images', nextImages)
+                               }}
+                               aspectRatio="aspect-[3/4]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                 const nextImages = [...(tempData.sections.find(s => s.id === 'gallery')?.config.images || [])]
+                                 nextImages.splice(i, 1)
+                                 handleUpdate('gallery', 'images', nextImages)
+                              }}
+                              className="absolute top-1 right-1 bg-red-600 text-white w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
+                              title="Hapus foto ini"
+                            >
+                              ✕
+                            </button>
+                          </div>
                        ))}
                     </div>
                   </div>
@@ -659,6 +687,16 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                               className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
                             />
                          </div>
+                         <ImageUpload
+                            label="Foto QRIS / Rekening (Opsional)"
+                            value={acc.qrCode || acc.image}
+                            onChange={(url) => {
+                               const nextAccs = [...(tempData.sections.find(s => s.id === 'gift')?.config.accounts || [])]
+                               nextAccs[i].qrCode = url
+                               handleUpdate('gift', 'accounts', nextAccs)
+                            }}
+                            aspectRatio="aspect-square"
+                         />
                       </div>
                     ))}
                   </div>

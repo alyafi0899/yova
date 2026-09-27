@@ -34,6 +34,21 @@ function un(id: string, w: number, h: number, crop = 'center') {
   return `https://images.unsplash.com/${id}?w=${w}&h=${h}&fit=crop&crop=${crop}&auto=format&q=80`;
 }
 
+function resolveImg(src: string | undefined, w: number, h: number, crop = 'center', fallbackId = '') {
+  const target = src || fallbackId;
+  if (!target) return '';
+  if (
+    target.startsWith('http://') ||
+    target.startsWith('https://') ||
+    target.startsWith('data:') ||
+    target.startsWith('blob:') ||
+    target.startsWith('/')
+  ) {
+    return target;
+  }
+  return un(target, w, h, crop);
+}
+
 const PH = {
   cover: 'photo-1772241824154-ce6e7c985ff9',
   bride: 'photo-1779144999758-4062528dd799',
@@ -333,27 +348,66 @@ function Tag({ children }: { children: string }) {
 
 // ── envelope cover ────────────────────────────────────────────────────────────
 function EnvelopeCover({
-  guestName, brideName, groomName, onFullyOpen,
+  guestName, brideName, groomName, config, onFullyOpen,
 }: {
-  guestName: string; brideName: string; groomName: string; onFullyOpen: () => void;
+  guestName: string; brideName: string; groomName: string; config?: any; onFullyOpen: () => void;
 }) {
   const [phase, setPhase] = useState<0 | 1 | 2>(0);
   function handleOpen() { setPhase(1); setTimeout(() => { setPhase(2); }, 1600); setTimeout(() => { onFullyOpen(); }, 3200); }
-  const EW = 'min(300px, 78vw)';
-  const EH_NUM = 200;
+  const EW = 'min(340px, 86vw)';
+  const EH_NUM = 220;
+
+  const bgPhoto = resolveImg(config?.couplePhoto || config?.coverImage, 900, 700, 'center', PH.dark1);
+  const cardPhoto = resolveImg(config?.couplePhoto || config?.coverImage, 400, 200, 'center', PH.dark2);
+
+  const bInitial = brideName.trim()[0]?.toUpperCase() || 'B';
+  const gInitial = groomName.trim()[0]?.toUpperCase() || 'G';
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden" style={{ backgroundColor: T.bg }}>
-      <div className="absolute inset-0 pointer-events-none"><img src={un(PH.dark1, 900, 700)} alt="" className="w-full h-full object-cover opacity-15" /><div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, ${T.bg}90 30%, ${T.bg} 100%)` }} /></div>
-      <div className="relative z-10 text-center mb-10" style={{ animation: 'malamFadeIn 1.2s ease 0.3s both' }}><p dir="rtl" style={{ fontFamily: serif, fontSize: '1.15rem', color: T.gold, letterSpacing: '0.04em' }}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p><p className="text-[9px] tracking-[0.3em] uppercase mt-1" style={{ fontFamily: sans, color: T.muted }}>Bismillahirrahmanirrahim</p></div>
-      <div className="relative z-10" style={{ width: EW, perspective: '1100px', perspectiveOrigin: 'center top' }}>
-        <div className={phase >= 1 ? 'env-card-rise' : ''} style={{ position: 'absolute', left: '8%', right: '8%', bottom: 16, height: EH_NUM * 0.9, backgroundColor: T.elevated, border: `1px solid ${T.gold}40`, zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 20, overflow: 'hidden' }}><div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: `url(${un(PH.dark2, 400, 200)})`, backgroundSize: 'cover' }} /><p style={{ fontFamily: script, fontSize: '1.6rem', color: T.gold, lineHeight: 1 }}>{brideName} &amp; {groomName}</p><p className="text-[9px] tracking-[0.25em] uppercase" style={{ fontFamily: sans, color: T.muted }}>12 · 12 · 2026</p><GoldLine className="w-24" /><p className="text-[8px] text-center leading-loose tracking-wider" style={{ fontFamily: sans, color: `${T.cream}60` }}>You're Cordially Invited</p></div>
-        <div style={{ position: 'relative', width: '100%', height: EH_NUM, backgroundColor: T.surface, border: `1px solid ${T.gold}50`, zIndex: 3 }}><svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M 0 100 L 50 55 L 100 100" stroke={`${T.gold}25`} strokeWidth="0.5" fill="none" /><path d="M 0 0 L 50 45 L 100 0" stroke={`${T.gold}20`} strokeWidth="0.3" fill="none" /><path d="M 0 0 L 0 100" stroke={`${T.gold}20`} strokeWidth="0.3" /><path d="M 100 0 L 100 100" stroke={`${T.gold}20`} strokeWidth="0.3" /></svg><div className="absolute inset-0 flex flex-col items-center justify-center gap-2"><p style={{ fontFamily: serif, fontSize: '1.3rem', color: T.cream, letterSpacing: '0.12em' }}>{brideName.toUpperCase()} &amp; {groomName.toUpperCase()}</p><p style={{ fontFamily: sans, fontSize: '0.6rem', color: T.muted, letterSpacing: '0.2em' }}>12 DECEMBER 2026</p></div></div>
-        <div style={{ position: 'absolute', top: 0, left: '-1px', right: '-1px', height: EH_NUM * 0.55, zIndex: 4, perspective: 1100, perspectiveOrigin: 'top center' }}><div className={phase === 1 ? 'env-flap-open' : ''} style={{ position: 'absolute', inset: 0, clipPath: 'polygon(0 0, 100% 0, 50% 82%)', backgroundColor: T.elevated, border: `1px solid ${T.gold}55`, transformOrigin: 'top center', backfaceVisibility: 'hidden', zIndex: 4 }}><div className={phase === 1 ? 'seal-out' : ''} style={{ position: 'absolute', bottom: '14%', left: '50%', transform: 'translateX(-50%)', width: 38, height: 38, borderRadius: '50%', backgroundColor: T.wax, border: `1.5px solid ${T.goldDim}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 12px ${T.wax}80` }}><p style={{ fontFamily: serif, fontSize: '0.62rem', color: T.goldBright, letterSpacing: '0.05em' }}>Z&amp;R</p></div></div></div>
+    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden py-8 px-4" style={{ backgroundColor: T.bg }}>
+      <div className="absolute inset-0 pointer-events-none">
+        <img src={bgPhoto} alt="" className="w-full h-full object-cover opacity-15" />
+        <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, ${T.bg}90 30%, ${T.bg} 100%)` }} />
       </div>
-      <div className="relative z-10 text-center mt-8" style={{ animation: 'malamFadeIn 1s ease 0.8s both' }}><p className="text-[9px] tracking-[0.25em] uppercase mb-1" style={{ fontFamily: sans, color: T.muted }}>Kepada Yth.</p><p style={{ fontFamily: serif, fontSize: '1rem', color: T.cream }}>{guestName}</p></div>
-      {phase === 0 && (<button onClick={handleOpen} className="relative z-10 mt-8 group" style={{ animation: 'malamFadeIn 1s ease 1.2s both' }}><span className="block px-10 py-3 text-[11px] tracking-[0.3em] uppercase relative overflow-hidden" style={{ fontFamily: sans, color: T.gold, border: `1px solid ${T.gold}70` }}><span className="relative z-10">Open Invitation</span><span className="absolute inset-0 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" style={{ backgroundColor: T.gold + '25' }} /></span><svg className="mx-auto mt-3 animate-bounce" width="14" height="18" viewBox="0 0 14 18" fill="none"><path d="M7 2 L7 14 M3 10 L7 14 L11 10" stroke={T.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></button>)}
-      {phase === 2 && (<p className="relative z-10 mt-6 text-[10px] tracking-[0.2em] uppercase" style={{ fontFamily: sans, color: T.muted, animation: 'malamFadeIn 0.6s ease forwards' }}>Opening your invitation…</p>)}
+      <div className="relative z-10 text-center mb-8" style={{ animation: 'malamFadeIn 1.2s ease 0.3s both' }}>
+        <p dir="rtl" style={{ fontFamily: serif, fontSize: '1.25rem', color: T.gold, letterSpacing: '0.04em' }}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+        <p className="text-[9px] tracking-[0.3em] uppercase mt-1 font-semibold" style={{ fontFamily: sans, color: T.muted }}>Bismillahirrahmanirrahim</p>
+      </div>
+      <div className="relative z-10" style={{ width: EW, perspective: '1100px', perspectiveOrigin: 'center top' }}>
+        <div className={phase >= 1 ? 'env-card-rise' : ''} style={{ position: 'absolute', left: '6%', right: '6%', bottom: 12, height: EH_NUM * 0.88, backgroundColor: T.elevated, border: `1px solid ${T.gold}50`, zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '16px 12px', overflow: 'hidden', boxShadow: `0 10px 30px ${T.bg}90` }}>
+          <div className="absolute inset-0 opacity-15 pointer-events-none bg-cover bg-center" style={{ backgroundImage: `url(${cardPhoto})` }} />
+          <p className="text-center truncate max-w-full px-2" style={{ fontFamily: script, fontSize: 'clamp(1.4rem, 5vw, 1.8rem)', color: T.gold, lineHeight: 1.2 }}>{brideName} &amp; {groomName}</p>
+          <p className="text-[9px] tracking-[0.25em] uppercase font-medium" style={{ fontFamily: sans, color: T.muted }}>{config?.dateText || '12 · 12 · 2026'}</p>
+          <GoldLine className="w-20" />
+          <p className="text-[8px] text-center leading-relaxed tracking-wider uppercase" style={{ fontFamily: sans, color: `${T.cream}80` }}>You're Cordially Invited</p>
+        </div>
+        <div style={{ position: 'relative', width: '100%', height: EH_NUM, backgroundColor: T.surface, border: `1px solid ${T.gold}50`, zIndex: 3, overflow: 'hidden' }}>
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path d="M 0 100 L 50 55 L 100 100" stroke={`${T.gold}25`} strokeWidth="0.5" fill="none" />
+            <path d="M 0 0 L 50 45 L 100 0" stroke={`${T.gold}20`} strokeWidth="0.3" fill="none" />
+            <path d="M 0 0 L 0 100" stroke={`${T.gold}20`} strokeWidth="0.3" />
+            <path d="M 100 0 L 100 100" stroke={`${T.gold}20`} strokeWidth="0.3" />
+          </svg>
+          <div className="absolute inset-x-0 bottom-4 top-[50%] flex flex-col items-center justify-center px-4 text-center z-10">
+            <p className="font-serif leading-tight text-cream tracking-wider uppercase max-w-full px-2" style={{ fontFamily: serif, fontSize: 'clamp(0.85rem, 3.2vw, 1.1rem)' }}>
+              {brideName} <span style={{ color: T.gold }}>&amp;</span> {groomName}
+            </p>
+            <p style={{ fontFamily: sans, fontSize: '0.6rem', color: T.muted, letterSpacing: '0.2em' }} className="mt-2 uppercase font-medium">
+              {config?.dateText || '12 DECEMBER 2026'}
+            </p>
+          </div>
+        </div>
+        <div style={{ position: 'absolute', top: 0, left: '-1px', right: '-1px', height: EH_NUM * 0.48, zIndex: 4, perspective: 1100, perspectiveOrigin: 'top center' }}>
+          <div className={phase === 1 ? 'env-flap-open' : ''} style={{ position: 'absolute', inset: 0, clipPath: 'polygon(0 0, 100% 0, 50% 90%)', backgroundColor: T.elevated, border: `1px solid ${T.gold}55`, transformOrigin: 'top center', backfaceVisibility: 'hidden', zIndex: 4 }}>
+            <div className={phase === 1 ? 'seal-out' : ''} style={{ position: 'absolute', bottom: '2%', left: '50%', transform: 'translateX(-50%)', width: 38, height: 38, borderRadius: '50%', backgroundColor: T.wax, border: `1.5px solid ${T.goldDim}`, display: 'flex', itemsCenter: 'center', justifyContent: 'center', boxShadow: `0 4px 15px ${T.wax}A0` }}>
+              <p style={{ fontFamily: serif, fontSize: '0.65rem', color: T.goldBright, letterSpacing: '0.05em' }} className="font-bold">{bInitial}&amp;{gInitial}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="relative z-10 text-center mt-8" style={{ animation: 'malamFadeIn 1s ease 0.8s both' }}><p className="text-[9px] tracking-[0.25em] uppercase mb-1 font-semibold" style={{ fontFamily: sans, color: T.muted }}>Kepada Yth.</p><p style={{ fontFamily: serif, fontSize: '1.05rem', color: T.cream }}>{guestName}</p></div>
+      {phase === 0 && (<button onClick={handleOpen} className="relative z-10 mt-7 group" style={{ animation: 'malamFadeIn 1s ease 1.2s both' }}><span className="block px-9 py-3 text-[10px] tracking-[0.3em] uppercase relative overflow-hidden font-bold" style={{ fontFamily: sans, color: T.gold, border: `1px solid ${T.gold}70` }}><span className="relative z-10">Open Invitation</span><span className="absolute inset-0 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" style={{ backgroundColor: T.gold + '25' }} /></span><svg className="mx-auto mt-2.5 animate-bounce" width="14" height="18" viewBox="0 0 14 18" fill="none"><path d="M7 2 L7 14 M3 10 L7 14 L11 10" stroke={T.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></button>)}
+      {phase === 2 && (<p className="relative z-10 mt-6 text-[10px] tracking-[0.2em] uppercase font-medium" style={{ fontFamily: sans, color: T.muted, animation: 'malamFadeIn 0.6s ease forwards' }}>Opening your invitation…</p>)}
     </div>
   );
 }
@@ -394,12 +448,12 @@ function CoupleSection({ data, config }: { data: InvitationData, config: any }) 
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
           {[
-            { who: data.couple.bride.name.split(' ')[0], full: data.couple.bride.name, par: 'Putri', parents: data.couple.bride.parents, photo: data.couple.bride.image || PH.bride, anim: bride },
-            { who: data.couple.groom.name.split(' ')[0], full: data.couple.groom.name, par: 'Putra', parents: data.couple.groom.parents, photo: data.couple.groom.image || PH.groom, anim: groom },
+            { who: data.couple.bride.name.split(' ')[0], full: data.couple.bride.name, par: 'Putri', parents: data.couple.bride.parents, photo: resolveImg(data.couple.bride.image, 360, 480, 'top', PH.bride), anim: bride },
+            { who: data.couple.groom.name.split(' ')[0], full: data.couple.groom.name, par: 'Putra', parents: data.couple.groom.parents, photo: resolveImg(data.couple.groom.image, 360, 480, 'top', PH.groom), anim: groom },
           ].map((p) => (
             <div key={p.who} ref={p.anim.ref} style={p.anim.style} className="flex flex-col items-center gap-5 text-center">
               <div className="relative group">
-                <div className="overflow-hidden mx-auto transition-transform duration-700 group-hover:scale-[1.02]" style={{ width: 'min(180px,46vw)', aspectRatio: '3/4', border: `1px solid ${T.goldBorder}`, boxShadow: `0 20px 60px ${T.bg}80, 0 0 0 1px ${T.goldDim}30` }}><img src={p.photo.startsWith('http') ? p.photo : un(p.photo, 360, 480, 'top')} alt={p.full} className="w-full h-full object-cover" /><div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, transparent 55%, ${T.bg}50 100%)` }} /></div>
+                <div className="overflow-hidden mx-auto transition-transform duration-700 group-hover:scale-[1.02]" style={{ width: 'min(180px,46vw)', aspectRatio: '3/4', border: `1px solid ${T.goldBorder}`, boxShadow: `0 20px 60px ${T.bg}80, 0 0 0 1px ${T.goldDim}30` }}><img src={p.photo} alt={p.full} className="w-full h-full object-cover" /><div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, transparent 55%, ${T.bg}50 100%)` }} /></div>
                 {[['top-0 left-0', 'border-t border-l'], ['top-0 right-0', 'border-t border-r'], ['bottom-0 left-0', 'border-b border-l'], ['bottom-0 right-0', 'border-b border-r']].map(([pos, border]) => (<div key={pos} className={`absolute ${pos} w-5 h-5 ${border}`} style={{ borderColor: T.gold }} />))}
               </div>
               <div><p style={{ fontFamily: script, fontSize: '2rem', color: T.gold, lineHeight: 1.1 }}>{p.who}</p><p className="text-lg mt-1" style={{ fontFamily: serif, color: T.cream }}>{p.full}</p><p className="text-xs mt-3 mb-1" style={{ fontFamily: sans, color: T.muted }}>{p.par} dari</p><p className="text-sm leading-relaxed" style={{ fontFamily: sans, color: `${T.cream}80` }}>{p.parents}</p></div>
@@ -415,10 +469,21 @@ function CoupleSection({ data, config }: { data: InvitationData, config: any }) 
 function StoryEntry({ s, i, total }: { s: any; i: number; total: number }) {
   const side = i % 2 === 0 ? 'left' : 'right';
   const { ref, style } = useReveal(side, i * 0.15);
+  const storyImg = resolveImg(s?.image, 300, 300, 'center');
+
   return (
     <div ref={ref} style={style} className={`flex items-start gap-5 ${side === 'right' ? 'flex-row-reverse text-right' : ''}`}>
       <div className="flex flex-col items-center gap-1.5 flex-shrink-0"><div className="w-10 h-10 flex items-center justify-center" style={{ border: `1px solid ${T.gold}70` }}><div className="w-2.5 h-2.5" style={{ backgroundColor: T.gold }} /></div>{i < total - 1 && <div className="w-px min-h-[56px] flex-1" style={{ backgroundColor: `${T.goldBorder}` }} />}</div>
-      <div className="pb-8"><p className="text-[10px] tracking-[0.3em] uppercase mb-1" style={{ fontFamily: sans, color: T.gold }}>{s?.year || '20xx'}</p><h3 className="text-2xl mb-2" style={{ fontFamily: serif, color: T.cream }}>{s?.title || 'Our Story'}</h3><p className="text-sm leading-relaxed max-w-xs" style={{ fontFamily: sans, color: T.muted }}>{s?.desc || 'Story description...'}</p></div>
+      <div className="pb-8 flex-1">
+        <p className="text-[10px] tracking-[0.3em] uppercase mb-1" style={{ fontFamily: sans, color: T.gold }}>{s?.year || '20xx'}</p>
+        <h3 className="text-2xl mb-2" style={{ fontFamily: serif, color: T.cream }}>{s?.title || 'Our Story'}</h3>
+        {storyImg && (
+          <div className={`my-3 overflow-hidden rounded ${side === 'right' ? 'ml-auto' : ''}`} style={{ width: 'min(160px, 40vw)', aspectRatio: '1/1', border: `1px solid ${T.goldBorder}` }}>
+            <img src={storyImg} alt={s?.title || 'Story'} className="w-full h-full object-cover" />
+          </div>
+        )}
+        <p className="text-sm leading-relaxed max-w-xs" style={{ fontFamily: sans, color: T.muted }}>{s?.desc || 'Story description...'}</p>
+      </div>
     </div>
   );
 }
@@ -494,8 +559,18 @@ function EventsSection({ config }: { config: any }) {
 function GalItem({ url, i, onOpen }: { url: string; i: number; onOpen: (i: number) => void }) {
   const { ref, style } = useReveal('scale', i * 0.07);
   const isTall = i % 4 === 0 || i % 4 === 3;
+  const imgUrl = resolveImg(url, 600, isTall ? 800 : 500);
+
   return (
-    <div ref={ref} style={{ ...style, gridRow: isTall ? 'span 2' : 'span 1', aspectRatio: isTall ? '3/4' : '4/3', cursor: 'pointer' }} className="overflow-hidden group relative" onClick={() => onOpen(i)}><img src={url} alt="Gallery" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108" /><div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 flex items-center justify-center" style={{ backgroundColor: `${T.bg}50` }}><div className="w-10 h-10 flex items-center justify-center" style={{ border: `1px solid ${T.gold}` }}><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M8 2h4v4M12 2l-5 5M6 12H2v-4M2 12l5-5" stroke={T.gold} strokeWidth="1.2" strokeLinecap="round" /></svg></div></div><div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ border: `1px solid ${T.gold}60` }} /></div>
+    <div ref={ref} style={{ ...style, gridRow: isTall ? 'span 2' : 'span 1', aspectRatio: isTall ? '3/4' : '4/3', cursor: 'pointer' }} className="overflow-hidden group relative" onClick={() => onOpen(i)}>
+      <img src={imgUrl} alt="Gallery" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108" />
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 flex items-center justify-center" style={{ backgroundColor: `${T.bg}50` }}>
+        <div className="w-10 h-10 flex items-center justify-center" style={{ border: `1px solid ${T.gold}` }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M8 2h4v4M12 2l-5 5M6 12H2v-4M2 12l5-5" stroke={T.gold} strokeWidth="1.2" strokeLinecap="round" /></svg>
+        </div>
+      </div>
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ border: `1px solid ${T.gold}60` }} />
+    </div>
   );
 }
 
@@ -506,11 +581,27 @@ function GallerySection({ config }: { config: any }) {
   const prev = () => setLb((i) => i === null ? 0 : (i - 1 + images.length) % images.length);
   const next = () => setLb((i) => i === null ? 0 : (i + 1) % images.length);
   useEffect(() => { if (lb === null) return; const h = (e: KeyboardEvent) => { if (e.key === 'Escape') setLb(null); if (e.key === 'ArrowLeft') prev(); if (e.key === 'ArrowRight') next(); }; window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h); }, [lb, images.length]);
+
   return (
     <section className="py-28 px-6" style={{ backgroundColor: T.bg }}>
       <div ref={title.ref} style={title.style} className="text-center mb-12"><Tag>{config?.tagline || 'Momen Berharga'}</Tag><p className="mt-4" style={{ fontFamily: script, fontSize: 'clamp(2rem,8vw,3.5rem)', color: T.gold }}>Our Gallery</p><GoldLine className="w-40 mx-auto mt-4" /></div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 max-w-2xl mx-auto">{images.map((url: string, i: number) => <GalItem key={i} url={url} i={i} onOpen={setLb} />)}</div>
-      {lb !== null && (<div className="fixed inset-0 z-[300] flex items-center justify-center" style={{ backgroundColor: `${T.bg}F5` }} onClick={() => setLb(null)}><div className="relative max-w-xl w-full px-4" onClick={(e) => e.stopPropagation()}><img key={lb} src={images[lb]} alt="Gallery" className="w-full max-h-[80vh] object-contain" style={{ border: `1px solid ${T.goldBorder}`, animation: 'malamFadeIn 0.35s ease' }} /><p className="text-center text-xs mt-3" style={{ fontFamily: sans, color: T.muted }}>{lb + 1} / {images.length}</p></div>{[{ fn: prev, d: 'left-4', path: 'M10 3 L5 8 L10 13' }, { fn: next, d: 'right-4', path: 'M6 3 L11 8 L6 13' }].map(({ fn, d, path }) => (<button key={d} className={`absolute ${d} top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center`} style={{ border: `1px solid ${T.gold}60` }} onClick={fn}><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d={path} stroke={T.cream} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></button>))}<button className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center" style={{ border: `1px solid ${T.gold}50` }} onClick={() => setLb(null)}><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2 L10 10 M10 2 L2 10" stroke={T.cream} strokeWidth="1.5" strokeLinecap="round" /></svg></button></div>)}
+      {lb !== null && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center" style={{ backgroundColor: `${T.bg}F5` }} onClick={() => setLb(null)}>
+          <div className="relative max-w-xl w-full px-4" onClick={(e) => e.stopPropagation()}>
+            <img key={lb} src={resolveImg(images[lb], 900, 700)} alt="Gallery" className="w-full max-h-[80vh] object-contain" style={{ border: `1px solid ${T.goldBorder}`, animation: 'malamFadeIn 0.35s ease' }} />
+            <p className="text-center text-xs mt-3" style={{ fontFamily: sans, color: T.muted }}>{lb + 1} / {images.length}</p>
+          </div>
+          {[{ fn: prev, d: 'left-4', path: 'M10 3 L5 8 L10 13' }, { fn: next, d: 'right-4', path: 'M6 3 L11 8 L6 13' }].map(({ fn, d, path }) => (
+            <button key={d} className={`absolute ${d} top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center`} style={{ border: `1px solid ${T.gold}60` }} onClick={fn}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d={path} stroke={T.cream} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+          ))}
+          <button className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center" style={{ border: `1px solid ${T.gold}50` }} onClick={() => setLb(null)}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2 L10 10 M10 2 L2 10" stroke={T.cream} strokeWidth="1.5" strokeLinecap="round" /></svg>
+          </button>
+        </div>
+      )}
     </section>
   );
 }
@@ -520,10 +611,17 @@ function DarkGiftCard({ acc, copied, onCopy, delay }: { acc: any; copied: string
   const { ref, style } = useReveal('up', delay);
   const key = `${acc.bank}-${acc.number}`;
   const done = copied === key;
+  const qrImage = resolveImg(acc.qrCode || acc.image, 300, 300);
+
   return (
-    <div ref={ref} style={{ ...style, border: `1px solid ${T.goldBorder}`, backgroundColor: T.surface, padding: '1.75rem' }}>
-      <p className="text-[10px] tracking-[0.25em] uppercase mb-5" style={{ fontFamily: sans, color: T.muted }}>{acc.type}</p>
+    <div ref={ref} style={{ ...style, border: `1px solid ${T.goldBorder}`, backgroundColor: T.surface, padding: '1.75rem' }} className="flex flex-col items-center text-center">
+      <p className="text-[10px] tracking-[0.25em] uppercase mb-3 w-full text-left" style={{ fontFamily: sans, color: T.muted }}>{acc.type || 'Bank Transfer'}</p>
       <p className="text-2xl mb-1" style={{ fontFamily: serif, color: T.cream }}>{acc.bank}</p>
+      {qrImage && (
+        <div className="my-3 p-2 bg-white rounded shadow-md" style={{ width: '130px', aspectRatio: '1/1' }}>
+          <img src={qrImage} alt={`QR ${acc.bank}`} className="w-full h-full object-contain" />
+        </div>
+      )}
       <p className="text-xl tracking-widest my-1" style={{ fontFamily: sans, color: T.gold, letterSpacing: '0.15em' }}>{acc.number}</p>
       <p className="text-xs mb-5" style={{ fontFamily: sans, color: T.muted }}>a.n. {acc.holder}</p>
       <button onClick={() => onCopy(acc.number, key)} className="w-full py-3 text-[10px] tracking-[0.2em] uppercase flex items-center justify-center gap-2 transition-all duration-400" style={{ fontFamily: sans, color: done ? T.bg : T.gold, backgroundColor: done ? T.gold : 'transparent', border: `1px solid ${T.goldBorder}` }}>{done ? 'Copied' : 'Copy Number'}</button>
@@ -669,7 +767,7 @@ export default function MalamInvitation({
 
       {!coverGone && (
         <div style={{ opacity: opened ? 0 : 1, transition: 'opacity 0.7s ease', pointerEvents: opened ? 'none' : 'auto' }}>
-          <EnvelopeCover guestName={guestName} brideName={bName} groomName={gName} onFullyOpen={handleFullyOpen} />
+          <EnvelopeCover guestName={guestName} brideName={bName} groomName={gName} config={getSection('cover')?.config} onFullyOpen={handleFullyOpen} />
         </div>
       )}
 
