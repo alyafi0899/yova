@@ -41,7 +41,27 @@ export default function AdminOrders() {
         .order('created_at', { ascending: false })
 
       if (!error && data) {
+        let localConfirmed: string[] = []
+        let localRejected: string[] = []
+        try {
+          localConfirmed = JSON.parse(localStorage.getItem('yova_confirmed_rentals') || '[]')
+          localRejected = JSON.parse(localStorage.getItem('yova_rejected_rentals') || '[]')
+        } catch (e) {
+          console.warn('LocalStorage error:', e)
+        }
+
         const ordersWithDresses = await Promise.all((data || []).map(async (order: any) => {
+          const isConfirmedLocally = localConfirmed.some(c =>
+            c.toUpperCase() === (order.booking_id || '').toUpperCase() ||
+            c.toUpperCase() === (order.id || '').toUpperCase()
+          )
+          const isRejectedLocally = localRejected.some(c =>
+            c.toUpperCase() === (order.booking_id || '').toUpperCase() ||
+            c.toUpperCase() === (order.id || '').toUpperCase()
+          )
+
+          const effectiveStatus = isConfirmedLocally ? 'confirmed' : (isRejectedLocally ? 'rejected' : order.status)
+
           let dressData = null
           if (order.dress_id) {
             const { data: d } = await supabase.from('dresses').select('id, name').eq('id', order.dress_id).maybeSingle()
@@ -58,16 +78,16 @@ export default function AdminOrders() {
             }
           }
           const finalDress = dressData || (order.dress_code ? { id: '', name: order.dress_code } : null)
-          return { ...order, dresses: finalDress }
+          return { ...order, status: effectiveStatus, dresses: finalDress }
         }))
         setOrders(ordersWithDresses)
 
         // Calculate stats
         setStats({
-          total: data.length,
-          pending: data.filter(o => o.status === 'pending').length,
-          active: data.filter(o => o.status === 'confirmed').length,
-          completed: data.filter(o => o.status === 'completed').length,
+          total: ordersWithDresses.length,
+          pending: ordersWithDresses.filter(o => o.status === 'pending').length,
+          active: ordersWithDresses.filter(o => o.status === 'confirmed').length,
+          completed: ordersWithDresses.filter(o => o.status === 'completed').length,
         })
       }
     } catch (err) {
@@ -79,16 +99,31 @@ export default function AdminOrders() {
   async function updateStatus(orderId: string, status: string, dressId?: string, bookingId?: string) {
     try {
       // 1. Optimistic UI update
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: status as any } : o))
+      setOrders(prev => prev.map(o => (o.id === orderId || (bookingId && o.booking_id === bookingId)) ? { ...o, status: status as any } : o))
 
       // 2. Local confirmed cache sync for instant voucher activation
-      if (bookingId && (status === 'confirmed' || status === 'completed')) {
+      const key = (bookingId || orderId).toUpperCase()
+      if (status === 'confirmed' || status === 'completed') {
         try {
           const confirmedList = JSON.parse(localStorage.getItem('yova_confirmed_rentals') || '[]')
-          if (!confirmedList.includes(bookingId.toUpperCase())) {
-            confirmedList.push(bookingId.toUpperCase())
+          if (!confirmedList.includes(key)) {
+            confirmedList.push(key)
             localStorage.setItem('yova_confirmed_rentals', JSON.stringify(confirmedList))
           }
+          const rejectedList = JSON.parse(localStorage.getItem('yova_rejected_rentals') || '[]').filter((c: string) => c !== key)
+          localStorage.setItem('yova_rejected_rentals', JSON.stringify(rejectedList))
+        } catch (e) {
+          console.warn('LocalStorage cache error:', e)
+        }
+      } else if (status === 'rejected') {
+        try {
+          const rejectedList = JSON.parse(localStorage.getItem('yova_rejected_rentals') || '[]')
+          if (!rejectedList.includes(key)) {
+            rejectedList.push(key)
+            localStorage.setItem('yova_rejected_rentals', JSON.stringify(rejectedList))
+          }
+          const confirmedList = JSON.parse(localStorage.getItem('yova_confirmed_rentals') || '[]').filter((c: string) => c !== key)
+          localStorage.setItem('yova_confirmed_rentals', JSON.stringify(confirmedList))
         } catch (e) {
           console.warn('LocalStorage cache error:', e)
         }

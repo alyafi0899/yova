@@ -95,6 +95,17 @@ export default function AdminFitting() {
       }
     }
 
+    // Cache confirmed bookingId in localStorage
+    try {
+      const confirmedList = JSON.parse(localStorage.getItem('yova_confirmed_rentals') || '[]')
+      if (!confirmedList.includes(bookingId.toUpperCase())) {
+        confirmedList.push(bookingId.toUpperCase())
+        localStorage.setItem('yova_confirmed_rentals', JSON.stringify(confirmedList))
+      }
+    } catch (e) {
+      console.warn('LocalStorage error:', e)
+    }
+
     // 2. Create or Update Rental record (Upsert)
     const { error: rentalError } = await supabase
       .from('rentals')
