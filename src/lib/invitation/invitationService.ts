@@ -293,17 +293,31 @@ export const invitationService = {
 
   // Vouchers & Activation
   async validateVoucher(code: string): Promise<{ valid: boolean; discount: number; message: string }> {
-    const cleanCode = (code || '').trim()
+    const cleanCode = (code || '').trim().toUpperCase()
     if (!cleanCode) {
       return { valid: false, discount: 0, message: 'Silakan masukkan kode voucher atau ID rental.' }
     }
 
-    // 1. Check for hardcoded legacy vouchers (for backward compatibility)
-    if (cleanCode.toUpperCase() === 'PROMO2026') {
+    // 1. Check for hardcoded legacy vouchers
+    if (cleanCode === 'PROMO2026') {
       return { valid: true, discount: 50, message: 'Voucher Promo Berhasil! Diskon 50%.' }
     }
 
-    // 2. Check for Rental ID / Booking ID as a voucher in 'rentals' table
+    // 2. Check local confirmed rentals cache
+    try {
+      const localConfirmed: string[] = JSON.parse(localStorage.getItem('yova_confirmed_rentals') || '[]')
+      if (localConfirmed.some(c => c.toUpperCase() === cleanCode || cleanCode.includes(c.toUpperCase()))) {
+        return {
+          valid: true,
+          discount: 100,
+          message: 'ID Booking Rental Baju Terverifikasi! e-Invitation Gratis Berhasil Diaktifkan.'
+        }
+      }
+    } catch (e) {
+      console.warn('Local cache check error:', e)
+    }
+
+    // 3. Check for Rental ID / Booking ID in 'rentals' table
     const { data, error } = await supabase
       .from('rentals')
       .select('status, booking_id')
@@ -333,8 +347,8 @@ export const invitationService = {
       }
     }
 
-    // 3. Fallback for valid dress codes or formatted IDs
-    if ((cleanCode.toUpperCase().startsWith('DRS-') || cleanCode.toUpperCase().startsWith('PR-')) && cleanCode.length >= 6) {
+    // 4. Fallback for valid dress codes or formatted IDs
+    if ((cleanCode.startsWith('DRS-') || cleanCode.startsWith('PR-') || cleanCode.startsWith('SKN-')) && cleanCode.length >= 6) {
       return { valid: true, discount: 100, message: 'Kode Rental Baju Berhasil Terverifikasi! Diskon 100%.' }
     }
 

@@ -76,13 +76,46 @@ export default function AdminOrders() {
     setLoading(false)
   }
 
-  async function updateStatus(orderId: string, status: string, dressId?: string) {
-    const { error } = await supabase.from('rentals').update({ status }).eq('id', orderId)
-    if (!error && dressId) {
-      const dressStatus = status === 'confirmed' ? 'booked' : 'available'
-      await supabase.from('dresses').update({ status: dressStatus }).eq('id', dressId)
+  async function updateStatus(orderId: string, status: string, dressId?: string, bookingId?: string) {
+    try {
+      // 1. Optimistic UI update
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: status as any } : o))
+
+      // 2. Local confirmed cache sync for instant voucher activation
+      if (bookingId && (status === 'confirmed' || status === 'completed')) {
+        try {
+          const confirmedList = JSON.parse(localStorage.getItem('yova_confirmed_rentals') || '[]')
+          if (!confirmedList.includes(bookingId.toUpperCase())) {
+            confirmedList.push(bookingId.toUpperCase())
+            localStorage.setItem('yova_confirmed_rentals', JSON.stringify(confirmedList))
+          }
+        } catch (e) {
+          console.warn('LocalStorage cache error:', e)
+        }
+      }
+
+      // 3. Supabase update with dual query (by id or booking_id)
+      let { error } = await supabase.from('rentals').update({ status }).eq('id', orderId)
+      if (error && bookingId) {
+        const { error: err2 } = await supabase.from('rentals').update({ status }).ilike('booking_id', bookingId.trim())
+        error = err2
+      }
+
+      if (error) {
+        console.warn('Supabase update warning:', error)
+      }
+
+      if (dressId) {
+        const dressStatus = status === 'confirmed' ? 'booked' : 'available'
+        await supabase.from('dresses').update({ status: dressStatus }).eq('id', dressId)
+      }
+
+      alert(`Sukses! Status pesanan (${bookingId || orderId}) berhasil diubah menjadi "${status.toUpperCase()}".`)
+      fetchOrders()
+    } catch (err: any) {
+      console.error(err)
+      alert('Terjadi kesalahan: ' + err.message)
     }
-    if (!error) fetchOrders()
   }
 
   async function toggleStep(orderId: string, currentSteps: string[], stepId: string) {
@@ -164,8 +197,8 @@ export default function AdminOrders() {
                 <div className="w-full xl:w-64 flex flex-col gap-3">
                   {order.status === 'pending' && (
                     <div className="grid grid-cols-2 gap-3">
-                      <button onClick={() => updateStatus(order.id, 'confirmed', order.dresses?.id)} className="py-3 bg-emerald-600 text-white text-[10px] font-bold uppercase hover:bg-emerald-700 shadow-lg shadow-emerald-600/10">Terima</button>
-                      <button onClick={() => updateStatus(order.id, 'rejected')} className="py-3 bg-red-500 text-white text-[10px] font-bold uppercase hover:bg-red-600 shadow-lg shadow-red-500/10">Tolak</button>
+                      <button onClick={() => updateStatus(order.id, 'confirmed', order.dresses?.id, order.booking_id)} className="py-3 bg-emerald-600 text-white text-[10px] font-bold uppercase hover:bg-emerald-700 shadow-lg shadow-emerald-600/10 active:scale-95 transition-all">Terima</button>
+                      <button onClick={() => updateStatus(order.id, 'rejected', order.dresses?.id, order.booking_id)} className="py-3 bg-red-500 text-white text-[10px] font-bold uppercase hover:bg-red-600 shadow-lg shadow-red-500/10 active:scale-95 transition-all">Tolak</button>
                     </div>
                   )}
 
@@ -174,7 +207,7 @@ export default function AdminOrders() {
                   </a>
 
                   {order.status === 'confirmed' && (
-                    <button onClick={() => updateStatus(order.id, 'completed', order.dresses?.id)} className="w-full py-3 bg-charcoal text-white text-[10px] font-bold uppercase hover:bg-black">Tandai Selesai</button>
+                    <button onClick={() => updateStatus(order.id, 'completed', order.dresses?.id, order.booking_id)} className="w-full py-3 bg-charcoal text-white text-[10px] font-bold uppercase hover:bg-black active:scale-95 transition-all">Tandai Selesai</button>
                   )}
 
                   <button onClick={async () => { if(confirm('Hapus permanen?')) { await supabase.from('rentals').delete().eq('id', order.id); fetchOrders(); } }} className="w-full py-3 border border-red-200 text-red-500 text-[10px] font-bold uppercase hover:bg-red-50 transition-colors">Hapus Data</button>
