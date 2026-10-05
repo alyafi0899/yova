@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import type { InvitationData } from '../../../lib/invitation/types';
+import { getCallName } from '../../../lib/utils/name';
 
 // ── Design System ──────────────────────────────────────────────────────────
 
@@ -177,8 +178,8 @@ function VerticalTakeoverSection({ id, title, tagline, children, itemsCount, con
 
 function EnvelopeReveal({ guestName, onOpen, data }: { guestName: string, onOpen: () => void, data: InvitationData }) {
   const [isOpening, setIsOpening] = useState(false);
-  const brideFirst = data?.couple?.bride?.name?.split(' ')[0] || 'Bride';
-  const groomFirst = data?.couple?.groom?.name?.split(' ')[0] || 'Groom';
+  const brideFirst = getCallName(data?.couple?.bride, 'Bride');
+  const groomFirst = getCallName(data?.couple?.groom, 'Groom');
 
   return (
     <div className="fixed inset-0 z-[1000] bg-ivory flex items-center justify-center overflow-hidden">
@@ -235,8 +236,8 @@ function EnvelopeReveal({ guestName, onOpen, data }: { guestName: string, onOpen
 
 function HeroSection({ config, data, guestName }: { config: any, data: InvitationData, guestName: string }) {
   const photo = config?.couplePhoto || FALLBACK_MEDIA.hero;
-  const brideFirst = data?.couple?.bride?.name?.split(' ')[0] || 'Bride';
-  const groomFirst = data?.couple?.groom?.name?.split(' ')[0] || 'Groom';
+  const brideFirst = getCallName(data?.couple?.bride, 'Bride');
+  const groomFirst = getCallName(data?.couple?.groom, 'Groom');
 
   return (
     <SectionScene id="cover" bg={C.cream}>

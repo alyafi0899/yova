@@ -6,6 +6,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { InvitationData } from '../../../lib/invitation/types';
+import { getCallName } from '../../../lib/utils/name';
 
 // ── tokens ────────────────────────────────────────────────────────────────────
 const T = {
@@ -448,8 +449,8 @@ function CoupleSection({ data, config }: { data: InvitationData, config: any }) 
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
           {[
-            { who: data.couple.bride.name.split(' ')[0], full: data.couple.bride.name, par: 'Putri', parents: data.couple.bride.parents, photo: resolveImg(data.couple.bride.image, 360, 480, 'top', PH.bride), anim: bride },
-            { who: data.couple.groom.name.split(' ')[0], full: data.couple.groom.name, par: 'Putra', parents: data.couple.groom.parents, photo: resolveImg(data.couple.groom.image, 360, 480, 'top', PH.groom), anim: groom },
+            { who: getCallName(data.couple.bride, 'Bride'), full: data.couple.bride.name, par: 'Putri', parents: data.couple.bride.parents, photo: resolveImg(data.couple.bride.image, 360, 480, 'top', PH.bride), anim: bride },
+            { who: getCallName(data.couple.groom, 'Groom'), full: data.couple.groom.name, par: 'Putra', parents: data.couple.groom.parents, photo: resolveImg(data.couple.groom.image, 360, 480, 'top', PH.groom), anim: groom },
           ].map((p) => (
             <div key={p.who} ref={p.anim.ref} style={p.anim.style} className="flex flex-col items-center gap-5 text-center">
               <div className="relative group">
@@ -753,8 +754,8 @@ export default function MalamInvitation({
   function handleFullyOpen() { setOpened(true); setTimeout(() => { setCoverGone(true); setFrameAnimated(true); }, 600); }
   function backToTop() { topRef.current?.scrollIntoView({ behavior: 'smooth' }); }
 
-  const bName = data?.couple?.bride?.name?.split(' ')[0] || 'Bride';
-  const gName = data?.couple?.groom?.name?.split(' ')[0] || 'Groom';
+  const bName = getCallName(data?.couple?.bride, 'Bride');
+  const gName = getCallName(data?.couple?.groom, 'Groom');
 
   return (
     <div ref={topRef} className="fixed inset-0 overflow-y-auto bg-[#2D0B0F] scroll-smooth" style={{ backgroundColor: T.bg, fontFamily: sans }}>

@@ -6,6 +6,7 @@ import YasminInvitation from '../../components/invitation/yasmin/YasminInvitatio
 import MalamInvitation from '../../components/invitation/malam/MalamInvitation'
 import ImageUpload from '../../components/common/ImageUpload'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getCallName } from '../../lib/utils/name'
 
 interface DashboardCustomizeProps {
   project: InvitationProject
@@ -294,8 +295,8 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                              <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Nama Panggilan Wanita</label>
                              <input
                                type="text"
-                               value={tempData.couple.bride.name.split(' ')[0]}
-                               onChange={(e) => handleUpdate('couple', 'bride.name', e.target.value)}
+                               value={tempData.couple.bride.nickname !== undefined ? tempData.couple.bride.nickname : getCallName(tempData.couple.bride, 'Zahra')}
+                               onChange={(e) => handleUpdate('couple', 'bride.nickname', e.target.value)}
                                className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
                                placeholder="Zahra"
                              />
@@ -304,8 +305,8 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                              <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Nama Panggilan Pria</label>
                              <input
                                type="text"
-                               value={tempData.couple.groom.name.split(' ')[0]}
-                               onChange={(e) => handleUpdate('couple', 'groom.name', e.target.value)}
+                               value={tempData.couple.groom.nickname !== undefined ? tempData.couple.groom.nickname : getCallName(tempData.couple.groom, 'Rafi')}
+                               onChange={(e) => handleUpdate('couple', 'groom.nickname', e.target.value)}
                                className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
                                placeholder="Rafi"
                              />
@@ -352,12 +353,23 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                       <div key={p} className="space-y-4 pt-4 border-t border-nude first:border-0 first:pt-0">
                         <h4 className="text-[10px] font-bold uppercase tracking-widest text-mocha">{p === 'bride' ? 'Mempelai Wanita' : 'Mempelai Pria'}</h4>
                         <div className="space-y-2">
-                          <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Nama Lengkap</label>
+                          <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Nama Lengkap &amp; Gelar</label>
                           <input
                             type="text"
                             value={tempData.couple[p as 'bride'|'groom']?.name || ''}
                             onChange={(e) => handleUpdate('couple', `${p}.name`, e.target.value)}
                             className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
+                            placeholder="Contoh: Dr. Hj. Zahra Aulia, S.Ked"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Nama Panggilan (Di Cover &amp; Inisial)</label>
+                          <input
+                            type="text"
+                            value={tempData.couple[p as 'bride'|'groom']?.nickname !== undefined ? tempData.couple[p as 'bride'|'groom']?.nickname : getCallName(tempData.couple[p as 'bride'|'groom'])}
+                            onChange={(e) => handleUpdate('couple', `${p}.nickname`, e.target.value)}
+                            className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
+                            placeholder="Contoh: Zahra"
                           />
                         </div>
                         <div className="space-y-2">

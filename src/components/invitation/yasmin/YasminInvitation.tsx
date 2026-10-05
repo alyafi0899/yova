@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { InvitationData } from '../../../lib/invitation/types';
+import { getCallName } from '../../../lib/utils/name';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const T = {
@@ -724,8 +725,8 @@ export default function YasminInvitation({
 
   function backToTop() { topRef.current?.scrollIntoView({ behavior: 'smooth' }); }
 
-  const bName = data?.couple?.bride?.name?.split(' ')[0] || 'Bride';
-  const gName = data?.couple?.groom?.name?.split(' ')[0] || 'Groom';
+  const bName = getCallName(data?.couple?.bride, 'Bride');
+  const gName = getCallName(data?.couple?.groom, 'Groom');
 
   return (
     <div className="fixed inset-0 overflow-y-auto bg-ivory scroll-smooth" ref={topRef} style={{ fontFamily: sans, backgroundColor: T.bg }}>

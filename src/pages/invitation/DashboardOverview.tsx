@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { invitationService } from '../../lib/invitation/invitationService'
 import type { InvitationProject } from '../../lib/invitation/types'
+import { getCallName } from '../../lib/utils/name'
 
 function Countdown({ targetDate }: { targetDate: string }) {
   // ... (keep countdown logic)
@@ -95,7 +96,7 @@ export default function DashboardOverview({ project }: { project: InvitationProj
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
         <div>
           <h1 className="font-display text-4xl text-charcoal mb-2">
-            {project.data.couple.bride.name.split(' ')[0]} & {project.data.couple.groom.name.split(' ')[0]}
+            {getCallName(project.data.couple.bride)} &amp; {getCallName(project.data.couple.groom)}
           </h1>
           <div className="flex items-center gap-3">
             <span className="text-[10px] uppercase tracking-widest font-bold text-muted">Undangan Pernikahan</span>
