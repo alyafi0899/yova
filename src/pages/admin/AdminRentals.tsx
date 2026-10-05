@@ -33,7 +33,13 @@ export default function AdminRentals() {
       .select('*, dresses(name)')
       .order('created_at', { ascending: false })
 
-    if (data) setRentals(data)
+    if (data) {
+      const mapped = data.map((r: any) => ({
+        ...r,
+        dresses: r.dresses || (r.dress_code ? { name: r.dress_code } : null)
+      }))
+      setRentals(mapped)
+    }
     setLoading(false)
   }
 

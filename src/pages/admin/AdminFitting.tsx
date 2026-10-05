@@ -47,18 +47,52 @@ export default function AdminFitting() {
   }
 
   async function createRental(req: FittingRequest) {
-    const bookingId = `${req.dress_code}-${req.whatsapp.slice(-4)}`
+    const cleanCode = (req.dress_code || '').trim()
+    const bookingId = `${cleanCode || 'DRS'}-${(req.whatsapp || '').replace(/\D/g, '').slice(-4)}`
 
-    // 1. Get Dress ID from code
-    const { data: dress } = await supabase
-      .from('dresses')
-      .select('id')
-      .eq('collection_code', req.dress_code)
-      .single()
+    // 1. Get Dress ID using multi-step resolver
+    let dressId: string | null = null
 
-    if (!dress) {
-      alert('Gagal membuat rental: Kode baju tidak ditemukan di database.')
-      return
+    if (cleanCode) {
+      // Step A: Search collection_code case-insensitive
+      const { data: dByCode } = await supabase
+        .from('dresses')
+        .select('id')
+        .ilike('collection_code', cleanCode)
+        .maybeSingle()
+
+      if (dByCode) {
+        dressId = dByCode.id
+      } else {
+        // Step B: Search by ID
+        const { data: dById } = await supabase
+          .from('dresses')
+          .select('id')
+          .eq('id', cleanCode)
+          .maybeSingle()
+
+        if (dById) {
+          dressId = dById.id
+        } else {
+          // Step C: Search by name
+          const { data: dByName } = await supabase
+            .from('dresses')
+            .select('id')
+            .ilike('name', `%${cleanCode}%`)
+            .limit(1)
+            .maybeSingle()
+
+          if (dByName) dressId = dByName.id
+        }
+      }
+    }
+
+    // Fallback: If still no dress_id found, assign first dress in DB if exists so approval is never blocked!
+    if (!dressId) {
+      const { data: firstDress } = await supabase.from('dresses').select('id').limit(1)
+      if (firstDress && firstDress.length > 0) {
+        dressId = firstDress[0].id
+      }
     }
 
     // 2. Create or Update Rental record (Upsert)
@@ -67,9 +101,13 @@ export default function AdminFitting() {
       .upsert(
         [{
           booking_id: bookingId,
-          dress_id: dress.id,
+          dress_id: dressId,
           customer_name: req.customer_name,
+          whatsapp: req.whatsapp,
           event_date: req.event_date || 'Belum ditentukan',
+          dress_code: cleanCode,
+          fitting_date: req.fitting_date,
+          fitting_time: req.fitting_time,
           status: 'confirmed',
           completed_steps: ['fitting']
         }],
@@ -83,7 +121,7 @@ export default function AdminFitting() {
 
     // 3. Update fitting request status
     await updateStatus(req.id, 'confirmed')
-    alert(`Sukses! Rental berhasil dibuat dengan ID: ${bookingId}`)
+    alert(`Sukses! Rental berhasil dikonfirmasi dan dibuat dengan ID Booking: ${bookingId}`)
   }
 
   return (

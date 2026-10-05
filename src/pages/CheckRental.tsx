@@ -31,11 +31,12 @@ export default function CheckRental({ navigate }: { navigate?: (path: string) =>
     setError(null)
     setRental(null)
 
+    const cleanBookingId = bookingId.trim()
     const { data, error: supaError } = await supabase
       .from('rentals')
       .select('*')
-      .eq('booking_id', bookingId.toUpperCase())
-      .single()
+      .ilike('booking_id', cleanBookingId)
+      .maybeSingle()
 
     if (supaError || !data) {
       setError('ID Booking tidak ditemukan. Pastikan kode yang Anda masukkan benar.')
@@ -47,8 +48,17 @@ export default function CheckRental({ navigate }: { navigate?: (path: string) =>
           .from('dresses')
           .select('name, price, images')
           .eq('id', data.dress_id)
-          .single()
+          .maybeSingle()
         dressData = d
+      }
+      if (!dressData && data.dress_code) {
+        const clean = data.dress_code.trim()
+        const { data: dByCode } = await supabase
+          .from('dresses')
+          .select('name, price, images')
+          .ilike('collection_code', clean)
+          .maybeSingle()
+        dressData = dByCode || { name: data.dress_code, price: 0, images: [] }
       }
       setRental({ ...data, dresses: dressData } as any)
     }

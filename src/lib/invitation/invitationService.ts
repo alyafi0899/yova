@@ -293,30 +293,49 @@ export const invitationService = {
 
   // Vouchers & Activation
   async validateVoucher(code: string): Promise<{ valid: boolean; discount: number; message: string }> {
+    const cleanCode = (code || '').trim()
+    if (!cleanCode) {
+      return { valid: false, discount: 0, message: 'Silakan masukkan kode voucher atau ID rental.' }
+    }
+
     // 1. Check for hardcoded legacy vouchers (for backward compatibility)
-    if (code === 'PROMO2026') {
+    if (cleanCode.toUpperCase() === 'PROMO2026') {
       return { valid: true, discount: 50, message: 'Voucher Promo Berhasil! Diskon 50%.' }
     }
 
-    // 2. Check for Rental ID as a voucher (e.g., SKN-1234-567)
-    // In production, we check the 'rentals' table for this booking_id
+    // 2. Check for Rental ID / Booking ID as a voucher in 'rentals' table
     const { data, error } = await supabase
       .from('rentals')
-      .select('status')
-      .eq('booking_id', code.toUpperCase())
-      .single()
+      .select('status, booking_id')
+      .ilike('booking_id', cleanCode)
+      .maybeSingle()
 
     if (data && !error) {
-      return {
-        valid: true,
-        discount: 100,
-        message: `ID Fitting Berhasil Digunakan! Status Baju: ${data.status.toUpperCase()}.`
+      const status = (data.status || '').toLowerCase()
+      if (status === 'confirmed' || status === 'completed' || status === 'active' || status === 'ready') {
+        return {
+          valid: true,
+          discount: 100,
+          message: 'ID Booking Rental Baju Terverifikasi! e-Invitation Gratis Berhasil Diaktifkan.'
+        }
+      } else if (status === 'pending') {
+        return {
+          valid: false,
+          discount: 0,
+          message: 'ID Booking Rental Baju Ditemukan, tetapi status saat ini masih PENDING. Mohon tunggu konfirmasi admin.'
+        }
+      } else {
+        return {
+          valid: false,
+          discount: 0,
+          message: `ID Booking Rental Baju Ditemukan dengan status: ${status.toUpperCase()}.`
+        }
       }
     }
 
-    // 3. Fallback for dress codes
-    if (code.startsWith('DRS-') && code.length > 8) {
-      return { valid: true, discount: 100, message: 'Voucher Rental Baju Berhasil Digunakan! Diskon 100%.' }
+    // 3. Fallback for valid dress codes or formatted IDs
+    if ((cleanCode.toUpperCase().startsWith('DRS-') || cleanCode.toUpperCase().startsWith('PR-')) && cleanCode.length >= 6) {
+      return { valid: true, discount: 100, message: 'Kode Rental Baju Berhasil Terverifikasi! Diskon 100%.' }
     }
 
     return { valid: false, discount: 0, message: 'Kode Voucher atau ID Fitting Tidak Valid.' }

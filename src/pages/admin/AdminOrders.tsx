@@ -42,11 +42,23 @@ export default function AdminOrders() {
 
       if (!error && data) {
         const ordersWithDresses = await Promise.all((data || []).map(async (order: any) => {
+          let dressData = null
           if (order.dress_id) {
-            const { data: dressData } = await supabase.from('dresses').select('id, name').eq('id', order.dress_id).single()
-            return { ...order, dresses: dressData }
+            const { data: d } = await supabase.from('dresses').select('id, name').eq('id', order.dress_id).maybeSingle()
+            dressData = d
           }
-          return { ...order, dresses: null }
+          if (!dressData && order.dress_code) {
+            const clean = order.dress_code.trim()
+            const { data: dByCode } = await supabase.from('dresses').select('id, name').ilike('collection_code', clean).maybeSingle()
+            if (dByCode) {
+              dressData = dByCode
+            } else {
+              const { data: dByName } = await supabase.from('dresses').select('id, name').ilike('name', `%${clean}%`).limit(1).maybeSingle()
+              dressData = dByName
+            }
+          }
+          const finalDress = dressData || (order.dress_code ? { id: '', name: order.dress_code } : null)
+          return { ...order, dresses: finalDress }
         }))
         setOrders(ordersWithDresses)
 
