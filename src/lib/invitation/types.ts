@@ -160,8 +160,8 @@ export interface UserInvitation {
 export interface InvitationData {
   title: string
   couple: {
-    bride: { name: string; parents?: string; image?: string; nickname?: string }
-    groom: { name: string; parents?: string; image?: string; nickname?: string }
+    bride: { name: string; parents?: string; relation?: string; image?: string; nickname?: string }
+    groom: { name: string; parents?: string; relation?: string; image?: string; nickname?: string }
   }
   event: {
     date: string

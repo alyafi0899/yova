@@ -382,12 +382,23 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Orang Tua</label>
+                          <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Keterangan / Status Anak (Opsional)</label>
+                          <input
+                            type="text"
+                            value={tempData.couple[p as 'bride'|'groom']?.relation !== undefined ? tempData.couple[p as 'bride'|'groom']?.relation : ''}
+                            onChange={(e) => handleUpdate('couple', `${p}.relation`, e.target.value)}
+                            className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
+                            placeholder={p === 'bride' ? 'Contoh: anak ke dua dari (atau Putri dari)' : 'Contoh: anak pertama dari (atau Putra dari)'}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Nama Orang Tua</label>
                           <input
                             type="text"
                             value={tempData.couple[p as 'bride'|'groom']?.parents || ''}
                             onChange={(e) => handleUpdate('couple', `${p}.parents`, e.target.value)}
                             className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
+                            placeholder="Contoh: Bapak Ahmad Fauzi & Ibu Siti Rahmah"
                           />
                         </div>
                         <ImageUpload

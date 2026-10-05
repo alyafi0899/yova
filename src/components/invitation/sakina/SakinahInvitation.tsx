@@ -290,13 +290,14 @@ function QuranSection({ config }: { config: any }) {
 
 function CoupleCard({ person, isBride }: { person: any, isBride: boolean }) {
   const photo = person?.image || (isBride ? FALLBACK_MEDIA.bride : FALLBACK_MEDIA.groom);
+  const relation = person?.relation || (isBride ? 'Daughter of' : 'Son of');
   return (
     <div className="min-w-full h-full flex shrink-0 items-start justify-center p-4 overflow-hidden">
        <div className="w-full max-w-[280px] flex flex-col items-center relative">
           <div className="w-full aspect-[4/5] relative z-20 overflow-hidden shadow-2xl rounded-t-[5rem] border-[6px] border-white"><img src={photo} className="w-full h-full object-cover" alt={person?.name} /></div>
           <div className="mt-8 text-center space-y-2">
              <h3 className="text-3xl text-ink font-serif italic leading-tight">{person?.name || (isBride ? 'Bride' : 'Groom')}</h3>
-             <div className="flex flex-col items-center gap-1.5 opacity-60 mb-2"><div className="w-6 h-[0.5px] bg-gold/40" /><p className="text-[9px] text-muted tracking-widest font-bold uppercase">{isBride ? 'Daughter of' : 'Son of'}</p></div>
+             <div className="flex flex-col items-center gap-1.5 opacity-60 mb-2"><div className="w-6 h-[0.5px] bg-gold/40" /><p className="text-[9px] text-muted tracking-widest font-bold uppercase">{relation}</p></div>
              <p className="text-sm text-ink font-serif italic">{person?.parents || 'Parents Name'}</p>
           </div>
        </div>

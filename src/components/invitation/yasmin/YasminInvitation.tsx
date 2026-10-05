@@ -328,7 +328,7 @@ function CoupleSection({ data, config }: { data: InvitationData; config: any }) 
             <div>
               <p style={{ fontFamily: script, fontSize: '2rem', color: T.goldDark, lineHeight: 1.1 }}>{data?.couple?.bride?.name?.split(' ')[0] || 'Bride'}</p>
               <p className="text-xl mt-1 mb-3" style={{ fontFamily: serif, color: T.ink }}>{data?.couple?.bride?.name || 'Bride Name'}</p>
-              <p className="text-xs mb-1" style={{ fontFamily: sans, color: T.muted }}>Putri dari</p>
+              <p className="text-xs mb-1" style={{ fontFamily: sans, color: T.muted }}>{data?.couple?.bride?.relation || 'Putri dari'}</p>
               <p className="text-sm leading-relaxed" style={{ fontFamily: sans, color: T.ink }}>{data?.couple?.bride?.parents || 'Parents'}</p>
             </div>
           </div>
@@ -344,7 +344,7 @@ function CoupleSection({ data, config }: { data: InvitationData; config: any }) 
             <div>
               <p style={{ fontFamily: script, fontSize: '2rem', color: T.goldDark, lineHeight: 1.1 }}>{data?.couple?.groom?.name?.split(' ')[0] || 'Groom'}</p>
               <p className="text-xl mt-1 mb-3" style={{ fontFamily: serif, color: T.ink }}>{data?.couple?.groom?.name || 'Groom Name'}</p>
-              <p className="text-xs mb-1" style={{ fontFamily: sans, color: T.muted }}>Putra dari</p>
+              <p className="text-xs mb-1" style={{ fontFamily: sans, color: T.muted }}>{data?.couple?.groom?.relation || 'Putra dari'}</p>
               <p className="text-sm leading-relaxed" style={{ fontFamily: sans, color: T.ink }}>{data?.couple?.groom?.parents || 'Parents'}</p>
             </div>
           </div>

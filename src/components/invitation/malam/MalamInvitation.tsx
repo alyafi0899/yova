@@ -450,15 +450,34 @@ function CoupleSection({ data, config }: { data: InvitationData, config: any }) 
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
           {[
-            { who: getCallName(data.couple.bride, 'Bride'), full: data.couple.bride.name, par: 'Putri', parents: data.couple.bride.parents, photo: resolveImg(data.couple.bride.image, 360, 480, 'top', PH.bride), anim: bride },
-            { who: getCallName(data.couple.groom, 'Groom'), full: data.couple.groom.name, par: 'Putra', parents: data.couple.groom.parents, photo: resolveImg(data.couple.groom.image, 360, 480, 'top', PH.groom), anim: groom },
+            {
+              who: getCallName(data.couple.bride, 'Bride'),
+              full: data.couple.bride.name,
+              relation: data.couple.bride.relation !== undefined && data.couple.bride.relation.trim() !== '' ? data.couple.bride.relation : 'Putri dari',
+              parents: data.couple.bride.parents,
+              photo: resolveImg(data.couple.bride.image, 360, 480, 'top', PH.bride),
+              anim: bride
+            },
+            {
+              who: getCallName(data.couple.groom, 'Groom'),
+              full: data.couple.groom.name,
+              relation: data.couple.groom.relation !== undefined && data.couple.groom.relation.trim() !== '' ? data.couple.groom.relation : 'Putra dari',
+              parents: data.couple.groom.parents,
+              photo: resolveImg(data.couple.groom.image, 360, 480, 'top', PH.groom),
+              anim: groom
+            },
           ].map((p) => (
             <div key={p.who} ref={p.anim.ref} style={p.anim.style} className="flex flex-col items-center gap-5 text-center">
               <div className="relative group">
                 <div className="overflow-hidden mx-auto transition-transform duration-700 group-hover:scale-[1.02]" style={{ width: 'min(180px,46vw)', aspectRatio: '3/4', border: `1px solid ${T.goldBorder}`, boxShadow: `0 20px 60px ${T.bg}80, 0 0 0 1px ${T.goldDim}30` }}><img src={p.photo} alt={p.full} className="w-full h-full object-cover" /><div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, transparent 55%, ${T.bg}50 100%)` }} /></div>
                 {[['top-0 left-0', 'border-t border-l'], ['top-0 right-0', 'border-t border-r'], ['bottom-0 left-0', 'border-b border-l'], ['bottom-0 right-0', 'border-b border-r']].map(([pos, border]) => (<div key={pos} className={`absolute ${pos} w-5 h-5 ${border}`} style={{ borderColor: T.gold }} />))}
               </div>
-              <div><p style={{ fontFamily: script, fontSize: '2rem', color: T.gold, lineHeight: 1.1 }}>{p.who}</p><p className="text-lg mt-1" style={{ fontFamily: serif, color: T.cream }}>{p.full}</p><p className="text-xs mt-3 mb-1" style={{ fontFamily: sans, color: T.muted }}>{p.par} dari</p><p className="text-sm leading-relaxed" style={{ fontFamily: sans, color: `${T.cream}80` }}>{p.parents}</p></div>
+              <div>
+                <p style={{ fontFamily: script, fontSize: '2rem', color: T.gold, lineHeight: 1.1 }}>{p.who}</p>
+                <p className="text-lg mt-1" style={{ fontFamily: serif, color: T.cream }}>{p.full}</p>
+                <p className="text-xs mt-3 mb-1" style={{ fontFamily: sans, color: T.muted }}>{p.relation}</p>
+                <p className="text-sm leading-relaxed" style={{ fontFamily: sans, color: `${T.cream}80` }}>{p.parents}</p>
+              </div>
             </div>
           ))}
         </div>
