@@ -690,7 +690,7 @@ function CoupleSection({ brideName, groomName }: { brideName: string; groomName:
 const STORY = [
   { year: '2019', title: 'First Meeting', desc: 'Bertemu untuk pertama kalinya di sebuah acara kampus yang tak terduga dan tak terlupakan.', side: 'left' as const },
   { year: '2021', title: 'A New Chapter', desc: 'Persahabatan yang tumbuh perlahan menjadi sesuatu yang jauh lebih bermakna dari yang pernah terbayangkan.', side: 'right' as const },
-  { year: '2025', title: 'The Proposal', desc: 'Rafi melamar Zahra dengan penuh cinta dan doa di bawah langit senja Banda Aceh yang indah.', side: 'left' as const },
+  { year: '2025', title: 'The Proposal', desc: 'Rafi melamar Zahra dengan penuh cinta dan doa di bawah langit senja . yang indah.', side: 'left' as const },
   { year: '2026', title: 'The Beginning of Forever', desc: 'Kami memulai babak baru kehidupan bersama, diikat oleh cinta, doa, dan ridho-Nya.', side: 'right' as const },
 ] as const;
 
@@ -871,8 +871,8 @@ function EventsSection() {
         <p className="mt-4" style={{ fontFamily: script, fontSize: 'clamp(2rem,8vw,3.5rem)', color: T.gold }}>Wedding Events</p>
       </div>
       <div className="flex flex-col md:flex-row gap-5 max-w-2xl mx-auto">
-        <DarkEventCard title="Akad Nikah" time="08:00 – 10:00 WIB" venue="Masjid Al-Hikmah" address="Banda Aceh" delay={0.1} />
-        <DarkEventCard title="Walimatul Ursy" time="11:00 – 15:00 WIB" venue="Grand Ballroom Hermes Palace" address="Banda Aceh" delay={0.25} />
+        <DarkEventCard title="Akad Nikah" time="08:00 – 10:00 WIB" venue="Masjid Al-Hikmah" address="." delay={0.1} />
+        <DarkEventCard title="Walimatul Ursy" time="11:00 – 15:00 WIB" venue="Grand Ballroom Hermes Palace" address="." delay={0.25} />
       </div>
     </section>
   );

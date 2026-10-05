@@ -120,7 +120,7 @@ export default function PublicInvitation() {
           Yova
         </h1>
         <div className="w-12 h-0.5 mx-auto mt-8 mb-6" style={{ background: 'rgba(201,168,76,0.5)' }} />
-        <p className="text-white/50 text-xs tracking-widest uppercase mb-12">10 Januari 2027 · Banda Aceh</p>
+        <p className="text-white/50 text-xs tracking-widest uppercase mb-12">10 Januari 2027 · .</p>
         <button onClick={() => setOpened(true)} className="flex items-center gap-3 mx-auto px-8 py-3.5 rounded-full text-sm tracking-widest uppercase transition-all hover:scale-105" style={{ border: '1px solid rgba(201,168,76,0.5)', color: '#C9A84C', backdropFilter: 'blur(8px)' }}>
           <span>Buka Undangan</span>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
@@ -197,8 +197,8 @@ export default function PublicInvitation() {
         <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 26, color: '#1B3A4B' }} className="text-center mb-8">Rangkaian Acara</h2>
         <div className="space-y-5">
           {[
-            { event: 'Akad Nikah', date: 'Ahad, 10 Januari 2027', time: '08.00 – 10.00 WIB', venue: 'Masjid Raya Baiturrahman', address: 'Jl. Masjid Raya, Banda Aceh', icon: '☽' },
-            { event: 'Resepsi / Walimah', date: 'Ahad, 10 Januari 2027', time: '11.00 – 16.00 WIB', venue: 'Hotel Hermes Palace Banda Aceh', address: 'Jl. T. Nyak Arief, Banda Aceh', icon: '♡' },
+            { event: 'Akad Nikah', date: 'Ahad, 10 Januari 2027', time: '08.00 – 10.00 WIB', venue: 'Masjid Raya Baiturrahman', address: 'Jl. Masjid Raya, .', icon: '☽' },
+            { event: 'Resepsi / Walimah', date: 'Ahad, 10 Januari 2027', time: '11.00 – 16.00 WIB', venue: 'Hotel Hermes Palace .', address: 'Jl. T. Nyak Arief, .', icon: '♡' },
           ].map(ev => (
             <div key={ev.event} className="p-5 rounded-2xl border" style={{ background: '#FFFFFF', borderColor: '#E0D9CF' }}>
               <div className="flex items-start gap-4">

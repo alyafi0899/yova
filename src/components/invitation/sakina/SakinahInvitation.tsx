@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import type { InvitationData } from '../../../lib/invitation/types';
 import { getCallName } from '../../../lib/utils/name';
+import { useBackgroundMusic } from '../../../hooks/useBackgroundMusic';
 
 // ── Design System ──────────────────────────────────────────────────────────
 
@@ -317,12 +318,13 @@ function StoryCard({ item, index }: { item: any, index: number }) {
 }
 
 function EventCard({ event }: { event: any }) {
+  const displayAddress = (event?.address || '').replace(/banda aceh/gi, '').replace(/\.,\s*Aceh/gi, '').trim();
   return (
     <div className="min-w-full h-full flex shrink-0 items-start justify-center p-4">
        <div className="w-full max-w-[300px] bg-paper p-10 text-center space-y-10 shadow-2xl relative border border-gold/10">
           <div className="space-y-2"><p className="text-[10px] font-bold text-gold uppercase tracking-[0.5em] italic">{event?.name || 'Wedding Event'}</p><p className="text-4xl text-ink font-serif italic tracking-tighter">{event?.date || '12.12.2026'}</p><p className="text-[11px] font-bold text-muted uppercase tracking-[0.4em] pt-2">{event?.time || '08:00 - End'}</p></div>
           <div className="w-full h-px bg-gold/20" />
-          <div className="space-y-2"><p className="text-xl font-serif text-ink italic leading-tight">{event?.venue || 'The Venue Name'}</p><p className="text-[10px] text-muted uppercase tracking-[0.2em]">{event?.address || 'Address Details'}</p></div>
+          <div className="space-y-2"><p className="text-xl font-serif text-ink italic leading-tight">{event?.venue || 'The Venue Name'}</p>{displayAddress ? <p className="text-[10px] text-muted uppercase tracking-[0.2em]">{displayAddress}</p> : null}</div>
           {event?.mapsLink ? <a href={event.mapsLink} target="_blank" rel="noopener noreferrer" className="block w-full py-4 border border-ink text-ink text-[9px] font-bold uppercase tracking-[0.4em] active:scale-95 transition-all shadow-sm hover:bg-ink/5 text-center">Google Map</a> : <button className="w-full py-4 border border-ink text-ink text-[9px] font-bold uppercase tracking-[0.4em] active:scale-95 transition-all shadow-sm hover:bg-ink/5">Google Map</button>}
        </div>
     </div>
@@ -485,7 +487,7 @@ export default function SakinahInvitation({
   externalIndex?: number
 }) {
   const [opened, setOpened] = useState(previewMode);
-  const [musicOn, setMusicOn] = useState(false);
+  const bgm = useBackgroundMusic(previewMode);
   const [activeSection, setActiveSection] = useState('cover');
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -529,13 +531,13 @@ export default function SakinahInvitation({
     return () => observer.disconnect();
   }, [opened, activeSectionIds.join(',')]);
 
-  if (!opened) return <EnvelopeReveal guestName={guestName} data={data} onOpen={() => setOpened(true)} />;
+  if (!opened) return <EnvelopeReveal guestName={guestName} data={data} onOpen={() => { setOpened(true); bgm.play(); }} />;
 
   return (
     <div className={`${previewMode ? 'absolute' : 'fixed'} inset-0 bg-cream overflow-y-auto overflow-x-hidden scroll-smooth inv-scroll select-none shadow-[inset_0_0_100px_rgba(0,0,0,0.05)]`} ref={containerRef}>
       <div className="anim-fade-in relative min-h-full">
         <SideNavigation activeSection={activeSection} sections={activeSectionIds} onNavigate={(id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })} />
-        <button onClick={() => setMusicOn((v) => !v)} className="fixed top-12 left-10 z-[150] w-14 h-14 rounded-full flex items-center justify-center transition-all duration-1000 bg-forest shadow-2xl border border-gold/30 hover:scale-110 active:scale-95 group overflow-hidden"><div className="relative w-full h-full flex items-center justify-center"><motion.div animate={musicOn ? { rotate: 360 } : { rotate: 0 }} transition={{ duration: 6, repeat: Infinity, ease: "linear" }} className="absolute inset-0 rounded-full border-[1.5px] border-gold/10 border-t-gold/50 m-2" /><span className="text-xl relative z-10">{musicOn ? '🔇' : '🎵'}</span></div></button>
+        <button onClick={bgm.toggle} className="fixed top-12 left-10 z-[150] w-14 h-14 rounded-full flex items-center justify-center transition-all duration-1000 bg-forest shadow-2xl border border-gold/30 hover:scale-110 active:scale-95 group overflow-hidden" title={bgm.isPlaying ? 'Mute Music' : 'Play Music'}><div className="relative w-full h-full flex items-center justify-center"><motion.div animate={bgm.isPlaying ? { rotate: 360 } : { rotate: 0 }} transition={{ duration: 6, repeat: Infinity, ease: "linear" }} className="absolute inset-0 rounded-full border-[1.5px] border-gold/10 border-t-gold/50 m-2" /><span className="text-xl relative z-10">{bgm.isPlaying ? '🎵' : '🔇'}</span></div></button>
         {isSectionEnabled('cover') && <HeroSection config={getSection('cover')?.config} data={data} guestName={guestName} />}
         {isSectionEnabled('introduction') && <IntroductionSection config={getSection('introduction')?.config} />}
         {isSectionEnabled('quran') && <QuranSection config={getSection('quran')?.config} />}

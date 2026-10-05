@@ -88,8 +88,8 @@ export const invitationService = {
       event: {
         date: '2026-12-12T08:00:00',
         time: '08:00 - 15:00',
-        location: 'Banda Aceh',
-        address: 'Banda Aceh, Aceh',
+        location: '',
+        address: '',
         mapsLink: 'https://maps.google.com'
       },
       rsvp: { enabled: true },

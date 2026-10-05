@@ -7,6 +7,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { InvitationData } from '../../../lib/invitation/types';
 import { getCallName } from '../../../lib/utils/name';
+import { useBackgroundMusic } from '../../../hooks/useBackgroundMusic';
 
 // ── tokens ────────────────────────────────────────────────────────────────────
 const T = {
@@ -525,6 +526,7 @@ function CountdownSection({ brideName, groomName, config }: { brideName: string;
 // ── events section ────────────────────────────────────────────────────────────
 function DarkEventCard({ ev, delay }: { ev: any; delay: number }) {
   const { ref, style } = useReveal('up', delay);
+  const displayAddress = (ev?.address || '').replace(/banda aceh/gi, '').replace(/\.,\s*Aceh/gi, '').trim();
   return (
     <div ref={ref} style={{ ...style, flex: 1 }}>
       <div className="h-full flex flex-col overflow-hidden group transition-all duration-500 hover:shadow-2xl" style={{ border: `1px solid ${T.goldBorder}`, boxShadow: `0 8px 40px ${T.bg}60` }}>
@@ -534,7 +536,7 @@ function DarkEventCard({ ev, delay }: { ev: any; delay: number }) {
           <div className="w-full h-px" style={{ backgroundColor: T.goldBorder }} />
           <p className="text-sm font-medium" style={{ fontFamily: sans, color: T.gold }}>{ev.time}</p>
           <div className="w-full h-px" style={{ backgroundColor: T.goldBorder }} />
-          <div><p className="text-base" style={{ fontFamily: serif, color: T.cream }}>{ev.venue}</p><p className="text-xs mt-1" style={{ fontFamily: sans, color: T.muted }}>{ev.address}</p></div>
+          <div><p className="text-base" style={{ fontFamily: serif, color: T.cream }}>{ev.venue}</p>{displayAddress ? <p className="text-xs mt-1" style={{ fontFamily: sans, color: T.muted }}>{displayAddress}</p> : null}</div>
           <div className="flex gap-2 w-full mt-auto">
             {ev.mapsLink && <a href={ev.mapsLink} target="_blank" rel="noopener noreferrer" className="flex-1 py-2.5 text-[10px] tracking-[0.15em] uppercase transition-all duration-300 hover:bg-[#D4A553] hover:text-[#110C08] text-center" style={{ fontFamily: sans, color: T.gold, border: `1px solid ${T.goldBorder}` }}>View Map</a>}
             <button className="flex-1 py-2.5 text-[10px] tracking-[0.15em] uppercase transition-all duration-300 hover:bg-[#D4A553] hover:text-[#110C08]" style={{ fontFamily: sans, color: T.gold, border: `1px solid ${T.goldBorder}` }}>+ Calendar</button>
@@ -694,10 +696,9 @@ function ClosingSection({ brideName, groomName, config, onBackToTop }: { brideNa
 }
 
 // ── music button ──────────────────────────────────────────────────────────────
-function MusicBtn() {
-  const [on, setOn] = useState(false);
+function MusicBtn({ bgm }: { bgm: { isPlaying: boolean; toggle: () => void } }) {
   return (
-    <button onClick={() => setOn(v => !v)} className="fixed top-5 left-5 z-[150] w-10 h-10 flex items-center justify-center transition-all duration-300 rounded-full" style={{ backgroundColor: T.elevated, border: `1px solid ${T.goldBorder}`, boxShadow: `0 4px 20px ${T.bg}` }} title={on ? 'Pause' : 'Play'}>{on ? '🔇' : '🎵'}</button>
+    <button onClick={bgm.toggle} className="fixed top-5 left-5 z-[150] w-10 h-10 flex items-center justify-center transition-all duration-300 rounded-full" style={{ backgroundColor: T.elevated, border: `1px solid ${T.goldBorder}`, boxShadow: `0 4px 20px ${T.bg}` }} title={bgm.isPlaying ? 'Pause Music' : 'Play Music'}>{bgm.isPlaying ? '🎵' : '🔇'}</button>
   );
 }
 
@@ -730,6 +731,7 @@ export default function MalamInvitation({
   const [opened, setOpened] = useState(false);
   const [coverGone, setCoverGone] = useState(false);
   const [frameAnimated, setFrameAnimated] = useState(false);
+  const bgm = useBackgroundMusic(false);
   const topRef = useRef<HTMLDivElement>(null);
 
   const sectionIds = ['cover', 'quran', 'couple', 'story', 'countdown', 'event', 'gallery', 'gift', 'rsvp', 'closing'];
@@ -751,7 +753,7 @@ export default function MalamInvitation({
     }
   }, [externalIndex]);
 
-  function handleFullyOpen() { setOpened(true); setTimeout(() => { setCoverGone(true); setFrameAnimated(true); }, 600); }
+  function handleFullyOpen() { setOpened(true); bgm.play(); setTimeout(() => { setCoverGone(true); setFrameAnimated(true); }, 600); }
   function backToTop() { topRef.current?.scrollIntoView({ behavior: 'smooth' }); }
 
   const bName = getCallName(data?.couple?.bride, 'Bride');
@@ -764,7 +766,7 @@ export default function MalamInvitation({
       <FloralFrame animate={frameAnimated} />
       {opened && <ScrollProgress />}
       {opened && <SectionDots count={8} />}
-      {opened && <MusicBtn />}
+      {opened && <MusicBtn bgm={bgm} />}
 
       {!coverGone && (
         <div style={{ opacity: opened ? 0 : 1, transition: 'opacity 0.7s ease', pointerEvents: opened ? 'none' : 'auto' }}>

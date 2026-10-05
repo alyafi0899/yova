@@ -38,7 +38,7 @@ export const yasmin_v1: InvitationTemplate = {
         couplePhoto: 'https://images.unsplash.com/photo-1772241824154-ce6e7c985ff9?w=800&h=1000&fit=crop&auto=format',
         tagline: 'The Wedding of',
         dateText: '12 December 2026',
-        locationText: 'Banda Aceh'
+        locationText: '.'
       },
       elements: [],
       widgets: [],
@@ -117,7 +117,7 @@ export const yasmin_v1: InvitationTemplate = {
             date: 'Saturday, 12 December 2026',
             time: '08:00 – 10:00 WIB',
             venue: 'Masjid Al-Hikmah',
-            address: 'Banda Aceh',
+            address: '',
             mapsLink: 'https://maps.google.com'
           },
           {
@@ -125,7 +125,7 @@ export const yasmin_v1: InvitationTemplate = {
             date: 'Saturday, 12 December 2026',
             time: '11:00 – 15:00 WIB',
             venue: 'Grand Ballroom Hermes Palace',
-            address: 'Banda Aceh',
+            address: '',
             mapsLink: 'https://maps.google.com'
           }
         ]

@@ -91,14 +91,14 @@ export const noura_v1: InvitationTemplate = {
             date: 'Sabtu, 10 Jan 2027',
             time: '08:00 - 10:00 WIB',
             venue: 'Masjid Raya Baiturrahman',
-            address: 'Jl. Masjid Raya, Banda Aceh',
+            address: 'Jl. Masjid Raya, .',
           },
           {
             name: 'Resepsi',
             date: 'Sabtu, 10 Jan 2027',
             time: '11:00 - 16:00 WIB',
             venue: 'Hotel Hermes Palace',
-            address: 'Jl. T. Nyak Arief, Banda Aceh',
+            address: 'Jl. T. Nyak Arief, .',
           }
         ]
       },

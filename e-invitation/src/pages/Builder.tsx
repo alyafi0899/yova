@@ -441,12 +441,12 @@ function RightPanel({ selected, activeSection, data, onChange, config, onConfigC
                 {inp('Tanggal', 'akadDate', '10 Januari 2027')}
                 {inp('Waktu', 'akadTime', '08.00 – 10.00 WIB')}
                 {inp('Venue', 'akadVenue', 'Masjid Raya Baiturrahman')}
-                {inp('Alamat', 'akadAddress', 'Banda Aceh')}
+                {inp('Alamat', 'akadAddress', '.')}
                 {inp('Google Maps URL', 'akadMaps', 'https://maps.google.com/...')}
                 <p className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider pt-2 border-t" style={{ borderColor: '#E0D9CF' }}>Resepsi</p>
                 {inp('Waktu', 'receptionTime', '11.00 – 16.00 WIB')}
                 {inp('Venue', 'receptionVenue', 'Hotel Hermes Palace')}
-                {inp('Alamat', 'receptionAddress', 'Banda Aceh')}
+                {inp('Alamat', 'receptionAddress', '.')}
               </>
             )}
             {activeSection === 'quote' && (

@@ -125,14 +125,14 @@ export const sakinah_v1: InvitationTemplate = {
             date: 'Saturday, 12 December 2026',
             time: '08:00 – 10:00 WIB',
             venue: 'Masjid Al-Hikmah',
-            address: 'Banda Aceh',
+            address: '',
           },
           {
             name: 'Walimatul Ursy',
             date: 'Saturday, 12 December 2026',
             time: '11:00 – 15:00 WIB',
             venue: 'Grand Ballroom Hermes Palace',
-            address: 'Banda Aceh',
+            address: '',
           }
         ]
       },

@@ -309,7 +309,7 @@ Saturday
 08:00 – 10:00 WIB
 
 Masjid Al-Hikmah
-Banda Aceh
+.
 
 [ VIEW MAP ]
 
@@ -321,7 +321,7 @@ Saturday
 11:00 – 15:00 WIB
 
 Grand Ballroom Example
-Banda Aceh
+.
 
 [ VIEW MAP ]
 

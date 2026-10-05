@@ -27,7 +27,7 @@ const FEATURES = [
 ]
 
 const TESTIMONIALS = [
-  { name: 'Fatimah & Rizky', city: 'Banda Aceh', text: 'Undangan digitalnya sangat cantik dan mudah dibuat. Tamu-tamu kami sangat terkesan!', template: 'Noura' },
+  { name: 'Fatimah & Rizky', city: '.', text: 'Undangan digitalnya sangat cantik dan mudah dibuat. Tamu-tamu kami sangat terkesan!', template: 'Noura' },
   { name: 'Sari & Ahmad', city: 'Jakarta', text: 'Fitur RSVP-nya sangat membantu. Kami bisa pantau konfirmasi kehadiran dengan mudah.', template: 'Azzahra' },
   { name: 'Nabila & Farhan', city: 'Surabaya', text: 'Desain premium dengan harga yang sangat terjangkau. Sangat recommended!', template: 'Madinah' },
 ]

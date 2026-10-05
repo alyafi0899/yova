@@ -420,7 +420,7 @@ Example:
 
 Akad Nikah
 Masjid ______
-Banda Aceh
+.
 
 [ Open Google Maps ]
 

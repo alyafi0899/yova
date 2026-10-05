@@ -253,7 +253,7 @@ export default function TemplateRenderer({
           </h1>
           <Divider config={config} />
           <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: compact ? 8 : 10 }} className="tracking-widest uppercase mt-1">
-            {data.weddingDate} · Banda Aceh
+            {data.weddingDate} · .
           </p>
         </div>
       </div>

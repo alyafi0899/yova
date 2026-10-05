@@ -19,9 +19,18 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
   const [device, setDevice] = useState<'mobile' | 'tablet' | 'laptop-p' | 'desktop'>('mobile')
   const [tempData, setTempData] = useState<InvitationData>(JSON.parse(JSON.stringify(project.data)))
 
-  // Re-sync tempData if project changes
+  // Re-sync tempData if project changes & sanitize legacy hardcoded addresses
   useEffect(() => {
-    setTempData(JSON.parse(JSON.stringify(project.data)))
+    const dataCopy = JSON.parse(JSON.stringify(project.data))
+    const eventSec = dataCopy.sections?.find((s: any) => s.id === 'event')
+    if (eventSec?.config?.events) {
+      eventSec.config.events.forEach((ev: any) => {
+        if (ev.address) {
+          ev.address = ev.address.replace(/banda aceh/gi, '').replace(/\.,\s*Aceh/gi, '').trim()
+        }
+      })
+    }
+    setTempData(dataCopy)
   }, [project.id, project.templateId])
 
   // Dynamically generate sections from project data for multi-template support
@@ -485,6 +494,20 @@ export default function DashboardCustomize({ project, onUpdate }: DashboardCusto
                                 handleUpdate('event', 'events', nextEvents)
                               }}
                               className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
+                            />
+                         </div>
+                         <div className="space-y-2">
+                            <label className="text-[9px] font-bold uppercase tracking-widest text-muted">Detail Alamat (Opsional)</label>
+                            <input
+                              type="text"
+                              value={ev.address || ''}
+                              onChange={(e) => {
+                                const nextEvents = [...tempData.sections.find(s => s.id === 'event')?.config.events]
+                                nextEvents[i].address = e.target.value
+                                handleUpdate('event', 'events', nextEvents)
+                              }}
+                              className="w-full bg-soft border border-nude p-3 text-xs focus:outline-none focus:border-mocha"
+                              placeholder="Contoh: Jl. Sudirman No. 12 (kosongkan jika tidak ada)"
                             />
                          </div>
                          <div className="space-y-2">

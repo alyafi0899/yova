@@ -6,6 +6,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { InvitationData } from '../../../lib/invitation/types';
 import { getCallName } from '../../../lib/utils/name';
+import { useBackgroundMusic } from '../../../hooks/useBackgroundMusic';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const T = {
@@ -237,7 +238,7 @@ function Cover({
         <div className="text-center">
           <p className="text-[10px] tracking-[0.35em] uppercase mb-2" style={{ fontFamily: sans, color: T.muted }}>{config?.tagline || 'The Wedding of'}</p>
           <h1 style={{ fontFamily: serif, fontSize: 'clamp(1.8rem, 7vw, 3rem)', color: T.ink, letterSpacing: '0.12em', lineHeight: 1.2 }}>{brideName.toUpperCase()} &amp; {groomName.toUpperCase()}</h1>
-          <p className="text-sm mt-1.5" style={{ fontFamily: sans, color: T.muted }}>{config?.dateText || '12 December 2026'} · {config?.locationText || 'Banda Aceh'}</p>
+          <p className="text-sm mt-1.5" style={{ fontFamily: sans, color: T.muted }}>{config?.dateText || '12 December 2026'} · {config?.locationText || '.'}</p>
         </div>
 
         <GoldLine className="w-52" />
@@ -438,6 +439,7 @@ function CountdownSection({ brideName, groomName, config }: { brideName: string;
 
 function EventCard({ event, delay }: { event: any; delay: number }) {
   const { ref, style } = useReveal('up', delay);
+  const displayAddress = (event?.address || '').replace(/banda aceh/gi, '').replace(/\.,\s*Aceh/gi, '').trim();
   return (
     <div ref={ref} style={{ ...style, flex: 1 }}>
       <div className="h-full flex flex-col overflow-hidden" style={{ border: `1px solid ${T.border}`, boxShadow: `0 8px 40px ${T.ink}06` }}>
@@ -450,7 +452,7 @@ function EventCard({ event, delay }: { event: any; delay: number }) {
           <div className="w-full h-px" style={{ backgroundColor: `${T.gold}30` }} />
           <p className="text-sm font-medium" style={{ fontFamily: sans, color: T.goldDark }}>{event?.time || '08:00 - End'}</p>
           <div className="w-full h-px" style={{ backgroundColor: `${T.gold}30` }} />
-          <div><p className="text-base" style={{ fontFamily: serif, color: T.ink }}>{event?.venue || 'Venue'}</p><p className="text-xs mt-1" style={{ fontFamily: sans, color: T.muted }}>{event?.address || 'Address'}</p></div>
+          <div><p className="text-base" style={{ fontFamily: serif, color: T.ink }}>{event?.venue || 'Venue'}</p>{displayAddress ? <p className="text-xs mt-1" style={{ fontFamily: sans, color: T.muted }}>{displayAddress}</p> : null}</div>
           <div className="flex gap-2 w-full mt-auto">
             {event?.mapsLink && <a href={event.mapsLink} target="_blank" rel="noopener noreferrer" className="flex-1 py-2.5 text-[10px] tracking-[0.2em] uppercase transition-all duration-300 hover:bg-[#8C6B3A] hover:text-white text-center" style={{ fontFamily: sans, color: T.goldDark, border: `1px solid ${T.gold}` }}>View Map</a>}
             <button className="flex-1 py-2.5 text-[10px] tracking-[0.2em] uppercase transition-all duration-300 hover:bg-[#B8966E] hover:text-white" style={{ fontFamily: sans, color: T.gold, border: `1px solid ${T.gold}60` }}>+ Calendar</button>
@@ -655,10 +657,9 @@ function ProgressDots({ count }: { count: number }) {
 
 // ── Floating music button ────────────────────────────────────────────────────
 
-function MusicButton() {
-  const [on, setOn] = useState(false);
+function MusicButton({ bgm }: { bgm: { isPlaying: boolean; toggle: () => void } }) {
   return (
-    <button onClick={() => setOn((v) => !v)} className="fixed top-5 left-5 z-[150] w-10 h-10 flex items-center justify-center transition-all duration-300 shadow-xl rounded-full" style={{ backgroundColor: T.bg + 'E0', backdropFilter: 'blur(8px)', border: `1px solid ${T.gold}50` }} title={on ? 'Pause music' : 'Play music'}>{on ? '🔇' : '🎵'}</button>
+    <button onClick={bgm.toggle} className="fixed top-5 left-5 z-[150] w-10 h-10 flex items-center justify-center transition-all duration-300 shadow-xl rounded-full" style={{ backgroundColor: T.bg + 'E0', backdropFilter: 'blur(8px)', border: `1px solid ${T.gold}50` }} title={bgm.isPlaying ? 'Pause music' : 'Play music'}>{bgm.isPlaying ? '🎵' : '🔇'}</button>
   );
 }
 
@@ -677,6 +678,7 @@ export default function YasminInvitation({
 }) {
   const [opened, setOpened] = useState(false);
   const [coverGone, setCoverGone] = useState(false);
+  const bgm = useBackgroundMusic(false);
   const topRef = useRef<HTMLDivElement>(null);
 
   const sectionIds = ['cover', 'quran', 'couple', 'story', 'countdown', 'event', 'gallery', 'gift', 'rsvp', 'closing'];
@@ -720,6 +722,7 @@ export default function YasminInvitation({
 
   function handleOpen() {
     setOpened(true);
+    bgm.play();
     setTimeout(() => setCoverGone(true), 750);
   }
 
@@ -738,7 +741,7 @@ export default function YasminInvitation({
 
       {opened && (
         <div className="relative animate-in fade-in duration-1000">
-          <MusicButton />
+          <MusicButton bgm={bgm} />
           <ProgressDots count={SECTION_COUNT} />
           {isSectionEnabled('quran') && <div data-section="0" id="quran"><QuranSection config={getSection('quran')?.config} /></div>}
           {isSectionEnabled('couple') && <div data-section="1" id="couple"><CoupleSection data={data} config={getSection('couple')?.config} /></div>}
